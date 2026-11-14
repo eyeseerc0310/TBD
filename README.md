@@ -5,7 +5,9 @@ thoughts, tasks, events and ideas.
 
 Home has three columns: a clock / calendar card (swipe or use the arrows to switch
 views) above a Connections card, a task manager with weekly progress, colours and
-drag-to-reorder, and a Notes card for writing and saved notes. Around it:
+drag-to-reorder, and a Notes card for writing, with the three most recently touched notes below
+(tap one to edit it in place). The clock view includes a stopwatch / countdown timer
+that can log time to a task. Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. Notes, Files, Connections and Pin Board
 are in place as workspaces ready to grow.
 
@@ -58,7 +60,7 @@ Type-specific `meta`:
 
 | Type | `meta` |
 | --- | --- |
-| `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
+| `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`), `tracked` (ms timed on the timer) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
 | `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`. Captures are the saved notes shown on the Notes page and the Home notes card |
 | `connection` | `target` (link, email, phone or text), `kind` (`link` · `email` · `phone` · `text`), `color`, `order` |
@@ -67,7 +69,9 @@ Type-specific `meta`:
 Dates and times are stored as local wall-clock values ("floating" time), so a 9:00
 event stays at 9:00 across daylight-saving changes and time-zone moves.
 
-Application state is `{ items, settings, ui }`:
+Application state is `{ items, settings, ui, timer }`:
+
+- `timer` — `mode` (`stopwatch` · `countdown`), `running`, `startedAt` (epoch ms), `elapsed` (ms before the current run), `duration` (countdown ms), `taskId` (linked task). Stored as timestamps, so it keeps time across refreshes.
 
 - `settings`
   - Clock: `clock24`, `location`, `clockFace` (`minimal` · `classic` · `modern` · `digital`),
