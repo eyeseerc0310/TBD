@@ -255,6 +255,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 }
 .switch input:checked { background: var(--accent); border-color: transparent; }
 .switch input:checked::after { transform: translateX(14px); background: var(--on-accent); }
+.switch input:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Segmented control */
 .seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-ctl); background: var(--surface-sunken); border: 1px solid var(--border); flex: none; }
@@ -408,7 +409,14 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Clock */
 .clock { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s4); }
-.clock__face { height: clamp(120px, 24vh, 210px); aspect-ratio: 1; max-width: 100%; }
+.stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+.panel--clock { flex: none; container-type: inline-size; }
+.panel--notes { flex: 1; min-height: 160px; }
+.panel__actions { display: flex; align-items: center; gap: var(--s2); }
+/* The face is sized by the window height, capped by the card's width (cqi). */
+.clock__face { height: min(max(150px, 31vh), 270px, 100cqi); aspect-ratio: 1; max-width: 100%; }
+.clock.no-time .clock__face { height: min(max(180px, 41vh), 340px, 100cqi); }
+.clock.no-time .clock__digital { display: none; }
 .clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .clock[data-face="digital"] { padding: var(--s6) 0 var(--s2); }
 .clock[data-face="digital"] .clock__face { display: none; }
@@ -441,6 +449,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
 }
 .notes__area::placeholder { color: var(--text-3); }
+.btn--sm .icon { width: 14px; height: 14px; }
 .notes__status { font-size: var(--fs-xs); color: var(--text-3); opacity: 0; transition: opacity var(--t) var(--ease); }
 .notes__status.is-visible { opacity: 1; }
 
@@ -738,7 +747,9 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nav__btn::after { display: none; }
   .main { padding: var(--s5) var(--gutter) calc(96px + env(safe-area-inset-bottom)); }
   .dashboard { grid-template-columns: minmax(0, 1fr); }
-  .clock__face { height: min(56vw, 200px); }
+  .clock__face { height: min(62vw, 230px); }
+  .clock.no-time .clock__face { height: min(76vw, 290px); }
+  .panel--notes { min-height: 220px; }
   .list { max-height: none; overflow: visible; }
   .panel--tasks .list { max-height: none; }
   .page-head { margin-bottom: var(--s5); }
@@ -765,12 +776,15 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
   }
-  .app[data-page="home"] .notes__area { min-height: 72px; }
+  .app[data-page="home"] .notes__area { min-height: 48px; }
+  .app[data-page="home"] .panel--notes { min-height: 110px; }
 }
 /* Two-row tablet layout, fitted: the top row gets the larger share. */
 @media (min-width: 720px) and (max-width: 1099px) and (orientation: portrait) and (min-height: 960px),
        (min-width: 720px) and (max-width: 899px) and (min-height: 960px) {
   .app[data-page="home"] .dashboard { grid-template-rows: minmax(0, 1.55fr) minmax(0, 1fr); }
+  .app[data-page="home"] .clock__face { height: min(max(150px, 20vh), 220px, 100cqi); }
+  .app[data-page="home"] .clock.no-time .clock__face { height: min(max(170px, 26vh), 290px, 100cqi); }
 }
 
 /* ---------- 10. Motion ---------- */
@@ -991,7 +1005,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     <section class="page" data-page="home" aria-labelledby="home-title">
       <h1 class="sr-only" id="home-title">Home</h1>
       <div class="dashboard">
-        <!-- Clock + quick notes -->
+        <!-- Left column: clock above quick notes -->
+        <div class="stack">
         <article class="panel glass panel--clock" aria-labelledby="clock-title">
           <header class="panel__head">
             <h2 class="panel__title" id="clock-title">Clock</h2>
@@ -1007,14 +1022,19 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
               <div class="clock__location" id="clock-location"></div>
             </div>
           </div>
-          <section class="panel__section" aria-labelledby="notes-label">
-            <div class="section-head">
-              <h3 class="panel__title" id="notes-label">Quick Notes</h3>
-              <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
-            </div>
-            <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-labelledby="notes-label" spellcheck="true"></textarea>
-          </section>
         </article>
+
+        <article class="panel glass panel--notes" aria-labelledby="notes-label">
+          <header class="panel__head">
+            <h2 class="panel__title" id="notes-label">Quick Notes</h2>
+            <div class="panel__actions">
+              <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
+              <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Move these notes to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg>Add to Notes</button>
+            </div>
+          </header>
+          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-labelledby="notes-label" spellcheck="true"></textarea>
+        </article>
+        </div>
 
         <!-- Calendar -->
         <article class="panel glass panel--calendar" aria-labelledby="cal-title">
@@ -1262,7 +1282,7 @@ function detect24h() {
 const DEFAULT_CUSTOM_THEME = Object.freeze({ bg: THEMES.graphite.bg, panel: THEMES.graphite.panel, line: THEMES.graphite.line, text: THEMES.graphite.text });
 const DEFAULT_SETTINGS = Object.freeze({
   // Clock
-  clock24: detect24h(), location: '', clockFace: 'minimal', clockShape: 'circle', showSeconds: true, showDate: false,
+  clock24: detect24h(), location: '', clockFace: 'minimal', clockShape: 'circle', showTime: true, showSeconds: true, showDate: false,
   // Calendar
   weekStart: 1, highlightWeekends: false,
   // Appearance
@@ -1340,6 +1360,7 @@ function normaliseSettings(raw) {
     clockFace: oneOf(s.clockFace, CLOCK_FACES, d.clockFace),
     clockShape: oneOf(s.clockShape, CLOCK_SHAPES, d.clockShape),
     showSeconds: bool(s.showSeconds, d.showSeconds),
+    showTime: bool(s.showTime, d.showTime),
     showDate: bool(s.showDate, d.showDate),
     weekStart: s.weekStart === 0 || s.weekStart === 1 ? s.weekStart : d.weekStart,
     highlightWeekends: bool(s.highlightWeekends, d.highlightWeekends),
@@ -2091,6 +2112,7 @@ const Clock = (() => {
     ensureFace();
     $('#clock-location').textContent = s.location.trim() || autoCity();
     $('#clock-zone').textContent = zoneName();
+    root.classList.toggle('no-time', !s.showTime && s.clockFace !== 'digital');
     const dateEl = $('#clock-date');
     dateEl.hidden = !s.showDate;
     if (s.showDate) dateEl.textContent = Fmt.dayMonth(Dates.today());
@@ -2107,6 +2129,7 @@ const Clock = (() => {
 const QuickNotes = (() => {
   const area = $('#quick-notes');
   const status = $('#notes-status');
+  const sendBtn = $('#notes-send');
   let timer = 0;
   let statusTimer = 0;
   let dirty = false;
@@ -2130,9 +2153,36 @@ const QuickNotes = (() => {
     const it = item();
     const value = it ? it.content : '';
     if (area.value !== value) area.value = value;
+    updateButton();
   }
-  area.addEventListener('input', () => { dirty = true; clearTimeout(timer); timer = setTimeout(flush, 500); });
+  const updateButton = () => { sendBtn.disabled = !area.value.trim(); };
+
+  /** Moves the pad's text into the Notes page Inbox and clears the pad (with Undo). */
+  function sendToNotes() {
+    flush();
+    const text = area.value.trim();
+    const it = item();
+    if (!text || !it) { area.focus(); return; }
+    const previous = it.content;
+    const capture = Items.create('capture', { title: '', content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes' } });
+    Items.update(it.id, { content: '' });
+    area.value = '';
+    updateButton();
+    Toast.show('Added to Notes', {
+      action: {
+        label: 'Undo',
+        run: () => {
+          Items.remove(capture.id);
+          const n = item();
+          if (n) Items.update(n.id, { content: previous });
+          sync(true);
+        },
+      },
+    });
+  }
+  area.addEventListener('input', () => { dirty = true; updateButton(); clearTimeout(timer); timer = setTimeout(flush, 500); });
   area.addEventListener('blur', flush);
+  sendBtn.addEventListener('click', sendToNotes);
   Persistence.onFlush(flush);
   return { render: () => sync(false), sync, flush };
 })();
@@ -2718,9 +2768,9 @@ const SettingsPanel = (() => {
     });
     return group;
   }
-  function toggle(key, value, label) {
+  function toggle(key, value, label, { disabled = false } = {}) {
     return h('label', { class: 'switch' }, h('input', {
-      type: 'checkbox', checked: value, 'aria-label': label, dataset: { key },
+      type: 'checkbox', checked: value, 'aria-label': label, dataset: { key }, disabled,
       onchange: (e) => set({ [key]: e.target.checked }),
     }));
   }
@@ -2770,7 +2820,7 @@ const SettingsPanel = (() => {
   const SECTIONS = [
     {
       id: 'clock', icon: 'clock', title: 'Clock', desc: 'Time format, location, face and shape',
-      keys: ['clock24', 'location', 'clockFace', 'clockShape', 'showSeconds', 'showDate'],
+      keys: ['clock24', 'location', 'clockFace', 'clockShape', 'showTime', 'showSeconds', 'showDate'],
       rows(s, refresh) {
         const location = h('input', { class: 'input', type: 'text', value: s.location, placeholder: Clock.autoCity(), 'aria-label': 'Location', maxlength: 80, dataset: { key: 'location' } });
         location.addEventListener('input', () => set({ location: location.value }));
@@ -2781,8 +2831,10 @@ const SettingsPanel = (() => {
             (v) => { set({ clockFace: v }); refresh(); }), { keywords: 'minimal classic modern digital numerals analog' }),
           stackRow('Shape', tiles('clockShape', Object.keys(SHAPE_LABELS).map((id) => ({ id, label: SHAPE_LABELS[id], preview: facePreview(s.clockFace === 'digital' ? 'minimal' : s.clockFace, id) })), s.clockShape, 'Clock shape',
             (v) => { set({ clockShape: v }); refresh(); }), { keywords: 'circle rounded square squircle hexagon' }),
+          row('Show digital time', toggle('showTime', s.clockFace === 'digital' ? true : s.showTime, 'Show digital time', { disabled: s.clockFace === 'digital' }),
+            { keywords: 'digital time numbers bigger larger clock', hint: s.clockFace === 'digital' ? 'Always shown on the Digital face' : 'Turn off for a larger clock face' }),
           row('Show second hand', toggle('showSeconds', s.showSeconds, 'Show second hand'), { keywords: 'seconds' }),
-          row('Show date under the time', toggle('showDate', s.showDate, 'Show date under the time'), { keywords: 'day' }),
+          row('Show date under the clock', toggle('showDate', s.showDate, 'Show date under the clock'), { keywords: 'day' }),
         ];
       },
     },
