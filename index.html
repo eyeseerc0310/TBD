@@ -371,8 +371,8 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Clock */
 .clock { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s6); min-height: 0; }
-.clock__face { width: min(100%, 270px); aspect-ratio: 1; flex: none; }
-.clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.clock__face { flex: 0 1 270px; min-height: 120px; width: 100%; display: flex; justify-content: center; }
+.clock__face svg { height: 100%; width: auto; max-width: 100%; aspect-ratio: 1; display: block; overflow: visible; }
 .clock__rim { fill: rgba(255, 255, 255, 0.015); stroke: var(--border-strong); stroke-width: 1; }
 .clock__tick { stroke: var(--text-3); stroke-width: 0.8; stroke-linecap: round; opacity: 0.45; }
 .clock__tick--hour { stroke: var(--text-2); stroke-width: 1.6; opacity: 0.9; }
@@ -396,7 +396,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; flex: none; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
 .cal__day {
-  position: relative; height: 34px; border-radius: var(--r-sm);
+  position: relative; height: clamp(28px, 4.2vh, 36px); border-radius: var(--r-sm);
   display: grid; place-items: center;
   font-size: var(--fs-sm); font-variant-numeric: tabular-nums; color: var(--text);
   transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
@@ -424,7 +424,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .wday { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 0; border-radius: var(--r-ctl); transition: background var(--t-fast) var(--ease); }
 .wday:hover { background: var(--hover); }
 .wday[aria-pressed="true"] { background: var(--hover-strong); }
-.ring { position: relative; width: 34px; height: 34px; }
+.ring { position: relative; width: min(34px, 100%); aspect-ratio: 1; }
 .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
 .ring__track { fill: none; stroke: var(--hover-strong); stroke-width: 2.5; }
 .ring__fill { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; transition: stroke-dasharray var(--t-slow) var(--ease), opacity var(--t) var(--ease); }
@@ -533,15 +533,18 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .dropzone__text { color: var(--text-2); font-size: var(--fs-sm); }
 
 /* ---------- 8. Responsive ---------- */
-/* Tablet: clock + calendar side by side, tasks across the full width. */
 @media (max-width: 1099px) {
   :root { --gutter: var(--s5); }
+}
+/* Tablet (portrait or narrow): clock + calendar side by side, tasks across
+   the full width. Landscape tablets keep the three-column desktop layout. */
+@media (max-width: 1099px) and (orientation: portrait), (max-width: 899px) {
   .dashboard { grid-template-rows: none; min-height: 0; flex: none; }
   .panel--tasks { grid-column: 1 / -1; }
   .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .list { max-height: 320px; }
   .panel--tasks .list { max-height: 420px; }
-  .clock__face { width: min(100%, 230px); }
+  .clock__face { flex-basis: 230px; }
 }
 /* Phone: one column; section navigation becomes a bottom tab bar. */
 @media (max-width: 719px) {
@@ -566,7 +569,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   .dashboard { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
   .panel { padding: var(--s4); }
   .panel--clock .clock { gap: var(--s4); padding: var(--s2) 0; }
-  .clock__face { width: min(62vw, 220px); }
+  .clock__face { flex: none; height: min(62vw, 220px); }
   .list { max-height: none; overflow: visible; }
   .panel--tasks .list { max-height: none; }
   .page-head { margin-bottom: var(--s5); }
@@ -575,6 +578,25 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   .dialog--top { margin-top: var(--s10); }
   .dialog__hint { display: none; } /* keyboard hint is noise on touch screens */
   .settings__row .input { max-width: 180px; }
+}
+/* Home fits the window exactly: no page scroll; long lists scroll inside
+   their panels. Phones (and very short windows) keep normal scrolling. */
+@media (min-width: 1100px) and (min-height: 640px),
+       (min-width: 900px) and (orientation: landscape) and (min-height: 640px),
+       (min-width: 720px) and (min-height: 960px) {
+  .app[data-page="home"] { height: 100dvh; overflow: hidden; }
+  .app[data-page="home"] .main { min-height: 0; padding-top: var(--s5); padding-bottom: var(--s5); }
+  .app[data-page="home"] .dashboard { flex: 1; min-height: 0; }
+  .app[data-page="home"] .list {
+    max-height: none; padding-bottom: var(--s3);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
+  }
+}
+/* Two-row tablet layout, fitted: the calendar row gets the larger share. */
+@media (min-width: 720px) and (max-width: 1099px) and (orientation: portrait) and (min-height: 960px),
+       (min-width: 720px) and (max-width: 899px) and (min-height: 960px) {
+  .app[data-page="home"] .dashboard { grid-template-rows: minmax(0, 1.55fr) minmax(0, 1fr); }
 }
 
 /* ---------- 9. Motion ---------- */
@@ -639,13 +661,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   <main class="main" id="main">
     <!-- Home -->
     <section class="page" data-page="home" aria-labelledby="home-title">
-      <header class="page-head">
-        <div>
-          <h1 class="page-head__title" id="home-title">Good day</h1>
-          <p class="page-head__sub" id="home-sub"></p>
-        </div>
-      </header>
-
+      <h1 class="sr-only" id="home-title">Home</h1>
       <div class="dashboard">
         <!-- Clock -->
         <article class="panel glass panel--clock" aria-labelledby="clock-title">
@@ -2022,21 +2038,6 @@ function buildPlaceholderPages() {
   }
 }
 
-/* ---------- Home header ---------- */
-function renderHomeHeader() {
-  const hour = new Date().getHours();
-  const greeting = hour < 5 ? 'Good evening' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const today = Dates.today();
-  const events = Events.on(today).length;
-  const { total, done } = Tasks.progress(today);
-  const left = total - done;
-  const parts = [];
-  if (events) parts.push(`${pluralise(events, 'event')} today`);
-  if (total) parts.push(left ? `${pluralise(left, 'task')} to go` : 'all tasks done');
-  $('#home-title').textContent = greeting;
-  $('#home-sub').textContent = parts.length ? `${Fmt.dayMonth(today)} · ${parts.join(' · ')}` : `${Fmt.dayMonth(today)} · A quiet day ahead.`;
-}
-
 /* ---------- Navigation ----------
    Hash routes (#/notes) work from a local file and on GitHub Pages, keep
    the back button meaningful, and never reload the page. */
@@ -2068,6 +2069,7 @@ const Navigation = (() => {
     const page = UI.get().page;
     $$('#nav [data-page]').forEach((b) => (b.getAttribute('data-page') === page ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
     $$('main > .page').forEach((p) => { p.hidden = p.dataset.page !== page; });
+    $('.app').dataset.page = page;
     document.title = page === 'home' ? 'STILL' : `${PAGES[page].title} · STILL`;
     if (page === 'home') Clock.start(); else Clock.stop();
   }
@@ -2154,7 +2156,6 @@ function render() {
   Navigation.render();
   const page = UI.get().page;
   if (page === 'home') {
-    renderHomeHeader();
     Clock.render();
     Calendar.render();
     TaskPanel.render();
