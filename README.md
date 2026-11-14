@@ -3,8 +3,9 @@
 A calm, local-first personal workspace — a place to capture, organise and revisit
 thoughts, tasks, events and ideas.
 
-The dashboard has a live clock with Quick Notes, an interactive calendar with events,
-and a task manager with weekly progress, colours and drag-to-reorder. Around it:
+Home has three columns: a clock / calendar card (swipe or use the arrows to switch
+views) above a Connections card, a task manager with weekly progress, colours and
+drag-to-reorder, and a Notes card for writing and saved notes. Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. Notes, Files, Connections and Pin Board
 are in place as workspaces ready to grow.
 
@@ -59,7 +60,8 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox` |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`. Captures are the saved notes shown on the Notes page and the Home notes card |
+| `connection` | `target` (link, email, phone or text), `kind` (`link` · `email` · `phone` · `text`), `color`, `order` |
 | `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
 
 Dates and times are stored as local wall-clock values ("floating" time), so a 9:00
@@ -75,7 +77,7 @@ Application state is `{ items, settings, ui }`:
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
     `density` (`comfortable` · `compact`)
-- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category)
+- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card)
 
 Older data without the newer fields loads with defaults; tasks without an `order`
 are numbered by creation time.
