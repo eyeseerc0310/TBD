@@ -397,6 +397,10 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .card__title { font: 600 var(--fs-base)/1.35 var(--font-head); overflow-wrap: anywhere; }
 .card__text { color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .card__foot { margin-top: auto; padding-top: var(--s2); display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-3); }
+.card.has-color { border-color: color-mix(in srgb, var(--row-c) 50%, var(--border)); background: color-mix(in srgb, var(--row-c) 12%, var(--surface)); }
+.card__open { text-align: left; border-radius: var(--r-sm); cursor: pointer; }
+.card__open:hover { text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
+.card__foot .icon { width: 12px; height: 12px; color: var(--accent); }
 .card .icon-btn { margin: -4px -6px 0 0; opacity: 0; }
 .card .icon-btn:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .card:hover .icon-btn, .card:focus-within .icon-btn { opacity: 1; }
@@ -405,20 +409,46 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 /* ---------- 6. Home panels ---------- */
 .dashboard { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
 .panel { display: flex; flex-direction: column; min-height: 0; padding: var(--pad); border-radius: var(--r-panel); }
-.panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h-sm); margin-bottom: var(--s4); flex: none; }
+/* Every card's first row (header, search bar, month bar) has this height. */
+.panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s4); flex: none; }
 .panel__title { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
 .panel__section { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--border); }
 .list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
+/* Left column: the clock/calendar card above the connections card */
+.stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+.panel__actions { display: flex; align-items: center; gap: var(--s1); }
+
+/* Clock / Calendar card: two views on a sliding track */
+.panel--time { position: relative; height: 480px; padding-bottom: calc(var(--pad) + 12px); outline: none; }
+.panel--time:focus-visible { box-shadow: var(--shadow), 0 0 0 2px var(--accent-line); }
+.views { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: 0 calc(var(--pad) * -1); touch-action: pan-y; }
+.views__track { display: flex; height: 100%; transition: transform var(--t-slow) var(--ease); will-change: transform; }
+.view { flex: 0 0 100%; min-width: 0; height: 100%; min-height: 0; padding: 0 var(--pad); display: flex; flex-direction: column; }
+.view--clock { justify-content: center; container-type: size; }
+/* Events under the calendar: a compact one-line empty state. */
+.view--calendar .empty { flex-direction: row; padding: var(--s3) 0; }
+.view--calendar .empty .icon { width: 16px; height: 16px; }
+.views__arrow {
+  position: absolute; top: 50%; z-index: 2; transform: translateY(-50%);
+  width: 20px; height: 44px; display: grid; place-items: center;
+  border-radius: var(--r-sm); color: var(--text-3); opacity: 0.6;
+  transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.views__arrow:hover, .views__arrow:focus-visible { opacity: 1; color: var(--text); background: var(--hover); }
+.views__arrow--prev { left: 2px; }
+.views__arrow--next { right: 2px; }
+.views__arrow .icon { width: 16px; height: 16px; }
+.views__dots { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; gap: 2px; }
+.views__dot { width: 22px; height: 16px; display: grid; place-items: center; border-radius: 999px; }
+.views__dot::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--border-strong); transition: width var(--t) var(--ease), background var(--t) var(--ease); }
+.views__dot[aria-selected="true"]::after { width: 16px; background: var(--text-2); }
+
 /* Clock */
 .clock { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s4); }
-.stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
-.panel--clock { flex: none; container-type: inline-size; }
-.panel--notes { flex: 1; min-height: 160px; }
-.panel__actions { display: flex; align-items: center; gap: var(--s2); }
-/* The face is sized by the window height, capped by the card's width (cqi). */
-.clock__face { height: min(max(150px, 31vh), 270px, 100cqi); aspect-ratio: 1; max-width: 100%; }
-.clock.no-time .clock__face { height: min(max(180px, 41vh), 340px, 100cqi); }
+/* The face fills the view: capped by its width (cqi) and by its height minus the readout (cqb). */
+.clock__face { height: min(280px, 100cqi, calc(100cqb - 118px)); min-height: 96px; aspect-ratio: 1; max-width: 100%; }
+.clock.no-time .clock__face { height: min(340px, 100cqi, calc(100cqb - 58px)); }
 .clock.no-time .clock__digital { display: none; }
 .clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .clock[data-face="digital"] { padding: var(--s6) 0 var(--s2); }
@@ -451,21 +481,49 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 /* Quick notes */
 .notes__area {
   overscroll-behavior: contain;
-  flex: 1; width: 100%; min-height: 72px; margin: 0; padding: 0;
+  flex: 1.25 1 0; width: 100%; min-height: 96px; margin: 0; padding: 0;
   border: 0; outline: none; resize: none; background: transparent;
   color: var(--text); font: 400 var(--fs-base)/1.6 var(--font);
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
 }
 .notes__area::placeholder { color: var(--text-3); }
+.notes__saved { flex: 1 1 0; }
+
+/* Compact rows: saved notes and connections */
+.mini-list { display: flex; flex-direction: column; gap: 6px; }
+.mini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s3); }
+.mini-row {
+  position: relative; flex: none;
+  display: flex; align-items: center; gap: var(--s3);
+  min-height: 50px; padding: 5px var(--s1) 5px var(--s3);
+  border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--hover);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.mini-row:hover { border-color: var(--border-strong); }
+.mini-row.has-color { border-color: color-mix(in srgb, var(--row-c) 55%, var(--border)); background: color-mix(in srgb, var(--row-c) 15%, transparent); }
+.mini-row.has-color::before { content: ""; position: absolute; left: -1px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--row-c); }
+.mini-row__icon { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--hover-strong); color: var(--text-2); }
+.mini-row__icon .icon { width: 16px; height: 16px; }
+.mini-row.has-color .mini-row__icon { background: color-mix(in srgb, var(--row-c) 30%, transparent); color: var(--text); }
+.mini-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 3px 0; text-align: left; border-radius: var(--r-sm); }
+.mini-row__top { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.mini-row__title { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row__title .icon { width: 12px; height: 12px; color: var(--accent); vertical-align: -1px; margin-right: 4px; }
+.mini-row__date { flex: none; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.mini-row__sub { font-size: var(--fs-sm); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row__sub:empty { display: none; }
+.row-more { opacity: 0.35; }
+.mini-row:hover .row-more, .mini-row:focus-within .row-more, .row-more[aria-expanded="true"] { opacity: 1; }
+@media (hover: none) { .row-more { opacity: 0.8; } }
 .btn--sm .icon { width: 14px; height: 14px; }
 .notes__status { font-size: var(--fs-xs); color: var(--text-3); opacity: 0; transition: opacity var(--t) var(--ease); }
 .notes__status.is-visible { opacity: 1; }
 
 /* Calendar */
-.cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-bottom: var(--s3); flex: none; }
+.cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s3); flex: none; }
 .cal__nav { display: flex; align-items: center; gap: 2px; }
 .cal__month { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; }
-.panel--calendar .btn.is-away { color: var(--accent); }
+.view--calendar .btn.is-away { color: var(--accent); }
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; flex: none; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
 .cal__day {
@@ -497,7 +555,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Tasks */
 .tasks__tools { display: flex; gap: var(--s2); flex: none; }
-.week { display: flex; align-items: center; gap: 2px; margin: var(--s4) calc(var(--s2) * -1) 0; flex: none; }
+.week { display: flex; align-items: center; gap: 2px; margin: 0 calc(var(--s2) * -1); flex: none; }
 .week__days { flex: 1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 .wday { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 0; border-radius: var(--r-ctl); transition: background var(--t-fast) var(--ease); }
 .wday:hover { background: var(--hover); }
@@ -725,12 +783,14 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 @media (max-width: 1099px) {
   :root { --gutter: var(--s5); }
 }
-/* Tablet (portrait or narrow): clock + calendar side by side, tasks across
-   the full width. Landscape tablets keep the three-column desktop layout. */
+/* Tablet (portrait or narrow): clock/calendar + connections on the left,
+   tasks over notes on the right. Landscape tablets keep three columns. */
 @media (max-width: 1099px) and (orientation: portrait), (max-width: 899px) {
-  .dashboard { grid-template-rows: none; min-height: 0; flex: none; }
-  .panel--tasks { grid-column: 1 / -1; }
-  .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto; grid-template-areas: "stack tasks" "stack notes"; min-height: 0; flex: none; }
+  .stack { grid-area: stack; }
+  .panel--tasks { grid-area: tasks; }
+  .panel--notes { grid-area: notes; }
+  .notes__area, .notes__saved { flex: none; }
   .list { max-height: 320px; }
   .panel--tasks .list { max-height: 420px; }
   .notes__area { min-height: 160px; }
@@ -755,10 +815,17 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nav__label { display: block; font-size: 10.5px; font-weight: 500; }
   .nav__btn::after { display: none; }
   .main { padding: var(--s5) var(--gutter) calc(96px + env(safe-area-inset-bottom)); }
-  .dashboard { grid-template-columns: minmax(0, 1fr); }
-  .clock__face { height: min(62vw, 230px); }
-  .clock.no-time .clock__face { height: min(76vw, 290px); }
-  .panel--notes { min-height: 220px; }
+  /* Phone order: clock/calendar, tasks, notes, connections */
+  .dashboard { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+  .stack { display: contents; }
+  .stack, .panel--tasks, .panel--notes { grid-area: auto; }
+  .panel--time { order: 1; height: 460px; }
+  .panel--tasks { order: 2; }
+  .panel--notes { order: 3; }
+  .panel--connections { order: 4; }
+  .notes__area { min-height: 180px; }
+  .notes__area, .notes__saved { flex: none; }
+  .mini-grid { grid-template-columns: minmax(0, 1fr); }
   .list { max-height: none; overflow: visible; }
   .panel--tasks .list { max-height: none; }
   .page-head { margin-bottom: var(--s5); }
@@ -785,15 +852,16 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
   }
-  .app[data-page="home"] .notes__area { min-height: 48px; }
-  .app[data-page="home"] .panel--notes { min-height: 110px; }
+  .app[data-page="home"] .notes__area { min-height: 80px; flex: 1.25 1 0; }
+  .app[data-page="home"] .notes__saved { flex: 1 1 0; }
+  /* The left column's two cards share its height. */
+  .app[data-page="home"] .panel--time { height: auto; flex: 1.8 1 0; min-height: 0; }
+  .app[data-page="home"] .panel--connections { flex: 1 1 0; min-height: 0; }
 }
-/* Two-row tablet layout, fitted: the top row gets the larger share. */
+/* Two-row tablet layout, fitted. */
 @media (min-width: 720px) and (max-width: 1099px) and (orientation: portrait) and (min-height: 960px),
        (min-width: 720px) and (max-width: 899px) and (min-height: 960px) {
-  .app[data-page="home"] .dashboard { grid-template-rows: minmax(0, 1.55fr) minmax(0, 1fr); }
-  .app[data-page="home"] .clock__face { height: min(max(150px, 20vh), 220px, 100cqi); }
-  .app[data-page="home"] .clock.no-time .clock__face { height: min(max(170px, 26vh), 290px, 100cqi); }
+  .app[data-page="home"] .dashboard { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
 /* ---------- 10. Motion ---------- */
@@ -984,6 +1052,11 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5.5M6.75 10.75 12 5.5l5.25 5.25"/></symbol>
   <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v13.5M6.75 13.25 12 18.5l5.25-5.25"/></symbol>
   <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><path d="m6.75 17.25 10.5-10.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.25 13.75a3.75 3.75 0 0 0 5.3 0l3-3a3.75 3.75 0 0 0-5.3-5.3l-1 1"/><path d="M13.75 10.25a3.75 3.75 0 0 0-5.3 0l-3 3a3.75 3.75 0 0 0 5.3 5.3l1-1"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.75" y="5.75" width="16.5" height="12.5" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 4.25h2.6l1.4 3.75-1.85 1.15a9.5 9.5 0 0 0 6.2 6.2L16 13.5l3.75 1.4v2.6a1.5 1.5 0 0 1-1.6 1.5A14.5 14.5 0 0 1 5 5.85a1.5 1.5 0 0 1 1.5-1.6Z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5.25 19.5a6.75 6.75 0 0 1 13.5 0"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M13.5 5h5.5v5.5M19 5l-8 8M17 14v4.5A1.5 1.5 0 0 1 15.5 20h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.75 12a7.25 7.25 0 1 0 2.1-5.1M4.75 4.75v3.5h3.5"/></symbol>
 </svg>
 
@@ -1014,57 +1087,67 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     <section class="page" data-page="home" aria-labelledby="home-title">
       <h1 class="sr-only" id="home-title">Home</h1>
       <div class="dashboard">
-        <!-- Left column: clock above quick notes -->
+        <!-- Left column: clock/calendar above connections -->
         <div class="stack">
-        <article class="panel glass panel--clock" aria-label="Clock">
-          <div class="clock" id="clock" data-face="minimal">
-            <div class="clock__face">
-              <svg id="clock-svg" viewBox="0 0 200 200" role="img" aria-label="Analog clock"></svg>
+          <article class="panel glass panel--time" id="time-card" tabindex="0" aria-roledescription="carousel" aria-label="Clock and calendar">
+            <div class="views" id="views">
+              <div class="views__track" id="views-track">
+                <section class="view view--clock" data-view="clock" aria-roledescription="slide" aria-label="Clock">
+            <div class="clock" id="clock" data-face="minimal">
+              <div class="clock__face">
+                <svg id="clock-svg" viewBox="0 0 200 200" role="img" aria-label="Analog clock"></svg>
+              </div>
+              <div class="clock__readout">
+                <div class="clock__digital"><time id="clock-time">--:--</time><span class="clock__side"><span class="clock__zone" id="clock-zone"></span><span class="clock__ampm" id="clock-ampm"></span></span></div>
+                <div class="clock__date" id="clock-date" hidden></div>
+                <div class="clock__location" id="clock-location"></div>
+              </div>
             </div>
-            <div class="clock__readout">
-              <div class="clock__digital"><time id="clock-time">--:--</time><span class="clock__side"><span class="clock__zone" id="clock-zone"></span><span class="clock__ampm" id="clock-ampm"></span></span></div>
-              <div class="clock__date" id="clock-date" hidden></div>
-              <div class="clock__location" id="clock-location"></div>
+                </section>
+                <section class="view view--calendar" data-view="calendar" aria-roledescription="slide" aria-labelledby="cal-month">
+                  <div class="cal__bar">
+                    <h2 class="cal__month" id="cal-month" aria-live="polite"></h2>
+                    <div class="cal__nav">
+                      <button class="btn btn--ghost btn--sm" type="button" data-action="cal-today">Today</button>
+                      <button class="icon-btn icon-btn--sm" type="button" data-action="cal-prev" aria-label="Previous month"><svg class="icon"><use href="#i-left"/></svg></button>
+                      <button class="icon-btn icon-btn--sm" type="button" data-action="cal-next" aria-label="Next month"><svg class="icon"><use href="#i-right"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="cal__grid" id="cal-dow" aria-hidden="true"></div>
+                  <div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div>
+                  <section class="panel__section" aria-labelledby="agenda-title">
+                    <div class="section-head">
+                      <h3 class="subhead" id="agenda-title"></h3>
+                      <button class="icon-btn icon-btn--sm" type="button" data-action="event-new" data-tip="New event" data-tip-align="end" aria-label="New event"><svg class="icon"><use href="#i-plus"/></svg></button>
+                    </div>
+                    <ul class="list" id="agenda-list"></ul>
+                  </section>
+                </section>
+              </div>
             </div>
-          </div>
-        </article>
+            <button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Show clock"><svg class="icon"><use href="#i-left"/></svg></button>
+            <button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Show calendar"><svg class="icon"><use href="#i-right"/></svg></button>
+            <div class="views__dots" role="tablist" aria-label="Views">
+              <button class="views__dot" type="button" role="tab" data-view="clock" aria-label="Clock"></button>
+              <button class="views__dot" type="button" role="tab" data-view="calendar" aria-label="Calendar"></button>
+            </div>
+          </article>
 
-        <article class="panel glass panel--notes" aria-labelledby="notes-label">
-          <header class="panel__head">
-            <h2 class="panel__title" id="notes-label">Quick Notes</h2>
-            <div class="panel__actions">
-              <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
-              <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Move these notes to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg>Add to Notes</button>
-            </div>
-          </header>
-          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-labelledby="notes-label" spellcheck="true"></textarea>
-        </article>
+          <article class="panel glass panel--connections" aria-labelledby="conn-label">
+            <header class="panel__head">
+              <h2 class="panel__title" id="conn-label">Connections</h2>
+              <div class="panel__actions">
+                <button class="icon-btn icon-btn--sm" type="button" data-action="connection-new" data-tip="Add connection" aria-label="Add connection"><svg class="icon"><use href="#i-plus"/></svg></button>
+                <button class="btn btn--ghost btn--sm" type="button" data-action="go-connections"><svg class="icon icon--sm"><use href="#i-connections"/></svg>Open Connections</button>
+              </div>
+            </header>
+            <ul class="list mini-list" id="conn-list"></ul>
+          </article>
         </div>
 
-        <!-- Calendar -->
-        <article class="panel glass panel--calendar" aria-labelledby="cal-month">
-          <div class="cal__bar">
-            <h2 class="cal__month" id="cal-month" aria-live="polite"></h2>
-            <div class="cal__nav">
-              <button class="btn btn--ghost btn--sm" type="button" data-action="cal-today">Today</button>
-              <button class="icon-btn icon-btn--sm" type="button" data-action="cal-prev" aria-label="Previous month"><svg class="icon"><use href="#i-left"/></svg></button>
-              <button class="icon-btn icon-btn--sm" type="button" data-action="cal-next" aria-label="Next month"><svg class="icon"><use href="#i-right"/></svg></button>
-            </div>
-          </div>
-          <div class="cal__grid" id="cal-dow" aria-hidden="true"></div>
-          <div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div>
-          <section class="panel__section" aria-labelledby="agenda-title">
-            <div class="section-head">
-              <h3 class="subhead" id="agenda-title"></h3>
-              <button class="icon-btn icon-btn--sm" type="button" data-action="event-new" data-tip="New event" data-tip-align="end" aria-label="New event"><svg class="icon"><use href="#i-plus"/></svg></button>
-            </div>
-            <ul class="list" id="agenda-list"></ul>
-          </section>
-        </article>
-
-        <!-- Tasks -->
+        <!-- Middle column: tasks -->
         <article class="panel glass panel--tasks" aria-label="Tasks">
-          <div class="tasks__tools">
+          <div class="tasks__tools panel__head">
             <label class="search">
               <svg class="icon icon--sm"><use href="#i-search"/></svg>
               <input class="input" id="task-search" type="search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off" spellcheck="false">
@@ -1084,6 +1167,25 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             </div>
             <ul class="list task-list" id="task-list" aria-live="polite">
             </ul>
+          </section>
+        </article>
+
+        <!-- Right column: notes -->
+        <article class="panel glass panel--notes" aria-labelledby="notes-label">
+          <header class="panel__head">
+            <h2 class="panel__title" id="notes-label">Notes</h2>
+            <div class="panel__actions">
+              <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
+              <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Save to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg>Add to Notes</button>
+            </div>
+          </header>
+          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-labelledby="notes-label" spellcheck="true"></textarea>
+          <section class="panel__section notes__saved" aria-labelledby="saved-title">
+            <div class="section-head">
+              <h3 class="subhead" id="saved-title">Saved notes</h3>
+              <span class="count" id="saved-count"></span>
+            </div>
+            <ul class="list mini-list" id="saved-notes"></ul>
           </section>
         </article>
       </div>
@@ -1107,7 +1209,16 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 
     <!-- Placeholder workspaces: content comes from PAGES in the script. -->
     <section class="page" data-page="files" aria-labelledby="files-title" hidden></section>
-    <section class="page" data-page="connections" aria-labelledby="connections-title" hidden></section>
+    <section class="page" data-page="connections" aria-labelledby="connections-title" hidden>
+      <header class="page-head">
+        <div>
+          <h1 class="page-head__title" id="connections-title">Connections</h1>
+          <p class="page-head__sub">Links, people and places you come back to.</p>
+        </div>
+        <button class="btn" type="button" data-action="connection-new"><svg class="icon icon--sm"><use href="#i-plus"/></svg>Add connection</button>
+      </header>
+      <div id="conn-page"></div>
+    </section>
     <section class="page" data-page="pins" aria-labelledby="pins-title" hidden></section>
   </main>
 </div>
@@ -1292,7 +1403,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 function defaultUi() {
   const today = Dates.today();
-  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock' };
+  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock' };
 }
 function defaultState() {
   return { items: [], settings: clone(DEFAULT_SETTINGS), ui: defaultUi() };
@@ -1325,6 +1436,15 @@ const ITEM_NORMALISERS = {
   capture(it) {
     it.meta.kind = typeof it.meta.kind === 'string' ? it.meta.kind : 'text';
     it.meta.category = typeof it.meta.category === 'string' ? it.meta.category : '';
+    it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
+    it.meta.pinned = it.meta.pinned === true;
+    return it;
+  },
+  connection(it) {
+    it.meta.target = typeof it.meta.target === 'string' ? it.meta.target : '';
+    it.meta.kind = ['link', 'email', 'phone', 'text'].includes(it.meta.kind) ? it.meta.kind : 'text';
+    it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
+    it.meta.order = Number.isFinite(it.meta.order) ? it.meta.order : null; // filled in by normaliseState
     return it;
   },
   note(it) {
@@ -1390,15 +1510,18 @@ function normaliseUi(raw) {
     calDay: Dates.isKey(u.calDay) ? u.calDay : d.calDay,
     taskDay: Dates.isKey(u.taskDay) ? u.taskDay : d.taskDay,
     settingsSection: u.settingsSection === '' || SETTINGS_SECTIONS.includes(u.settingsSection) ? u.settingsSection : d.settingsSection,
+    homeView: u.homeView === 'calendar' ? 'calendar' : 'clock',
   };
 }
-/** Gives every task a position within its day (older data has none). */
+/** Gives every task a position within its day, and every connection a
+    position in its list (older data has none). */
 function assignTaskOrder(items) {
   const byDay = new Map();
   for (const it of items) {
-    if (it.type !== 'task') continue;
-    if (!byDay.has(it.meta.date)) byDay.set(it.meta.date, []);
-    byDay.get(it.meta.date).push(it);
+    const group = it.type === 'task' ? `task:${it.meta.date}` : it.type === 'connection' ? 'connection' : null;
+    if (!group) continue;
+    if (!byDay.has(group)) byDay.set(group, []);
+    byDay.get(group).push(it);
   }
   for (const tasks of byDay.values()) {
     if (tasks.every((t) => t.meta.order !== null)) continue;
@@ -2166,7 +2289,7 @@ const QuickNotes = (() => {
     const it = item();
     if (!text || !it) { area.focus(); return; }
     const previous = it.content;
-    const capture = Items.create('capture', { title: '', content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes' } });
+    const capture = Items.create('capture', { title: '', content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes', color: null, pinned: false } });
     Items.update(it.id, { content: '' });
     area.value = '';
     updateButton();
@@ -2193,7 +2316,7 @@ const QuickNotes = (() => {
 const Calendar = (() => {
   const grid = $('#cal-grid');
   const dowRow = $('#cal-dow');
-  const panel = $('.panel--calendar');
+  const panel = $('.view--calendar');
   const cells = [];
   let focusDay = null;
 
@@ -2671,7 +2794,7 @@ const Capture = (() => {
   const KINDS = {
     text: {
       isEmpty: (f) => !f.text.trim(),
-      toItem: (f) => ({ title: f.title.trim(), content: f.text.trim(), meta: { kind: 'text', category: f.category, inbox: true } }),
+      toItem: (f) => ({ title: f.title.trim(), content: f.text.trim(), meta: { kind: 'text', category: f.category, inbox: true, color: null, pinned: false } }),
     },
   };
   let draft = { kind: 'text', title: '', text: '', category: '' }; // kept in memory if the dialog is dismissed
@@ -2996,15 +3119,348 @@ const SettingsPanel = (() => {
   return { open };
 })();
 
+/* ---------- Shared menu pieces ---------- */
+function menuItem(iconName, label, run, { danger = false, disabled = false } = {}) {
+  return h('button', { class: `menu__item${danger ? ' menu__item--danger' : ''}`, type: 'button', role: 'menuitem', disabled, onclick: run }, icon(iconName), label);
+}
+const menuSep = () => h('div', { class: 'menu__sep', role: 'separator' });
+function colourGroup(value, onPick) {
+  return h('div', { class: 'menu__group' },
+    h('div', { class: 'panel__title menu__label', text: 'Colour' }),
+    swatchPicker({ value, allowNone: true, label: 'Colour', onPick }));
+}
+/** Items kept in a user-defined order (meta.order). */
+const Ordered = {
+  list(type) { return Items.all(type).slice().sort((a, b) => (a.meta.order - b.meta.order) || a.createdAt.localeCompare(b.createdAt)); },
+  next(type) { return Ordered.list(type).reduce((m, t) => Math.max(m, t.meta.order), -1) + 1; },
+  move(type, id, delta) {
+    const ids = Ordered.list(type).map((t) => t.id);
+    const i = ids.indexOf(id);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= ids.length) return false;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    Tasks.reorder(ids);
+    return true;
+  },
+};
+
+/* ---------- Clock / Calendar card ----------
+   Two views on a sliding track. Switch with the edge arrows, the dots,
+   a swipe (touch, pen or mouse drag), a horizontal trackpad scroll, or
+   ← / → while the card itself has focus. The active view is remembered
+   in ui.homeView. The hidden view is inert so focus never lands in it. */
+const TimeCard = (() => {
+  const VIEWS = ['clock', 'calendar'];
+  const card = $('#time-card');
+  const viewport = $('#views');
+  const track = $('#views-track');
+  const index = () => Math.max(0, VIEWS.indexOf(UI.get().homeView));
+  let suppressClick = false;
+
+  function go(view) { if (VIEWS.includes(view) && view !== UI.get().homeView) UI.set({ homeView: view }); }
+  function step(delta) { go(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, index() + delta))]); }
+
+  function render() {
+    const i = index();
+    track.style.transform = `translateX(${-i * 100}%)`;
+    $$('.view', track).forEach((v, n) => { v.inert = n !== i; v.setAttribute('aria-hidden', String(n !== i)); });
+    $$('.views__dot', card).forEach((d) => d.setAttribute('aria-selected', String(d.dataset.view === VIEWS[i])));
+    $('.views__arrow--prev', card).hidden = i === 0;
+    $('.views__arrow--next', card).hidden = i === VIEWS.length - 1;
+  }
+
+  function build() {
+    $('.views__dots', card).addEventListener('click', (e) => { const d = e.target.closest('.views__dot'); if (d) go(d.dataset.view); });
+    card.addEventListener('keydown', (e) => {
+      if (e.target !== card) return; // arrows inside the calendar grid move between days
+      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    });
+
+    // Swipe: follow the finger, then settle on the nearest view.
+    let start = null;
+    viewport.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('input, textarea')) return;
+      start = { x: e.clientX, y: e.clientY, id: e.pointerId, dragging: false, width: viewport.clientWidth };
+    });
+    viewport.addEventListener('pointermove', (e) => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!start.dragging) {
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
+        start.dragging = true;
+        try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+        track.style.transition = 'none';
+      }
+      const i = index();
+      const atEdge = (i === 0 && dx > 0) || (i === VIEWS.length - 1 && dx < 0);
+      track.style.transform = `translateX(calc(${-i * 100}% + ${atEdge ? dx * 0.3 : dx}px))`;
+    });
+    const end = (e) => {
+      if (!start || e.pointerId !== start.id) return;
+      const s0 = start;
+      start = null;
+      if (!s0.dragging) return;
+      track.style.transition = '';
+      const dx = e.clientX - s0.x;
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 0);
+      if (Math.abs(dx) > s0.width * 0.18) step(dx < 0 ? 1 : -1);
+      render();
+    };
+    viewport.addEventListener('pointerup', end);
+    viewport.addEventListener('pointercancel', end);
+    viewport.addEventListener('click', (e) => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+    // Trackpad: a deliberate horizontal scroll switches once.
+    let acc = 0; let locked = false; let idle = 0;
+    viewport.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      clearTimeout(idle);
+      idle = setTimeout(() => { acc = 0; locked = false; }, 220);
+      if (locked) return;
+      acc += e.deltaX;
+      if (Math.abs(acc) > 60) { locked = true; step(acc > 0 ? 1 : -1); acc = 0; }
+    }, { passive: false });
+  }
+  return { build, render, step, go };
+})();
+
+/* ---------- Notes (saved) ----------
+   Saved notes are the captures shown on the Notes page: Quick Capture and
+   "Add to Notes" both create them. Pinned first, then newest. */
+const NotesData = {
+  list() {
+    return Items.all('capture').slice()
+      .sort((a, b) => ((b.meta.pinned ? 1 : 0) - (a.meta.pinned ? 1 : 0)) || b.createdAt.localeCompare(a.createdAt));
+  },
+  parts(n) {
+    const lines = n.content.split('\n').map((l) => l.trim()).filter(Boolean);
+    const title = n.title || lines[0] || 'Untitled note';
+    const preview = (n.title ? lines : lines.slice(1)).join(' · ');
+    return { title, preview };
+  },
+  label(iso) {
+    const key = Dates.key(new Date(iso));
+    if (key === Dates.today()) {
+      const d = new Date(iso);
+      return Fmt.time(`${pad2(d.getHours())}:${pad2(d.getMinutes())}`, Settings.get().clock24);
+    }
+    return Fmt.shortDate(key);
+  },
+  menu(id, anchor, getAnchor) {
+    const n = Items.get(id);
+    if (!n) return;
+    Popover.open({
+      anchor, key: `note:${id}`, label: 'Note options', getAnchor,
+      content: [
+        menuItem('open', 'Open', () => { Popover.close(false); NoteEditor.open(id); }),
+        menuSep(),
+        colourGroup(n.meta.color, (c) => Items.update(id, { meta: { color: c } })),
+        menuSep(),
+        menuItem('pin', n.meta.pinned ? 'Unpin' : 'Pin', () => { Popover.close(true); Items.update(id, { meta: { pinned: !n.meta.pinned } }); }),
+        menuSep(),
+        menuItem('trash', 'Delete', () => { Popover.close(false); removeWithUndo(id, 'Note'); }, { danger: true }),
+      ],
+    });
+  },
+};
+
+const NoteEditor = (() => {
+  function open(id) {
+    const n = Items.get(id);
+    if (!n) return;
+    const title = h('input', { class: 'input', type: 'text', value: n.title, placeholder: 'Title (optional)', 'aria-label': 'Title', maxlength: 200 });
+    const text = h('textarea', { class: 'input', rows: 9, value: n.content, placeholder: 'Write something…', 'aria-label': 'Note' });
+    const error = h('p', { class: 'form-error', role: 'alert' });
+    Dialog.open({
+      title: 'Note', className: 'dialog--wide', dismissOnBackdrop: false, initialFocus: text,
+      body: h('div', { class: 'form' }, title, text, error),
+      actions: [
+        { label: 'Delete', variant: 'danger', run: (close) => { close(); removeWithUndo(id, 'Note'); } },
+        'spacer', { label: 'Cancel' }, { label: 'Save', variant: 'primary', submit: true },
+      ],
+      onSubmit: (close) => {
+        if (!title.value.trim() && !text.value.trim()) { error.textContent = 'A note needs a title or some text.'; return; }
+        Items.update(id, { title: title.value.trim(), content: text.value.trim() });
+        close();
+      },
+    });
+  }
+  return { open };
+})();
+
+/* Saved notes list on the Home notes card. */
+const SavedNotes = (() => {
+  const list = $('#saved-notes');
+  const rowSel = (id) => `.mini-row[data-id="${CSS.escape(id)}"]`;
+  list.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    const row = el && el.closest('.mini-row');
+    if (!row) return;
+    if (el.dataset.action === 'note-open') NoteEditor.open(row.dataset.id);
+    if (el.dataset.action === 'note-menu') NotesData.menu(row.dataset.id, el, () => list.querySelector(`${rowSel(row.dataset.id)} .row-more`));
+  });
+  function render() {
+    const notes = NotesData.list();
+    $('#saved-count').textContent = notes.length ? String(notes.length) : '';
+    if (!notes.length) {
+      list.replaceChildren(h('li', { class: 'empty' }, icon('notes'), 'No saved notes yet.'));
+      return;
+    }
+    list.replaceChildren(...notes.map((n) => {
+      const { title, preview } = NotesData.parts(n);
+      return h('li', { class: `mini-row${n.meta.color ? ' has-color' : ''}`, dataset: { id: n.id }, style: n.meta.color ? `--row-c:${n.meta.color}` : null },
+        h('button', { class: 'mini-row__main', type: 'button', dataset: { action: 'note-open' }, 'aria-label': `Open “${title}”` },
+          h('span', { class: 'mini-row__top' },
+            h('span', { class: 'mini-row__title' }, n.meta.pinned ? icon('pin') : null, title),
+            h('span', { class: 'mini-row__date', text: NotesData.label(n.createdAt) })),
+          h('span', { class: 'mini-row__sub', text: preview })),
+        h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'note-menu' }, 'aria-label': `More options for “${title}”`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`note:${n.id}`)) }, icon('more')));
+    }));
+  }
+  return { render };
+})();
+
+/* ---------- Connections ----------
+   Saved links and contacts (items of type "connection"). Each has a name
+   (title) and a target, which is read as a web link, an email address, a
+   phone number or plain text. Shown on the Home card and the Connections
+   page; both read the same items. Icons are drawn locally — no favicons
+   are fetched, so nothing leaves the device. */
+const Connections = (() => {
+  const KIND_ICON = { link: 'link', email: 'mail', phone: 'phone', text: 'user' };
+  function parse(raw) {
+    const v = (raw || '').trim();
+    if (!v) return { kind: 'text', target: '' };
+    if (/^mailto:/i.test(v) || /^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(v)) return { kind: 'email', target: v.replace(/^mailto:/i, '') };
+    if (/^tel:/i.test(v) || /^\+?[\d\s().-]{6,}$/.test(v)) return { kind: 'phone', target: v.replace(/^tel:/i, '') };
+    if (/^https?:\/\//i.test(v)) return { kind: 'link', target: v };
+    if (/^[\w-]+(\.[\w-]+)+(:\d+)?([/?#]\S*)?$/i.test(v)) return { kind: 'link', target: `https://${v}` };
+    return { kind: 'text', target: v };
+  }
+  function subtitle(c) {
+    const { kind, target } = c.meta;
+    if (!target) return 'No link or contact';
+    if (kind === 'link') {
+      try { const u = new URL(target); return `${u.host.replace(/^www\./, '')}${u.pathname === '/' ? '' : u.pathname}`.replace(/\/$/, ''); }
+      catch { return target; }
+    }
+    return target;
+  }
+  function open(id) {
+    const c = Items.get(id);
+    if (!c) return;
+    const { kind, target } = c.meta;
+    if (!target) { ConnectionEditor.open(id); return; }
+    if (kind === 'link') window.open(target, '_blank', 'noopener,noreferrer');
+    else if (kind === 'email') window.location.href = `mailto:${target}`;
+    else if (kind === 'phone') window.location.href = `tel:${target.replace(/[^\d+]/g, '')}`;
+    else if (navigator.clipboard) navigator.clipboard.writeText(target).then(() => Toast.show('Copied to clipboard'), () => Toast.show(target));
+    else Toast.show(target);
+  }
+  function menu(id, anchor, getAnchor) {
+    const c = Items.get(id);
+    if (!c) return;
+    const ids = Ordered.list('connection').map((x) => x.id);
+    const i = ids.indexOf(id);
+    const move = (d) => () => { Popover.close(false); Ordered.move('connection', id, d); };
+    Popover.open({
+      anchor, key: `conn:${id}`, label: `Options for ${c.title}`, getAnchor,
+      content: [
+        menuItem('edit', 'Edit', () => { Popover.close(false); ConnectionEditor.open(id); }),
+        menuSep(),
+        colourGroup(c.meta.color, (col) => Items.update(id, { meta: { color: col } })),
+        menuSep(),
+        menuItem('arrow-up', 'Move up', move(-1), { disabled: i <= 0 }),
+        menuItem('arrow-down', 'Move down', move(1), { disabled: i < 0 || i >= ids.length - 1 }),
+        menuSep(),
+        menuItem('trash', 'Delete', () => { Popover.close(false); removeWithUndo(id, 'Connection'); }, { danger: true }),
+      ],
+    });
+  }
+  function row(c) {
+    return h('li', { class: `mini-row${c.meta.color ? ' has-color' : ''}`, dataset: { id: c.id }, style: c.meta.color ? `--row-c:${c.meta.color}` : null },
+      h('span', { class: 'mini-row__icon', 'aria-hidden': 'true' }, icon(KIND_ICON[c.meta.kind] || 'user')),
+      h('button', { class: 'mini-row__main', type: 'button', dataset: { action: 'conn-open' }, 'aria-label': `Open ${c.title}` },
+        h('span', { class: 'mini-row__title', text: c.title }),
+        h('span', { class: 'mini-row__sub', text: subtitle(c) })),
+      h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'conn-menu' }, 'aria-label': `More options for ${c.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`conn:${c.id}`)) }, icon('more')));
+  }
+  function bind(host) {
+    host.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      const r = el && el.closest('.mini-row');
+      if (!r) return;
+      if (el.dataset.action === 'conn-open') open(r.dataset.id);
+      if (el.dataset.action === 'conn-menu') menu(r.dataset.id, el, () => host.querySelector(`.mini-row[data-id="${CSS.escape(r.dataset.id)}"] .row-more`));
+    });
+  }
+  const homeList = $('#conn-list');
+  const page = $('#conn-page');
+  bind(homeList);
+  bind(page);
+  function render() {
+    const items = Ordered.list('connection');
+    homeList.replaceChildren(...(items.length ? items.map(row) : [h('li', { class: 'empty' }, icon('connections'), 'No connections yet')]));
+  }
+  function renderPage() {
+    const items = Ordered.list('connection');
+    if (!items.length) {
+      page.replaceChildren(emptyState({ icon: 'connections', title: 'No connections yet', text: 'Save the links, people and places you come back to. Tap one to open it.', action: { label: 'Add connection', id: 'connection-new', icon: 'plus' } }));
+      return;
+    }
+    page.replaceChildren(h('ul', { class: 'mini-grid' }, items.map(row)));
+  }
+  return { parse, render, renderPage };
+})();
+
+const ConnectionEditor = (() => {
+  function open(id = null) {
+    const c = id ? Items.get(id) : null;
+    let color = c ? c.meta.color : null;
+    const name = h('input', { class: 'input', type: 'text', value: c ? c.title : '', placeholder: 'Name', 'aria-label': 'Name', maxlength: 120, autocomplete: 'off' });
+    const target = h('input', { class: 'input', type: 'text', value: c ? c.meta.target : '', placeholder: 'Link, email or phone', 'aria-label': 'Link or contact', maxlength: 500, autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+    const error = h('p', { class: 'form-error', role: 'alert' });
+    const body = h('div', { class: 'form' },
+      h('label', { class: 'field' }, h('span', { class: 'field__label', text: 'Name' }), name),
+      h('label', { class: 'field' }, h('span', { class: 'field__label', text: 'Link or contact' }), target),
+      h('div', { class: 'field' }, h('span', { class: 'field__label', text: 'Colour (optional)' }),
+        swatchPicker({ value: color, allowNone: true, label: 'Colour', onPick: (v) => { color = v; } })),
+      error);
+    const actions = [];
+    if (c) actions.push({ label: 'Delete', variant: 'danger', run: (close) => { close(); removeWithUndo(c.id, 'Connection'); } });
+    actions.push('spacer', { label: 'Cancel' }, { label: c ? 'Save' : 'Add', variant: 'primary', submit: true });
+    Dialog.open({
+      title: c ? 'Edit connection' : 'New connection', body, actions, dismissOnBackdrop: false, initialFocus: name,
+      onSubmit: (close) => {
+        const title = name.value.trim();
+        name.setAttribute('aria-invalid', String(!title));
+        if (!title) { error.textContent = 'Give the connection a name.'; name.focus(); return; }
+        const parsed = Connections.parse(target.value);
+        if (c) Items.update(c.id, { title, meta: { ...parsed, color } });
+        else Items.create('connection', { title, meta: { ...parsed, color, order: Ordered.next('connection') } });
+        Toast.show(c ? 'Connection updated' : 'Connection added');
+        close();
+      },
+    });
+  }
+  return { open };
+})();
+
 /* ---------- Inbox (Notes page) ---------- */
 const Inbox = (() => {
   const host = $('#inbox');
   host.addEventListener('click', (e) => {
     const del = e.target.closest('[data-action="capture-delete"]');
-    if (del) removeWithUndo(del.dataset.id, 'Capture');
+    if (del) { removeWithUndo(del.dataset.id, 'Note'); return; }
+    const card = e.target.closest('.card[data-id]');
+    if (card && !e.target.closest('button:not(.card__open)')) NoteEditor.open(card.dataset.id);
   });
   function render() {
-    const captures = Items.all('capture').slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const captures = NotesData.list();
     $('#inbox-count').textContent = captures.length ? pluralise(captures.length, 'item') : '';
     if (!captures.length) {
       host.replaceChildren(emptyState({
@@ -3017,12 +3473,13 @@ const Inbox = (() => {
     host.replaceChildren(h('div', { class: 'inbox' }, captures.map((c) => {
       const heading = c.title || c.content.split('\n')[0];
       const rest = c.title ? c.content : c.content.split('\n').slice(1).join('\n').trim();
-      return h('article', { class: 'card glass' },
+      return h('article', { class: `card glass${c.meta.color ? ' has-color' : ''}`, dataset: { id: c.id }, style: c.meta.color ? `--row-c:${c.meta.color}` : null },
         h('div', { class: 'card__head' },
-          h('h3', { class: 'card__title', text: heading }),
+          h('h3', { class: 'card__title' }, h('button', { class: 'card__open', type: 'button', text: heading })),
           h('button', { class: 'icon-btn icon-btn--sm', type: 'button', dataset: { action: 'capture-delete', id: c.id }, 'aria-label': `Delete “${heading}”` }, icon('trash'))),
         rest ? h('p', { class: 'card__text', text: rest }) : null,
         h('div', { class: 'card__foot' },
+          c.meta.pinned ? icon('pin') : null,
           c.meta.category ? h('span', { class: 'tag', text: c.meta.category }) : null,
           h('time', { datetime: c.createdAt, text: Fmt.dateTime(c.createdAt) })));
     })));
@@ -3038,10 +3495,7 @@ const PAGES = {
     title: 'Files', sub: 'Documents, images and references, kept on this device.', icon: 'files',
     empty: { title: 'Your workspace is ready', text: 'File storage is on its way. Until then, capture links and references and they’ll wait in your Inbox.' },
   },
-  connections: {
-    title: 'Connections', sub: 'See how your notes, tasks and events relate.', icon: 'connections',
-    empty: { title: 'Ideas, linked together', text: 'Every item in STILL can already reference others. Soon you’ll be able to explore those links here.' },
-  },
+  connections: { title: 'Connections' },
   pins: {
     title: 'Pin Board', sub: 'Visual collections and inspiration.', icon: 'pin',
     empty: { title: 'Start collecting inspiration', text: 'Pin images, quotes and references to build boards. For now, capture anything that catches your eye.' },
@@ -3054,7 +3508,7 @@ function emptyState({ icon: iconName, title, text, action, eyebrow }) {
       eyebrow ? h('span', { class: 'eyebrow', text: eyebrow }) : null,
       h('h2', { class: 'empty-state__title', text: title }),
       h('p', { class: 'empty-state__text', text }),
-      action ? h('button', { class: 'btn', type: 'button', dataset: { action: 'capture' } }, icon('capture', 'icon--sm'), action.label, h('kbd', { text: action.keys })) : null));
+      action ? h('button', { class: 'btn', type: 'button', dataset: { action: action.id || 'capture' } }, icon(action.icon || 'capture', 'icon--sm'), action.label, action.keys ? h('kbd', { text: action.keys }) : null) : null));
 }
 function buildPlaceholderPages() {
   for (const [id, page] of Object.entries(PAGES)) {
@@ -3101,7 +3555,8 @@ const Navigation = (() => {
     $$('main > .page').forEach((p) => { p.hidden = p.dataset.page !== page; });
     $('.app').dataset.page = page;
     document.title = page === 'home' ? 'STILL' : `${PAGES[page].title} · STILL`;
-    if (page === 'home') Clock.start(); else { Clock.stop(); Popover.close(false); }
+    if (page === 'home' && UI.get().homeView === 'clock') Clock.start(); else Clock.stop();
+    if (page !== 'home' && page !== 'connections') Popover.close(false);
   }
   return { init, go, render, syncHash };
 })();
@@ -3118,6 +3573,10 @@ const ACTIONS = {
   'event-new': () => EventEditor.open(),
   'event-edit': (el) => EventEditor.open(el.dataset.id),
   'task-new': () => TaskPanel.openComposer(),
+  'view-prev': () => TimeCard.step(-1),
+  'view-next': () => TimeCard.step(1),
+  'connection-new': () => ConnectionEditor.open(),
+  'go-connections': () => Navigation.go('connections'),
   'week-prev': () => TaskPanel.shiftWeek(-1),
   'week-next': () => TaskPanel.shiftWeek(1),
 };
@@ -3148,6 +3607,7 @@ function bindKeyboard() {
     if (key === 'n') {
       if (page === 'home') { e.preventDefault(); TaskPanel.openComposer(); }
       else if (page === 'notes') { e.preventDefault(); Capture.open(); }
+      else if (page === 'connections') { e.preventDefault(); ConnectionEditor.open(); }
     } else if (e.key === '/' && page === 'home') {
       e.preventDefault(); TaskPanel.focusSearch();
     }
@@ -3186,12 +3646,17 @@ function render() {
   Navigation.render();
   const page = UI.get().page;
   if (page === 'home') {
+    TimeCard.render();
     Clock.render();
-    QuickNotes.render();
     Calendar.render();
     TaskPanel.render();
+    QuickNotes.render();
+    SavedNotes.render();
+    Connections.render();
   } else if (page === 'notes') {
     Inbox.render();
+  } else if (page === 'connections') {
+    Connections.renderPage();
   }
 }
 
@@ -3215,6 +3680,7 @@ function init() {
   });
   Calendar.build();
   TaskPanel.build();
+  TimeCard.build();
   buildPlaceholderPages();
   bindActions();
   bindKeyboard();
