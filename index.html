@@ -445,11 +445,9 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .notes__status.is-visible { opacity: 1; }
 
 /* Calendar */
-.cal__now { margin-bottom: var(--s4); flex: none; }
-.cal__weekday { font-size: var(--fs-sm); color: var(--text-2); }
-.cal__date { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; }
-.cal__bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s2); flex: none; }
-.cal__month { font: 500 var(--fs-base)/1.4 var(--font); }
+.cal__bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); flex: none; }
+.cal__month { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; }
+.panel--calendar .btn.is-away { color: var(--accent); }
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; flex: none; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
 .cal__day {
@@ -460,11 +458,13 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 }
 .cal__day:hover { background: var(--hover-strong); }
 .cal__day.is-outside { color: var(--text-3); }
-.cal__day.is-today { color: var(--accent); font-weight: 600; }
+.cal__day.is-today { color: var(--accent); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--accent); }
 .cal--weekends .cal__day.is-weekend:not([aria-pressed="true"]) { background: var(--hover); }
 .cal--weekends .cal__day.is-weekend:not([aria-pressed="true"]):hover { background: var(--hover-strong); }
 .cal--weekends .cal__dow.is-weekend { color: var(--text-2); }
 .cal__day[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* Selected and today: the fill plus an inner ring in the contrasting ink. */
+.cal__day.is-today[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3.5px var(--on-accent); }
 .cal__dots { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
 .cal__dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); }
 .cal__day.is-outside .cal__dot { background: var(--text-3); }
@@ -1022,10 +1022,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             <h2 class="panel__title" id="cal-title">Calendar</h2>
             <button class="btn btn--ghost btn--sm" type="button" data-action="cal-today">Today</button>
           </header>
-          <div class="cal__now">
-            <div class="cal__weekday" id="cal-weekday"></div>
-            <div class="cal__date" id="cal-date"></div>
-          </div>
           <div class="cal__bar">
             <button class="icon-btn icon-btn--sm" type="button" data-action="cal-prev" aria-label="Previous month"><svg class="icon"><use href="#i-left"/></svg></button>
             <h3 class="cal__month" id="cal-month" aria-live="polite"></h3>
@@ -1214,10 +1210,8 @@ const Dates = {
 /** Locale-aware formatting; formatters are created once. */
 const Fmt = (() => {
   const f = (opts) => new Intl.DateTimeFormat(undefined, opts);
-  const weekdayLong = f({ weekday: 'long' });
   const weekdayShort = f({ weekday: 'short' });
   const weekdayNarrow = f({ weekday: 'narrow' });
-  const fullDate = f({ day: 'numeric', month: 'long', year: 'numeric' });
   const dayMonth = f({ weekday: 'long', day: 'numeric', month: 'long' });
   const shortDay = f({ weekday: 'short', day: 'numeric', month: 'short' });
   const monthYear = f({ month: 'long', year: 'numeric' });
@@ -1226,8 +1220,6 @@ const Fmt = (() => {
   // 2023-01-01 was a Sunday: index 0..6 → Sunday..Saturday.
   const dow = (fmt, i) => fmt.format(new Date(2023, 0, 1 + i, 12));
   return {
-    weekdayLong: (k) => weekdayLong.format(Dates.parse(k)),
-    fullDate: (k) => fullDate.format(Dates.parse(k)),
     dayMonth: (k) => dayMonth.format(Dates.parse(k)),
     shortDay: (k) => shortDay.format(Dates.parse(k)),
     shortDate: (k) => shortDate.format(Dates.parse(k)),
@@ -2200,8 +2192,8 @@ const Calendar = (() => {
     const today = Dates.today();
 
     panel.classList.toggle('cal--weekends', highlightWeekends);
-    $('#cal-weekday').textContent = Fmt.weekdayLong(today);
-    $('#cal-date').textContent = Fmt.fullDate(today);
+    // "Today" lights up whenever you've moved away from today.
+    $('[data-action="cal-today"]').classList.toggle('is-away', calDay !== today || calMonth !== Dates.month(today));
     $('#cal-month').textContent = Fmt.monthYear(calMonth);
     dowRow.childNodes.forEach((el, i) => {
       const d = (weekStart + i) % 7;
