@@ -60,7 +60,7 @@ Type-specific `meta`:
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
 | `capture` | `kind` (`"text"` today), `category`, `inbox` |
-| `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`) |
+| `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
 
 Dates and times are stored as local wall-clock values ("floating" time), so a 9:00
 event stays at 9:00 across daylight-saving changes and time-zone moves.
@@ -69,7 +69,7 @@ Application state is `{ items, settings, ui }`:
 
 - `settings`
   - Clock: `clock24`, `location`, `clockFace` (`minimal` · `classic` · `modern` · `digital`),
-    `clockShape` (`circle` · `rounded` · `squircle` · `hexagon`), `showSeconds`, `showDate`
+    `clockShape` (`circle` · `rounded` · `squircle` · `hexagon`), `showTime` (digital time under the face; off = larger face), `showSeconds`, `showDate`
   - Calendar: `weekStart` (`1` Monday, `0` Sunday), `highlightWeekends`
   - Appearance: `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
