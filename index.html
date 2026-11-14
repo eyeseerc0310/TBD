@@ -93,6 +93,15 @@
 /* ---------- 2. Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); color-scheme: dark; height: 100%; overflow: hidden; overscroll-behavior: none; }
+/* An app, not a document: no text selection, long-press callouts, tap
+   flashes or dragging — except inside fields you type in. */
+html, body, * {
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-drag: none;
+}
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 html[data-scheme="light"] { color-scheme: light; }
 body {
   margin: 0;
@@ -407,7 +416,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 @media (hover: none) { .card .icon-btn { opacity: 1; } }
 
 /* ---------- 6. Home panels ---------- */
-.dashboard { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
+.dashboard { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1.3fr); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
 .panel { display: flex; flex-direction: column; min-height: 0; padding: var(--pad); border-radius: var(--r-panel); }
 /* Every card's first row (header, search bar, month bar) has this height. */
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s4); flex: none; }
@@ -420,14 +429,28 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .panel__actions { display: flex; align-items: center; gap: var(--s1); }
 
 /* Clock / Calendar card: two views on a sliding track */
-.panel--time { position: relative; height: 480px; padding-bottom: calc(var(--pad) + 12px); outline: none; }
-.panel--time:focus-visible { box-shadow: var(--shadow), 0 0 0 2px var(--accent-line); }
+.panel--time {
+  position: relative; height: 480px; outline: none;
+  transition: height var(--t-slow) var(--ease), margin-bottom var(--t-slow) var(--ease),
+              background-color var(--t-theme) var(--ease), border-color var(--t-theme) var(--ease), box-shadow var(--t) var(--ease);
+}
+/* Focus ring only when the card was reached with the keyboard. */
+html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px var(--accent-line); }
+/* Expanded: grows down over the Connections card, which stays in place. */
+.panel--time.is-expanded { z-index: 6; background: var(--surface-raised); box-shadow: var(--shadow-pop); }
 .views { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: 0 calc(var(--pad) * -1); touch-action: pan-y; }
-.views__track { display: flex; height: 100%; transition: transform var(--t-slow) var(--ease); will-change: transform; }
-.view { flex: 0 0 100%; min-width: 0; height: 100%; min-height: 0; padding: 0 var(--pad); display: flex; flex-direction: column; }
+.views__track { position: relative; height: 100%; }
+/* Each view sits on top of the other; transforms slide them in and out. */
+.view {
+  position: absolute; inset: 0; min-width: 0; min-height: 0;
+  padding: 0 calc(var(--pad) + 10px); /* room for the edge arrows */
+  display: flex; flex-direction: column;
+  transition: transform var(--t-slow) var(--ease);
+}
 .view--clock { justify-content: center; container-type: size; }
 /* Events under the calendar: a compact one-line empty state. */
 .view--calendar .empty { flex-direction: row; padding: var(--s3) 0; }
+#agenda-list { display: flex; flex-direction: column; gap: 6px; }
 .view--calendar .empty .icon { width: 16px; height: 16px; }
 .views__arrow {
   position: absolute; top: 50%; z-index: 2; transform: translateY(-50%);
@@ -436,13 +459,21 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .views__arrow:hover, .views__arrow:focus-visible { opacity: 1; color: var(--text); background: var(--hover); }
-.views__arrow--prev { left: 2px; }
-.views__arrow--next { right: 2px; }
+.views__arrow--prev { left: 4px; }
+.views__arrow--next { right: 4px; }
 .views__arrow .icon { width: 16px; height: 16px; }
-.views__dots { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; gap: 2px; }
-.views__dot { width: 22px; height: 16px; display: grid; place-items: center; border-radius: 999px; }
-.views__dot::after { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--border-strong); transition: width var(--t) var(--ease), background var(--t) var(--ease); }
-.views__dot[aria-selected="true"]::after { width: 16px; background: var(--text-2); }
+
+/* Scheduled events: a collapsible list under the calendar */
+.agenda__toggle { display: flex; align-items: center; gap: var(--s2); min-width: 0; height: var(--ctl-h-sm); padding: 0 var(--s1); margin-left: calc(var(--s1) * -1); border-radius: var(--r-sm); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
+.agenda__toggle:hover { color: var(--text); background: var(--hover); }
+.agenda__day { font-weight: 500; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agenda__chev { width: 14px; height: 14px; transition: transform var(--t-slow) var(--ease); }
+.agenda__toggle[aria-expanded="true"] .agenda__chev { transform: rotate(180deg); }
+.agenda-group { padding: var(--s3) 0 var(--s2); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.agenda-group:first-child { padding-top: 0; }
+.agenda-note { padding: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
+/* Event rows always carry a thin accent bar (their colour, or the accent). */
+.mini-row--event::before { content: ""; position: absolute; left: -1px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--row-c, var(--accent)); }
 
 /* Clock */
 .clock { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s4); }
@@ -546,12 +577,6 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .cal__day.is-outside .cal__dot { background: var(--text-3); }
 .cal__day[aria-pressed="true"] .cal__dot { background: var(--on-accent); }
 
-.event { display: flex; align-items: stretch; gap: var(--s3); width: 100%; padding: var(--s2); border-radius: var(--r-sm); text-align: left; transition: background var(--t-fast) var(--ease); }
-.event:hover { background: var(--hover); }
-.event__bar { width: 3px; border-radius: 2px; background: var(--accent); flex: none; }
-.event__body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.event__title { font-weight: 500; overflow-wrap: anywhere; }
-.event__time { font-size: var(--fs-sm); color: var(--text-2); font-variant-numeric: tabular-nums; }
 
 /* Tasks */
 .tasks__tools { display: flex; gap: var(--s2); flex: none; }
@@ -1117,7 +1142,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                   <div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div>
                   <section class="panel__section" aria-labelledby="agenda-title">
                     <div class="section-head">
-                      <h3 class="subhead" id="agenda-title"></h3>
+                      <h3 class="subhead"><button class="agenda__toggle" id="agenda-toggle" type="button" data-action="agenda-toggle" aria-expanded="false" aria-controls="agenda-list"><span id="agenda-title">Scheduled</span><span class="agenda__day" id="agenda-day"></span><svg class="icon agenda__chev" aria-hidden="true"><use href="#i-down"/></svg></button></h3>
                       <button class="icon-btn icon-btn--sm" type="button" data-action="event-new" data-tip="New event" data-tip-align="end" aria-label="New event"><svg class="icon"><use href="#i-plus"/></svg></button>
                     </div>
                     <ul class="list" id="agenda-list"></ul>
@@ -1125,12 +1150,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                 </section>
               </div>
             </div>
-            <button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Show clock"><svg class="icon"><use href="#i-left"/></svg></button>
-            <button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Show calendar"><svg class="icon"><use href="#i-right"/></svg></button>
-            <div class="views__dots" role="tablist" aria-label="Views">
-              <button class="views__dot" type="button" role="tab" data-view="clock" aria-label="Clock"></button>
-              <button class="views__dot" type="button" role="tab" data-view="calendar" aria-label="Calendar"></button>
-            </div>
+            <button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button>
+            <button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button>
           </article>
 
           <article class="panel glass panel--connections" aria-labelledby="conn-label">
@@ -1431,6 +1452,7 @@ const ITEM_NORMALISERS = {
     m.allDay = m.allDay === true || !Dates.isTime(m.startTime);
     m.startTime = Dates.isTime(m.startTime) ? m.startTime : null;
     m.endTime = Dates.isTime(m.endTime) ? m.endTime : m.startTime;
+    m.color = isHex(m.color) ? m.color.toLowerCase() : null;
     return it;
   },
   capture(it) {
@@ -2405,21 +2427,71 @@ const Calendar = (() => {
     }
     renderAgenda(calDay, today);
   }
+  const dayLabel = (day, today) => (day === today ? 'Today' : day === Dates.addDays(today, 1) ? 'Tomorrow' : Fmt.dayMonth(day));
+  function eventRow(ev, day) {
+    const c = ev.meta.color;
+    return h('li', { class: `mini-row mini-row--event${c ? ' has-color' : ''}`, dataset: { id: ev.id }, style: c ? `--row-c:${c}` : null },
+      h('button', { class: 'mini-row__main', type: 'button', dataset: { action: 'agenda-open' }, 'aria-label': `Edit ${ev.title}` },
+        h('span', { class: 'mini-row__title', text: ev.title }),
+        h('span', { class: 'mini-row__sub', text: Events.label(ev, day) })),
+      h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'agenda-menu' }, 'aria-label': `More options for ${ev.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`event:${ev.id}`)) }, icon('more')));
+  }
+  /** Expanded list: the selected day first, then today, tomorrow and later dates (by start date). */
+  function groups(selected, today) {
+    const out = [{ day: selected, label: dayLabel(selected, today), events: Events.on(selected), always: true }];
+    const byDay = new Map();
+    for (const ev of Items.all('event')) {
+      if (ev.meta.end < today) continue;
+      const d = ev.meta.start < today ? today : ev.meta.start;
+      if (d === selected) continue;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d).push(ev);
+    }
+    [...byDay.keys()].sort().forEach((d) => out.push({ day: d, label: dayLabel(d, today), events: Events.on(d).filter((e) => byDay.get(d).includes(e)) }));
+    return out;
+  }
   function renderAgenda(day, today) {
-    $('#agenda-title').textContent = day === today ? 'Today' : Fmt.shortDay(day);
     const list = $('#agenda-list');
-    const events = Events.on(day);
-    if (!events.length) {
-      list.replaceChildren(h('li', { class: 'empty' }, icon('calendar'), day === today ? 'Nothing scheduled today.' : 'Nothing scheduled.'));
+    const expanded = TimeCard.isExpanded();
+    $('#agenda-day').textContent = expanded ? '' : `· ${dayLabel(day, today)}`;
+    if (!expanded) {
+      const events = Events.on(day);
+      list.replaceChildren(...(events.length ? events.map((ev) => eventRow(ev, day))
+        : [h('li', { class: 'empty' }, icon('calendar'), day === today ? 'Nothing scheduled today.' : 'Nothing scheduled.')]));
       return;
     }
-    list.replaceChildren(...events.map((ev) => h('li', null,
-      h('button', { class: 'event', type: 'button', dataset: { action: 'event-edit', id: ev.id }, 'aria-label': `Edit ${ev.title}` },
-        h('span', { class: 'event__bar', 'aria-hidden': 'true' }),
-        h('span', { class: 'event__body' },
-          h('span', { class: 'event__title', text: ev.title }),
-          h('span', { class: 'event__time', text: Events.label(ev, day) }))))));
+    const gs = groups(day, today);
+    if (gs.every((g) => !g.events.length) && gs.length === 1) {
+      list.replaceChildren(h('li', { class: 'empty' }, icon('calendar'), 'Nothing scheduled'));
+      return;
+    }
+    list.replaceChildren(...gs.flatMap((g) => [
+      h('li', { class: 'agenda-group', text: g.label }),
+      ...(g.events.length ? g.events.map((ev) => eventRow(ev, g.day)) : [h('li', { class: 'agenda-note', text: 'Nothing scheduled' })]),
+    ]));
   }
+  function eventMenu(id, anchor) {
+    const ev = Items.get(id);
+    if (!ev) return;
+    Popover.open({
+      anchor, key: `event:${id}`, label: `Options for ${ev.title}`,
+      getAnchor: () => $(`#agenda-list .mini-row[data-id="${CSS.escape(id)}"] .row-more`),
+      content: [
+        menuItem('edit', 'Edit', () => { Popover.close(false); EventEditor.open(id); }),
+        menuSep(),
+        colourGroup(ev.meta.color, (c) => Items.update(id, { meta: { color: c } })),
+        menuSep(),
+        menuItem('trash', 'Delete', () => { Popover.close(false); removeWithUndo(id, 'Event'); }, { danger: true }),
+      ],
+    });
+  }
+  $('#agenda-list').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    const row = el && el.closest('.mini-row');
+    if (!row) return;
+    if (el.dataset.action === 'agenda-open') EventEditor.open(row.dataset.id);
+    if (el.dataset.action === 'agenda-menu') eventMenu(row.dataset.id, el);
+  });
   function shiftMonth(n) { UI.set({ calMonth: Dates.addMonths(UI.get().calMonth, n) }); }
   function goToday() { const t = Dates.today(); UI.set({ calDay: t, calMonth: Dates.month(t) }); }
   return { build, render, shiftMonth, goToday };
@@ -2483,6 +2555,7 @@ const EventEditor = (() => {
       if (!allDay.checked && (!Dates.isTime(startTime.value) || !Dates.isTime(endTime.value))) { error.textContent = 'Choose a start and end time.'; return; }
       if (endStamp() < startStamp()) { error.textContent = 'The event can’t end before it starts.'; return; }
       const meta = {
+        color: existing ? existing.meta.color : null,
         start: startDate.value, end: endDate.value, allDay: allDay.checked,
         startTime: allDay.checked ? null : startTime.value, endTime: allDay.checked ? null : endTime.value,
       };
@@ -3145,42 +3218,113 @@ const Ordered = {
 };
 
 /* ---------- Clock / Calendar card ----------
-   Two views on a sliding track. Switch with the edge arrows, the dots,
-   a swipe (touch, pen or mouse drag), a horizontal trackpad scroll, or
-   ← / → while the card itself has focus. The active view is remembered
-   in ui.homeView. The hidden view is inert so focus never lands in it. */
+   Two views stacked in one card. Each switch slides the outgoing view off
+   one side while the incoming one enters from the other, so navigation
+   loops endlessly in either direction with no jump at the wrap. Switch
+   with the edge arrows, a swipe (touch, pen or mouse drag that follows
+   the finger), a horizontal trackpad scroll, or ← / → while the card has
+   focus. The active view is remembered in ui.homeView; the hidden one is
+   inert. The calendar's Scheduled list can expand the card downward over
+   the Connections card (never remembered: it always starts collapsed). */
 const TimeCard = (() => {
   const VIEWS = ['clock', 'calendar'];
+  const DURATION = 330;
   const card = $('#time-card');
   const viewport = $('#views');
-  const track = $('#views-track');
-  const index = () => Math.max(0, VIEWS.indexOf(UI.get().homeView));
+  const slides = Object.fromEntries(VIEWS.map((v) => [v, $(`.view[data-view="${v}"]`, card)]));
+  const neighbour = (v, dir) => VIEWS[(VIEWS.indexOf(v) + dir + VIEWS.length) % VIEWS.length];
+  let shown = null;
   let suppressClick = false;
+  let expanded = false;
+  let baseHeight = 0;
+  let collapseTimer = 0;
 
-  function go(view) { if (VIEWS.includes(view) && view !== UI.get().homeView) UI.set({ homeView: view }); }
-  function step(delta) { go(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, index() + delta))]); }
-
+  const place = (el, x, animate) => {
+    el.style.transition = animate ? '' : 'none';
+    el.style.transform = `translateX(${x})`;
+  };
+  function layout() { VIEWS.forEach((v) => place(slides[v], v === shown ? '0px' : '100%', false)); }
   function render() {
-    const i = index();
-    track.style.transform = `translateX(${-i * 100}%)`;
-    $$('.view', track).forEach((v, n) => { v.inert = n !== i; v.setAttribute('aria-hidden', String(n !== i)); });
-    $$('.views__dot', card).forEach((d) => d.setAttribute('aria-selected', String(d.dataset.view === VIEWS[i])));
-    $('.views__arrow--prev', card).hidden = i === 0;
-    $('.views__arrow--next', card).hidden = i === VIEWS.length - 1;
+    const want = UI.get().homeView;
+    if (want !== shown) { shown = want; layout(); } // first draw, or a restore/reset
+    VIEWS.forEach((v) => { slides[v].inert = v !== shown; slides[v].setAttribute('aria-hidden', String(v !== shown)); });
+    $('#agenda-toggle').setAttribute('aria-expanded', String(expanded));
+  }
+  /** Slides `target` in from the side of `dir` (+1 = from the right). */
+  function slideTo(target, dir, fromPx = 0) {
+    if (target === shown) return;
+    const from = slides[shown];
+    const to = slides[target];
+    place(to, `calc(${dir * 100}% + ${fromPx}px)`, false);
+    void to.offsetWidth; // commit the start position before animating
+    place(from, `${-dir * 100}%`, true);
+    place(to, '0px', true);
+    shown = target;
+    UI.set({ homeView: target });
+  }
+  function step(dir) {
+    const go = () => slideTo(neighbour(shown, dir), dir);
+    if (expanded) { setExpanded(false); setTimeout(go, DURATION); } else go();
+  }
+
+  /* --- Expanding the Scheduled list --- */
+  const isPhone = () => window.matchMedia('(max-width: 719px)').matches;
+  function setExpanded(on) {
+    if (on === expanded) return;
+    clearTimeout(collapseTimer);
+    if (on) {
+      const r = card.getBoundingClientRect();
+      const conn = $('.panel--connections').getBoundingClientRect();
+      const phone = isPhone();
+      baseHeight = r.height;
+      const target = phone ? r.height + 300 : Math.max(r.height, conn.bottom - r.top);
+      card.style.transition = 'none';
+      card.style.flex = 'none';
+      card.style.height = `${r.height}px`;
+      card.style.marginBottom = '0px';
+      void card.offsetHeight;
+      card.style.transition = '';
+      card.classList.add('is-expanded');
+      card.style.height = `${target}px`;
+      // A matching negative margin keeps the card's slot the same size, so
+      // the Connections card stays exactly where it is underneath.
+      if (!phone) card.style.marginBottom = `${-(target - r.height)}px`;
+    } else {
+      card.style.height = `${baseHeight}px`;
+      card.style.marginBottom = '0px';
+      collapseTimer = setTimeout(clearExpanded, DURATION + 20);
+    }
+    expanded = on;
+    scheduleRender();
+  }
+  function clearExpanded() {
+    card.classList.remove('is-expanded');
+    ['transition', 'flex', 'height', 'marginBottom'].forEach((k) => { card.style[k] = ''; });
+  }
+  function collapseNow() {
+    if (!expanded) return;
+    clearTimeout(collapseTimer);
+    expanded = false;
+    clearExpanded();
+    scheduleRender();
   }
 
   function build() {
-    $('.views__dots', card).addEventListener('click', (e) => { const d = e.target.closest('.views__dot'); if (d) go(d.dataset.view); });
+    layout();
     card.addEventListener('keydown', (e) => {
       if (e.target !== card) return; // arrows inside the calendar grid move between days
       if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && expanded && !Dialog.anyOpen() && !$('.popover')) { e.preventDefault(); setExpanded(false); }
+    });
+    window.addEventListener('resize', collapseNow);
 
-    // Swipe: follow the finger, then settle on the nearest view.
+    // Swipe: both views follow the finger, then settle.
     let start = null;
     viewport.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || e.target.closest('input, textarea')) return;
+      if (e.button !== 0 || e.target.closest('input, textarea, .task__handle')) return;
       start = { x: e.clientX, y: e.clientY, id: e.pointerId, dragging: false, width: viewport.clientWidth };
     });
     viewport.addEventListener('pointermove', (e) => {
@@ -3191,23 +3335,25 @@ const TimeCard = (() => {
         if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
         start.dragging = true;
         try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
-        track.style.transition = 'none';
+        if (expanded) collapseNow();
       }
-      const i = index();
-      const atEdge = (i === 0 && dx > 0) || (i === VIEWS.length - 1 && dx < 0);
-      track.style.transform = `translateX(calc(${-i * 100}% + ${atEdge ? dx * 0.3 : dx}px))`;
+      place(slides[shown], `${dx}px`, false);
+      place(slides[neighbour(shown, dx < 0 ? 1 : -1)], `calc(${dx < 0 ? 100 : -100}% + ${dx}px)`, false);
     });
     const end = (e) => {
       if (!start || e.pointerId !== start.id) return;
       const s0 = start;
       start = null;
       if (!s0.dragging) return;
-      track.style.transition = '';
       const dx = e.clientX - s0.x;
       suppressClick = true;
       setTimeout(() => { suppressClick = false; }, 0);
-      if (Math.abs(dx) > s0.width * 0.18) step(dx < 0 ? 1 : -1);
-      render();
+      const dir = dx < 0 ? 1 : -1;
+      if (Math.abs(dx) > s0.width * 0.18) slideTo(neighbour(shown, dir), dir, dx);
+      else {
+        place(slides[shown], '0px', true);
+        place(slides[neighbour(shown, dir)], `${dir * 100}%`, true);
+      }
     };
     viewport.addEventListener('pointerup', end);
     viewport.addEventListener('pointercancel', end);
@@ -3225,7 +3371,7 @@ const TimeCard = (() => {
       if (Math.abs(acc) > 60) { locked = true; step(acc > 0 ? 1 : -1); acc = 0; }
     }, { passive: false });
   }
-  return { build, render, step, go };
+  return { build, render, step, toggleExpanded: () => setExpanded(!expanded), collapseNow, isExpanded: () => expanded };
 })();
 
 /* ---------- Notes (saved) ----------
@@ -3557,6 +3703,7 @@ const Navigation = (() => {
     document.title = page === 'home' ? 'STILL' : `${PAGES[page].title} · STILL`;
     if (page === 'home' && UI.get().homeView === 'clock') Clock.start(); else Clock.stop();
     if (page !== 'home' && page !== 'connections') Popover.close(false);
+    if (page !== 'home') TimeCard.collapseNow();
   }
   return { init, go, render, syncHash };
 })();
@@ -3574,6 +3721,7 @@ const ACTIONS = {
   'event-edit': (el) => EventEditor.open(el.dataset.id),
   'task-new': () => TaskPanel.openComposer(),
   'view-prev': () => TimeCard.step(-1),
+  'agenda-toggle': () => TimeCard.toggleExpanded(),
   'view-next': () => TimeCard.step(1),
   'connection-new': () => ConnectionEditor.open(),
   'go-connections': () => Navigation.go('connections'),
@@ -3596,6 +3744,8 @@ function bindActions() {
 
 /* ---------- Keyboard shortcuts ---------- */
 function bindKeyboard() {
+  document.addEventListener('keydown', (e) => { if (e.key === 'Tab' || e.key.startsWith('Arrow')) document.documentElement.dataset.input = 'key'; }, true);
+  document.addEventListener('pointerdown', () => { document.documentElement.dataset.input = 'pointer'; }, true);
   const isTyping = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
   document.addEventListener('keydown', (e) => {
     const mod = IS_MAC ? e.metaKey : e.ctrlKey;
