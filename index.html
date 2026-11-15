@@ -2708,13 +2708,13 @@ const ClockFace = (() => {
 /* ---------- Clock ----------
    One Date per frame drives both the hands and the digits, so they can
    never disagree. Runs only while Home is visible. When the card is
-   squashed vertically, so the face would be under 220px tall, it crossfades
-   to a digital clock in the same box, and back above 250px; the gap
+   squashed vertically, so the face would be under 190px tall, it crossfades
+   to a digital clock in the same box, and back at 210px; the gap
    between the two stops it flickering at the edge. A narrow card never
    switches it: the face just uses the card's full width. "Digital only"
    in Settings never switches. */
-const AUTO_DIGITAL_BELOW = 220;
-const AUTO_ANALOG_ABOVE = 250;
+const AUTO_DIGITAL_BELOW = 190;
+const AUTO_ANALOG_ABOVE = 210;
 const Clock = (() => {
   const root = $('#clock');
   const face = $('#clock-svg');
