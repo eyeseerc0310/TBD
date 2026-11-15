@@ -7,8 +7,9 @@ Home has three columns: a clock / calendar card (swipe or use the arrows to swit
 views) above a Connections card (your most recent note-to-note links), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a
-stopwatch / countdown timer; when the card is too small for a readable face (under
-about 220px), the clock crossfades to a large digital time and back. Drag the pill handles in the gaps between the cards to
+stopwatch / countdown timer; when the card is squashed vertically (the face under
+about 220px tall), the clock crossfades to a large digital time and back; a narrow card
+keeps the analog face, which then uses the card's full width. Drag the pill handles in the gaps between the cards to
 resize them (double-tap one to reset it; Settings → Appearance → Reset card sizes
 resets all). Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. The Connections

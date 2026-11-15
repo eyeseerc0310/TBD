@@ -590,6 +590,12 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 /* The face fills the view: capped by its width (cqi) and by its height minus the readout (cqb). */
 /* The face takes whatever height is left; the square SVG scales to fit. */
 .clock__face { position: relative; flex: 1 1 0; min-height: 72px; width: 100%; container-type: size; }
+/* Where the cards sit in columns (and can be resized narrow), the face may reach into the card's
+   side padding, to 8px from its edges, so a narrow card squeezes it far less: its size comes from
+   the height. Centred, it overflows both sides evenly. */
+@media (min-width: 1100px), (min-width: 900px) and (orientation: landscape) {
+  .clock__face { width: calc(100% + 2 * (var(--pad) + 10px) - 16px); }
+}
 .clock.no-time .clock__digital { display: none; }
 .clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
 
@@ -2701,11 +2707,12 @@ const ClockFace = (() => {
 
 /* ---------- Clock ----------
    One Date per frame drives both the hands and the digits, so they can
-   never disagree. Runs only while Home is visible. When the face would be
-   drawn smaller than 220px across (a small card or window), it crossfades
+   never disagree. Runs only while Home is visible. When the card is
+   squashed vertically, so the face would be under 220px tall, it crossfades
    to a digital clock in the same box, and back above 250px; the gap
-   between the two stops it flickering at the edge. "Digital only" in
-   Settings never switches. */
+   between the two stops it flickering at the edge. A narrow card never
+   switches it: the face just uses the card's full width. "Digital only"
+   in Settings never switches. */
 const AUTO_DIGITAL_BELOW = 220;
 const AUTO_ANALOG_ABOVE = 250;
 const Clock = (() => {
@@ -2724,7 +2731,7 @@ const Clock = (() => {
   let raf = 0;
   let lastDigital = '';
   let lastAuto = '';
-  let diameter = 0;     // the face box's smaller side: the analog face's size
+  let diameter = 0;     // the face box's height: the room the analog face has
   let autoDigital = false;
   let decided = false;  // has a size been seen since Home was last shown
 
@@ -2748,7 +2755,7 @@ const Clock = (() => {
     if (raf) paint(new Date());
   }
   new ResizeObserver(() => {
-    diameter = Math.min(faceBox.clientWidth, faceBox.clientHeight);
+    diameter = faceBox.clientHeight;
     if (!diameter) { decided = false; return; } // Home hidden: the next sight of it is placed without a fade
     // The digital clock also takes the time line under the face, and the gap above it.
     root.style.setProperty('--readout-h', `${readout.offsetHeight + (parseFloat(getComputedStyle(root).rowGap) || 0)}px`);
