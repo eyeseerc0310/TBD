@@ -472,11 +472,11 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .agenda-group { padding: var(--s3) 0 var(--s2); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
 .agenda-group:first-child { padding-top: 0; }
 .agenda-note { padding: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
-/* Coloured event rows show their colour as a tint and border only. */
-.mini-row.mini-row--event.has-color::before { content: none; }
+/* Coloured rows (tasks, events, notes, connections) show their colour as a
+   tinted border and background only. */
 
 /* Clock */
-.clock { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+.clock { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s3); }
 .clock__meta { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
 /* The face fills the view: capped by its width (cqi) and by its height minus the readout (cqb). */
 /* The face takes whatever height is left; the square SVG scales to fit. */
@@ -499,32 +499,20 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .clock[data-face="digital"] { justify-content: center; }
 
 /* Timer */
-.timer { flex: none; display: flex; flex-direction: column; gap: var(--s2); margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border); }
-.timer__top, .timer__main, .timer__sub { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; }
+/* Timer: centred rows pinned to the bottom of the clock view */
+.timer { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-top: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--border); text-align: center; }
 .seg--sm { padding: 2px; }
 .seg--sm button { height: 22px; padding: 0 var(--s2); font-size: var(--fs-xs); }
-.timer__link {
-  display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 52%;
-  height: 26px; padding: 0 var(--s2); border-radius: 999px; border: 1px solid var(--border);
-  color: var(--text-3); font-size: var(--fs-xs); cursor: pointer;
-  transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
-}
-.timer__link:hover { border-color: var(--border-strong); color: var(--text-2); }
-.timer__link.is-linked { border-color: var(--accent-line); color: var(--text); }
-.timer__link .icon { width: 12px; height: 12px; flex: none; }
-.timer__link select { appearance: none; -webkit-appearance: none; min-width: 0; max-width: 100%; padding: 0; border: 0; outline: none; background: transparent; color: inherit; font: inherit; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; cursor: pointer; }
-.timer__time { font: 300 30px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); padding: 3px 4px; margin-left: -4px; border-radius: var(--r-sm); transition: color var(--t) var(--ease), background var(--t-fast) var(--ease); }
+.timer__time { font: 300 32px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); padding: 3px 6px; border-radius: var(--r-sm); transition: color var(--t) var(--ease), background var(--t-fast) var(--ease); }
 .timer__time:not(:disabled):hover { background: var(--hover); }
 .timer__time:disabled { cursor: default; }
 .timer.is-running .timer__time { color: var(--accent); }
-.timer__edit { display: flex; align-items: center; gap: 4px; font: 300 24px/1 var(--font); color: var(--text-2); }
+.timer__edit { display: flex; align-items: center; justify-content: center; gap: 4px; font: 300 24px/1 var(--font); color: var(--text-2); }
 .timer__edit .input { width: 58px; height: 34px; padding: 0 6px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
-.timer__btns { display: flex; gap: var(--s2); flex: none; }
-.timer__btns .btn { min-width: 62px; }
-.timer__sub { min-height: 22px; font-size: var(--fs-xs); color: var(--text-3); }
-.timer__presets { display: flex; gap: 4px; flex: none; }
+.timer__btns { display: flex; justify-content: center; gap: var(--s2); }
+.timer__btns .btn { min-width: 68px; }
+.timer__presets { display: flex; justify-content: center; gap: 4px; }
 .timer__presets .chip { height: 22px; padding: 0 var(--s2); font-size: var(--fs-xs); }
-.timer__task { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .timer-pill {
   display: inline-flex; align-items: center; gap: 4px; flex: none;
   height: 24px; padding: 0 var(--s2); border-radius: 999px;
@@ -534,8 +522,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .timer-pill .icon { width: 12px; height: 12px; color: var(--accent); }
 .panel--time.is-pulsing { animation: timer-pulse 0.9s var(--ease) 3; }
 @keyframes timer-pulse { 50% { box-shadow: var(--shadow), 0 0 0 3px var(--accent-soft), 0 0 40px -6px var(--accent); } }
-.task__time { flex: none; gap: 4px; margin-right: var(--s1); }
-.task__time .icon { width: 11px; height: 11px; }
+
 /* Clock face artwork (drawn by ClockFace) */
 .clock__rim { fill: var(--surface-sunken); stroke: var(--border-strong); }
 .clock__tick { stroke: var(--text-3); stroke-linecap: round; }
@@ -562,10 +549,16 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .notes__area::placeholder { color: var(--text-3); }
 /* Recent: always sized to its rows (at most three), never scrolls. */
 .notes__saved { flex: none; }
-#saved-notes.list { flex: none; overflow: visible; max-height: none; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
-.mini-row--note { min-height: 46px; }
+#saved-notes.list { flex: none; height: calc(3 * 46px + 2 * 6px); overflow: hidden; max-height: none; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
+.mini-row.mini-row--note { height: 46px; min-height: 46px; }
+.mini-slot { flex: none; height: 46px; display: flex; align-items: center; padding: 0 var(--s3); border: 1px dashed var(--border); border-radius: var(--r-ctl); color: var(--text-3); font-size: var(--fs-sm); opacity: 0.7; }
 .mini-row.is-active { border-color: var(--accent-line); }
-.notes__title { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
+.notes__titlefield {
+  flex: 1; min-width: 0; height: var(--ctl-h); padding: 0; margin: 0;
+  border: 0; outline: none; background: transparent;
+  color: var(--text); font: 600 var(--fs-lg)/1.2 var(--font-head); letter-spacing: -0.01em;
+}
+.notes__titlefield::placeholder { color: var(--text-3); }
 .notes__mode { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
 
 /* Compact rows: saved notes and connections */
@@ -580,7 +573,6 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 }
 .mini-row:hover { border-color: var(--border-strong); }
 .mini-row.has-color { border-color: color-mix(in srgb, var(--row-c) 55%, var(--border)); background: color-mix(in srgb, var(--row-c) 15%, transparent); }
-.mini-row.has-color::before { content: ""; position: absolute; left: -1px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--row-c); }
 .mini-row__icon { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--hover-strong); color: var(--text-2); }
 .mini-row__icon .icon { width: 16px; height: 16px; }
 .mini-row.has-color .mini-row__icon { background: color-mix(in srgb, var(--row-c) 30%, transparent); color: var(--text); }
@@ -1178,28 +1170,20 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
               </div>
             </div>
             <section class="timer" id="timer" aria-label="Timer">
-              <div class="timer__top">
-                <div class="seg seg--sm" id="timer-mode" role="group" aria-label="Timer mode">
-                  <button type="button" data-mode="stopwatch" aria-pressed="true">Stopwatch</button>
-                  <button type="button" data-mode="countdown" aria-pressed="false">Countdown</button>
-                </div>
-                <label class="timer__link" id="timer-link"><svg class="icon"><use href="#i-link"/></svg><select id="timer-task" aria-label="Link to task"></select></label>
+              <div class="seg seg--sm" id="timer-mode" role="group" aria-label="Timer mode">
+                <button type="button" data-mode="stopwatch" aria-pressed="true">Stopwatch</button>
+                <button type="button" data-mode="countdown" aria-pressed="false">Countdown</button>
               </div>
-              <div class="timer__main">
-                <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
-                <div class="timer__edit" id="timer-edit" hidden>
-                  <input class="input" id="timer-min" type="number" inputmode="numeric" min="0" max="999" aria-label="Minutes"><span>:</span><input class="input" id="timer-sec" type="number" inputmode="numeric" min="0" max="59" aria-label="Seconds">
-                </div>
-                <div class="timer__btns">
-                  <button class="btn btn--primary btn--sm" id="timer-toggle" type="button">Start</button>
-                  <button class="btn btn--sm" id="timer-reset" type="button">Reset</button>
-                </div>
+              <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
+              <div class="timer__edit" id="timer-edit" hidden>
+                <input class="input" id="timer-min" type="number" inputmode="numeric" min="0" max="999" aria-label="Minutes"><span>:</span><input class="input" id="timer-sec" type="number" inputmode="numeric" min="0" max="59" aria-label="Seconds">
               </div>
-              <div class="timer__sub">
-                <div class="timer__presets" id="timer-presets" role="group" aria-label="Countdown presets">
-                  <button class="chip" type="button" data-min="5">5m</button><button class="chip" type="button" data-min="15">15m</button><button class="chip" type="button" data-min="25">25m</button><button class="chip" type="button" data-min="60">60m</button>
-                </div>
-                <div class="timer__task" id="timer-task-name"></div>
+              <div class="timer__btns">
+                <button class="btn btn--primary btn--sm" id="timer-toggle" type="button">Start</button>
+                <button class="btn btn--sm" id="timer-reset" type="button">Reset</button>
+              </div>
+              <div class="timer__presets" id="timer-presets" role="group" aria-label="Countdown presets">
+                <button class="chip" type="button" data-min="5">5m</button><button class="chip" type="button" data-min="15">15m</button><button class="chip" type="button" data-min="25">25m</button><button class="chip" type="button" data-min="60">60m</button>
               </div>
             </section>
                 </section>
@@ -1267,15 +1251,16 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
         </article>
 
         <!-- Right column: notes -->
-        <article class="panel glass panel--notes" aria-labelledby="notes-label">
+        <article class="panel glass panel--notes" aria-label="Notes">
           <header class="panel__head">
-            <div class="notes__title"><h2 class="panel__title" id="notes-label">Notes</h2><span class="notes__mode" id="notes-mode"></span></div>
+            <input class="notes__titlefield" id="note-title" type="text" placeholder="Title" aria-label="Title" maxlength="200" autocomplete="off" spellcheck="true">
             <div class="panel__actions">
+              <span class="notes__mode" id="notes-mode"></span>
               <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
               <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Save to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg><span id="notes-send-label">Add to Notes</span></button>
             </div>
           </header>
-          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-labelledby="notes-label" spellcheck="true"></textarea>
+          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-label="Note" spellcheck="true"></textarea>
           <section class="panel__section notes__saved" aria-labelledby="saved-title">
             <div class="section-head">
               <h3 class="subhead" id="saved-title">Recent</h3>
@@ -1568,6 +1553,7 @@ const ITEM_NORMALISERS = {
   },
   note(it) {
     it.meta.quick = it.meta.quick === true;
+    if (it.meta.quick && it.title === 'Quick notes') it.title = '';
     return it;
   },
 };
@@ -2367,13 +2353,14 @@ const Clock = (() => {
 })();
 
 /* ---------- Notes writing area ----------
-   The writing area on the Home notes card edits one of two things: the
+   The Notes card's Title field and body edit one of two things: the
    scratch pad (a single "note" item with meta.quick) or, after tapping a
    Recent row, that saved note itself ("Done" goes back to the pad, whose
    text is kept). Typing is buffered briefly so the app doesn't redraw on
    every key; the buffer is flushed before every save and backup. */
 const QuickNotes = (() => {
   const area = $('#quick-notes');
+  const titleIn = $('#note-title');
   const status = $('#notes-status');
   const sendBtn = $('#notes-send');
   const sendIcon = $('#notes-send use');
@@ -2384,8 +2371,7 @@ const QuickNotes = (() => {
   let dirty = false;
   let editingId = null; // the saved note open in the writing area, or null for the pad
   const pad = () => Items.all('note').find((n) => n.meta.quick) || null;
-  // A saved note's title (from Quick Capture) becomes its first line while editing.
-  const noteText = (n) => (n.title ? `${n.title}\n${n.content}` : n.content);
+  const current = () => (editingId ? Items.get(editingId) : pad());
 
   function showSaved() {
     status.classList.add('is-visible');
@@ -2396,15 +2382,11 @@ const QuickNotes = (() => {
     clearTimeout(timer);
     if (!dirty) return;
     dirty = false;
-    const value = area.value;
-    if (editingId) {
-      const n = Items.get(editingId);
-      if (n && noteText(n) !== value) Items.update(editingId, { title: '', content: value });
-    } else {
-      const it = pad();
-      if (it) { if (it.content !== value) Items.update(it.id, { content: value }); }
-      else if (value) Items.create('note', { title: 'Quick notes', content: value, meta: { quick: true } });
-    }
+    const title = titleIn.value;
+    const content = area.value;
+    const n = current();
+    if (n) { if (n.title !== title || n.content !== content) Items.update(n.id, { title, content }); }
+    else if (!editingId && (title || content)) Items.create('note', { title, content, meta: { quick: true } });
     showSaved();
   }
   function paintHead() {
@@ -2412,17 +2394,19 @@ const QuickNotes = (() => {
     sendIcon.setAttribute('href', editing ? '#i-check' : '#i-notes');
     sendLabel.textContent = editing ? 'Done' : 'Add to Notes';
     sendBtn.dataset.tip = editing ? 'Finish editing and return to your scratch pad' : 'Save to your Notes page';
-    sendBtn.disabled = !editing && !area.value.trim();
+    sendBtn.disabled = !editing && !titleIn.value.trim() && !area.value.trim();
     modeEl.textContent = editing ? 'Editing' : '';
-    area.placeholder = editing ? 'Write something…' : 'Jot something down…';
   }
   function sync(force = false) {
     if (editingId && !Items.get(editingId)) { editingId = null; force = true; } // deleted elsewhere
     if (force) { dirty = false; clearTimeout(timer); }
-    if (!force && (dirty || document.activeElement === area)) { paintHead(); return; }
-    const n = editingId ? Items.get(editingId) : pad();
-    const value = n ? (editingId ? noteText(n) : n.content) : '';
-    if (area.value !== value) area.value = value;
+    const active = document.activeElement;
+    if (!force && (dirty || active === area || active === titleIn)) { paintHead(); return; }
+    const n = current();
+    const title = n ? n.title : '';
+    const content = n ? n.content : '';
+    if (titleIn.value !== title) titleIn.value = title;
+    if (area.value !== content) area.value = content;
     paintHead();
   }
   function openNote(id) {
@@ -2442,15 +2426,17 @@ const QuickNotes = (() => {
     sync(true);
     scheduleRender();
   }
-  /** Moves the pad's text into the Notes page and clears the pad (with Undo). */
+  /** Saves the pad (title + body) as a note on the Notes page and clears it, with Undo. */
   function sendToNotes() {
     flush();
+    const title = titleIn.value.trim();
     const text = area.value.trim();
     const it = pad();
-    if (!text || !it) { area.focus(); return; }
-    const previous = it.content;
-    const capture = Items.create('capture', { title: '', content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes', color: null, pinned: false } });
-    Items.update(it.id, { content: '' });
+    if ((!title && !text) || !it) { (title ? area : titleIn).focus(); return; }
+    const previous = { title: it.title, content: it.content };
+    const capture = Items.create('capture', { title, content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes', color: null, pinned: false } });
+    Items.update(it.id, { title: '', content: '' });
+    titleIn.value = '';
     area.value = '';
     paintHead();
     Toast.show('Added to Notes', {
@@ -2459,14 +2445,18 @@ const QuickNotes = (() => {
         run: () => {
           Items.remove(capture.id);
           const n = pad();
-          if (n) Items.update(n.id, { content: previous });
+          if (n) Items.update(n.id, previous);
           sync(true);
         },
       },
     });
   }
-  area.addEventListener('input', () => { dirty = true; paintHead(); clearTimeout(timer); timer = setTimeout(flush, 500); });
+  const onInput = () => { dirty = true; paintHead(); clearTimeout(timer); timer = setTimeout(flush, 500); };
+  area.addEventListener('input', onInput);
+  titleIn.addEventListener('input', onInput);
   area.addEventListener('blur', flush);
+  titleIn.addEventListener('blur', flush);
+  titleIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); area.focus(); } });
   sendBtn.addEventListener('click', () => (editingId ? done() : sendToNotes()));
   Persistence.onFlush(flush);
   return { render: () => sync(false), sync, flush, openNote, editingId: () => editingId };
@@ -2930,7 +2920,6 @@ const TaskPanel = (() => {
       searching ? null : h('button', { class: 'task__handle', type: 'button', tabindex: '-1', 'aria-hidden': 'true', title: 'Drag to reorder' }, icon('grip')),
       h('label', { class: 'check-hit' }, h('input', { class: 'check', type: 'checkbox', checked: done, 'aria-label': `Complete “${task.title}”` })),
       h('button', { class: 'task__text', type: 'button', dataset: { action: 'task-edit' }, text: task.title, 'aria-label': `Edit “${task.title}”` }),
-      task.meta.tracked >= 60000 ? h('span', { class: 'tag task__time', title: 'Time on the timer' }, icon('timer'), fmtDuration(task.meta.tracked)) : null,
       searching ? h('span', { class: 'tag task__date', text: Fmt.shortDate(task.meta.date) }) : null,
       h('button', {
         class: 'icon-btn icon-btn--sm task__more', type: 'button', dataset: { action: 'task-menu' },
@@ -3515,27 +3504,17 @@ const TimeCard = (() => {
 })();
 
 /* ---------- Timer ----------
-   Stopwatch or countdown in the clock view. State lives in the store as
-   timestamps (startedAt, elapsed, duration), so it keeps running across
-   view switches and page refreshes. When linked to a task, each run's
-   time is added to that task's meta.tracked when it pauses, resets,
-   finishes or is re-linked. A finished countdown plays a soft chime,
-   pulses the card and shows a toast. */
-function fmtDuration(ms) {
-  const m = Math.floor(ms / 60000);
-  if (m < 60) return `${m}m`;
-  return m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${Math.floor(m / 60)}h`;
-}
+   Stopwatch or countdown at the bottom of the clock view. State lives in
+   the store as timestamps (startedAt, elapsed, duration), so it keeps
+   running across view switches and page refreshes. A finished countdown
+   plays a soft chime, pulses the card and shows a toast. */
 const Timer = (() => {
   const root = $('#timer');
   const timeEl = $('#timer-time');
   const toggleBtn = $('#timer-toggle');
   const resetBtn = $('#timer-reset');
   const modeSeg = $('#timer-mode');
-  const linkEl = $('#timer-link');
-  const select = $('#timer-task');
   const presets = $('#timer-presets');
-  const taskName = $('#timer-task-name');
   const editEl = $('#timer-edit');
   const minIn = $('#timer-min');
   const secIn = $('#timer-sec');
@@ -3545,7 +3524,6 @@ const Timer = (() => {
   let tickId = 0;
   let audio = null;
   let editing = false;
-  let optionsKey = '';
 
   const T = () => Store.get().timer;
   const setTimer = (patch) => Store.update((s) => Object.assign(s.timer, patch), 'timer');
@@ -3557,20 +3535,6 @@ const Timer = (() => {
   }
   const compact = (ms, roundUp) => { const t = hms(ms, roundUp); return t.startsWith('00:') ? t.slice(3) : t; };
 
-  /** Adds `ms` of tracked time to the linked task. */
-  function credit(ms) {
-    const t = T();
-    const task = t.taskId && Items.get(t.taskId);
-    if (!task || ms < 1000) return;
-    Items.update(task.id, { meta: { tracked: (task.meta.tracked || 0) + ms } });
-  }
-  /** Time since the current run started, capped at the countdown's end. */
-  function segment(t = T(), now = Date.now()) {
-    if (!t.running) return 0;
-    const seg = Math.max(0, now - t.startedAt);
-    return t.mode === 'countdown' ? Math.min(seg, Math.max(0, t.duration - t.elapsed)) : seg;
-  }
-
   function start() {
     const t = T();
     if (t.running) return;
@@ -3581,40 +3545,21 @@ const Timer = (() => {
   function pause() {
     const t = T();
     if (!t.running) return;
-    const seg = segment(t);
-    credit(seg);
-    setTimer({ running: false, startedAt: null, elapsed: t.elapsed + seg });
+    const elapsed = t.mode === 'countdown' ? Math.min(t.duration, elapsedNow(t)) : elapsedNow(t);
+    setTimer({ running: false, startedAt: null, elapsed });
   }
-  function reset() {
-    const t = T();
-    if (t.running) credit(segment(t));
-    setTimer({ running: false, startedAt: null, elapsed: 0 });
-  }
+  function reset() { setTimer({ running: false, startedAt: null, elapsed: 0 }); }
   function finish(quiet) {
-    const t = T();
-    credit(segment(t));
-    setTimer({ running: false, startedAt: null, elapsed: t.duration });
+    setTimer({ running: false, startedAt: null, elapsed: T().duration });
     if (!quiet) { chime(); pulse(); }
     Toast.show('Timer done');
   }
   function setMode(mode) {
     if (mode === T().mode) return;
-    reset();
-    setTimer({ mode });
+    setTimer({ mode, running: false, startedAt: null, elapsed: 0 });
   }
   function setDuration(ms) {
-    const t = T();
-    if (t.running) credit(segment(t));
     setTimer({ mode: 'countdown', running: false, startedAt: null, elapsed: 0, duration: Math.max(1000, Math.min(ms, 100 * 3600000)) });
-  }
-  function link(taskId) {
-    const t = T();
-    if (t.running) { // close the current run on the old task, keep going on the new one
-      const seg = segment(t);
-      credit(seg);
-      setTimer({ elapsed: t.elapsed + seg, startedAt: Date.now() });
-    }
-    setTimer({ taskId: taskId || null });
   }
 
   /* --- Countdown editing (tap the time) --- */
@@ -3690,7 +3635,6 @@ const Timer = (() => {
   }
   function render() {
     const t = T();
-    const task = t.taskId ? Items.get(t.taskId) : null;
     root.classList.toggle('is-running', t.running);
     $$('button', modeSeg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === t.mode)));
     toggleBtn.textContent = t.running ? 'Pause' : 'Start';
@@ -3700,19 +3644,6 @@ const Timer = (() => {
     timeEl.disabled = t.mode !== 'countdown' || t.running;
     timeEl.setAttribute('aria-label', t.mode === 'countdown' && !t.running ? 'Set countdown time' : 'Timer');
     presets.hidden = t.mode !== 'countdown' || t.running;
-    taskName.textContent = task ? `↳ ${task.title}` : '';
-    linkEl.classList.toggle('is-linked', !!task);
-    // Options: today's tasks (plus the linked task if it's from another day).
-    const tasks = Tasks.on(Dates.today());
-    if (task && !tasks.some((x) => x.id === task.id)) tasks.unshift(task);
-    const key = JSON.stringify([tasks.map((x) => [x.id, x.title]), task ? task.id : '']);
-    if (key !== optionsKey && document.activeElement !== select) {
-      optionsKey = key;
-      select.replaceChildren(
-        h('option', { value: '', text: tasks.length ? 'Link to task' : 'No tasks today' }),
-        ...tasks.map((x) => h('option', { value: x.id, text: x.title.length > 40 ? `${x.title.slice(0, 39)}…` : x.title })));
-      select.value = task ? task.id : '';
-    }
     paint();
     if (t.running && !tickId) tickId = setInterval(tick, 250);
     if (!t.running && tickId) { clearInterval(tickId); tickId = 0; }
@@ -3723,7 +3654,6 @@ const Timer = (() => {
     resetBtn.addEventListener('click', reset);
     modeSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
     presets.addEventListener('click', (e) => { const b = e.target.closest('[data-min]'); if (b) setDuration(Number(b.dataset.min) * 60000); });
-    select.addEventListener('change', () => link(select.value));
     timeEl.addEventListener('click', beginEdit);
     editEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); endEdit(true); }
@@ -3748,8 +3678,8 @@ const NotesData = {
   },
   parts(n) {
     const lines = n.content.split('\n').map((l) => l.trim()).filter(Boolean);
-    const title = n.title || lines[0] || 'Untitled note';
-    const preview = (n.title ? lines : lines.slice(1)).join(' · ');
+    const title = n.title.trim() || lines[0] || 'Untitled note';
+    const preview = (n.title.trim() ? lines : lines.slice(1)).join(' · ');
     return { title, preview };
   },
   label(iso) {
@@ -3819,11 +3749,9 @@ const SavedNotes = (() => {
   const recent = () => Items.all('capture').slice().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3);
   function render() {
     const notes = recent();
-    if (!notes.length) {
-      list.replaceChildren(h('li', { class: 'empty' }, icon('notes'), 'No notes yet.'));
-      return;
-    }
     const editing = QuickNotes.editingId();
+    // Always three slots, so the section never changes size.
+    const slots = Array.from({ length: 3 - notes.length }, (_, i) => h('li', { class: 'mini-slot', 'aria-hidden': 'true', text: !notes.length && i === 0 ? 'No notes yet' : '' }));
     list.replaceChildren(...notes.map((n) => {
       const { title } = NotesData.parts(n);
       return h('li', { class: `mini-row mini-row--note${n.meta.color ? ' has-color' : ''}${n.id === editing ? ' is-active' : ''}`, dataset: { id: n.id }, style: n.meta.color ? `--row-c:${n.meta.color}` : null },
@@ -3832,7 +3760,7 @@ const SavedNotes = (() => {
             h('span', { class: 'mini-row__title' }, n.meta.pinned ? icon('pin') : null, title),
             h('span', { class: 'mini-row__date', text: NotesData.label(n.updatedAt) }))),
         h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'note-menu' }, 'aria-label': `More options for “${title}”`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`note:${n.id}`)) }, icon('more')));
-    }));
+    }), ...slots);
   }
   return { render };
 })();
