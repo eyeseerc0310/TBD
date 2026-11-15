@@ -19,8 +19,10 @@ STILL is a single file: `index.html`. No build step, no dependencies, no account
 - **GitHub Pages:** publish the repository root; the page works as-is.
 - **Offline:** once loaded, everything runs without a connection.
 
-All data stays in your browser (`localStorage`). Nothing is sent anywhere. The only
-network request is the web font for the chosen typeface (Inter, JetBrains Mono or
+All data stays in your browser (`localStorage`). Nothing is sent anywhere, except
+what you type into the top-bar search, which is sent to Wikipedia's public API to
+find articles (article pages load from Wikipedia too). The only other network
+request is the web font for the chosen typeface (Inter, JetBrains Mono or
 Playfair Display, from Google Fonts); choose **SF Pro / System** to avoid even that.
 Without a connection the app falls back to local fonts.
 
@@ -29,6 +31,7 @@ Without a connection the app falls back to local fonts.
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl/⌘ K` | Quick Capture (from any page) |
+| `Ctrl/⌘ Shift K` | Focus the Wikipedia search bar |
 | `Ctrl/⌘ S` | Download a backup |
 | `Esc` | Close dialogs, cancel edits |
 | `N` | New task (Home) · Quick Capture (Notes) |
