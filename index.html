@@ -524,7 +524,7 @@ html.is-resizing, html.is-resizing * { -webkit-user-select: none !important; use
 html.is-resizing[data-resize="col"] * { cursor: col-resize !important; }
 html.is-resizing[data-resize="row"] * { cursor: row-resize !important; }
 /* A double-tap reset glides back rather than jumping. */
-.dashboard.is-settling { transition: grid-template-columns var(--t-slow) var(--ease); }
+.dashboard.is-settling, .notes-layout.is-settling { transition: grid-template-columns var(--t-slow) var(--ease); }
 .dashboard.is-settling .panel--time, .dashboard.is-settling .panel--connections { transition: flex-grow var(--t-slow) var(--ease); }
 @media (min-width: 1100px), (min-width: 900px) and (orientation: landscape) {
   .grabber--col { display: grid; }
@@ -822,13 +822,6 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .notes__titlefield::placeholder { color: var(--text-3); }
 .notes__mode { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
 
-/* Reading a note on the Notes page */
-.dialog--note .dialog__body { max-height: min(62vh, 600px); overflow-y: auto; overscroll-behavior: contain; }
-.note-view { cursor: default; color: var(--text); font: 400 var(--fs-base)/1.6 var(--font); }
-.note-view__empty { color: var(--text-3); }
-.backlinks--view { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--border); flex-wrap: wrap; row-gap: 4px; white-space: normal; }
-.card__links { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card.is-target { border-color: var(--accent-line); box-shadow: var(--shadow), 0 0 0 1px var(--accent-line); }
 
 /* ---------- Connections (graph, list, Home rows) ---------- */
 .graph { position: relative; height: clamp(340px, calc(100dvh - 290px), 1100px); border-radius: var(--r-panel); overflow: hidden; touch-action: none; cursor: grab; }
@@ -875,6 +868,97 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .conn-pair .conn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conn-pair .icon { flex: none; margin-right: -2px; }
 .conn-pair__sep { flex: none; font-weight: 400; color: var(--text-3); }
+
+/* ---------- Notes page ---------- */
+/* The note editor pane adds no box of its own, wherever it is. */
+.note-pane { display: contents; }
+#notes-back, #notes-new, .note-footer, #notes-drawer-btn { display: none; }
+.app[data-page="notes"] #notes-send, .app[data-page="notes"] #notes-mode { display: none; }
+.app[data-page="notes"] #notes-new { display: inline-grid; }
+.app[data-page="notes"] .note-footer { display: block; }
+.note-footer { flex: none; margin-top: var(--s2); text-align: center; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+/* Three cards, sized like Home's (the grabbers set --ncol-1..3); floors keep each usable. */
+.notes-layout {
+  position: relative; flex: 1; display: grid; gap: var(--gap); min-height: 600px;
+  grid-template-columns: minmax(min(200px, 16%), var(--ncol-1, 0.8fr)) minmax(min(260px, 20%), var(--ncol-2, 1.15fr)) minmax(min(320px, 26%), var(--ncol-3, 2.15fr));
+}
+.notes-layout > .panel { min-width: 0; }
+/* Sidebar */
+.nside { gap: 2px; overflow-y: auto; scrollbar-width: none; }
+.nside__head { flex: none; display: flex; align-items: center; gap: var(--s3); height: var(--ctl-h); padding: 0 var(--s2) 0 var(--s3); margin-bottom: var(--s1); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+.nside__head > .icon { width: 18px; height: 18px; color: var(--text-2); }
+.nside__head .icon-btn { margin-left: auto; }
+.nside__item { position: relative; flex: none; display: flex; align-items: center; min-height: 40px; border-radius: var(--r-ctl); color: var(--text-2); transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.nside__item:hover { background: var(--hover); color: var(--text); }
+.nside__main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s3); padding: 0 var(--s3); text-align: left; color: inherit; border-radius: inherit; font-size: var(--fs-base); }
+.nside__main .icon { flex: none; color: var(--text-2); }
+.nside__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nside__count { flex: none; font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.nside__item[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+.nside__item[aria-current="true"] .nside__main .icon, .nside__item[aria-current="true"] .nside__count { color: var(--accent-ink); }
+.nside__item[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--accent); }
+.nside__folder .row-more { margin-right: 4px; }
+.nside__folder:hover .row-more, .nside__folder:focus-within .row-more { opacity: 1; }
+.nside__item.is-drop { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent-line); }
+.nside__sep { flex: none; height: 1px; margin: var(--s3) var(--s2); background: var(--border); }
+/* List */
+.nlist__top { flex: none; display: flex; align-items: center; gap: var(--s2); }
+.nlist__chips { flex: none; display: flex; flex-wrap: nowrap; gap: var(--s2); margin: var(--s4) calc(var(--pad) * -1) var(--s2); padding: 0 var(--pad); overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.nlist__chips::-webkit-scrollbar { display: none; }
+.nchip { flex: none; height: 32px; padding: 0 var(--s4); border-radius: 999px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
+.nchip:hover { background: var(--hover); color: var(--text); }
+.nchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.nchip--more { padding: 0 var(--s3); display: inline-flex; align-items: center; gap: 6px; }
+.nchip--more .icon { width: 16px; height: 16px; }
+.nlist__bar { flex: none; display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s2); font-size: var(--fs-xs); color: var(--text-3); }
+.nlist__bar span { flex: 1; min-width: 0; }
+.nlist__rows { display: flex; flex-direction: column; }
+.ngroup { flex: none; display: flex; justify-content: space-between; padding: var(--s4) var(--s2) var(--s2); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.ngroup:first-child { padding-top: var(--s2); }
+.ngroup + .nrow { border-top: 0; }
+.nrow {
+  position: relative; flex: none; display: flex; align-items: flex-start; gap: var(--s1);
+  padding: var(--s3) var(--s1) var(--s3) var(--s3); border-radius: var(--r-ctl); border-top: 1px solid var(--border);
+  -webkit-user-drag: element; touch-action: pan-y; transition: background var(--t-fast) var(--ease);
+}
+.nrow:hover { background: var(--hover); }
+.nrow.is-selected, .nrow.is-selected + .nrow { border-top-color: transparent; }
+.nrow.is-selected { background: var(--hover-strong); }
+.nrow.has-color { background: color-mix(in srgb, var(--row-c) 13%, transparent); }
+.nrow.has-color.is-selected { background: color-mix(in srgb, var(--row-c) 22%, var(--hover-strong)); }
+.nrow.is-dragging { opacity: 0.5; }
+.nrow__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; border-radius: var(--r-sm); }
+.nrow__top { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
+.nrow__title { flex: 1; min-width: 0; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nrow__title .icon { width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; color: var(--accent-ink); }
+.nrow__time { flex: none; font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.nrow__preview { font-size: var(--fs-sm); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nrow__preview:empty { display: none; }
+.nrow .row-more { margin-top: -2px; }
+.nrow:hover .row-more, .nrow:focus-within .row-more { opacity: 1; }
+.nrow mark.hit, .nrow .hit { background: var(--accent-soft); color: var(--text); border-radius: 3px; padding: 0 1px; }
+/* Editor card */
+.nedit { min-width: 0; }
+.notes-scrim { display: none; }
+/* Narrow screens: the list, or the open note full width; the sidebar slides out as a drawer. */
+@media (max-width: 1099px) and (orientation: portrait), (max-width: 899px) {
+  .notes-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .notes-layout > .nside {
+    position: fixed; z-index: 62; top: var(--s3); bottom: var(--s3); left: var(--s3); width: min(300px, 84vw);
+    background: var(--surface-raised); box-shadow: var(--shadow-pop);
+    transform: translateX(calc(-100% - var(--s6))); transition: transform var(--t-slow) var(--ease);
+  }
+  .notes-layout.is-drawer > .nside { transform: none; }
+  .notes-layout.is-drawer > .notes-scrim { display: block; position: fixed; inset: 0; z-index: 61; background: var(--backdrop); }
+  .notes-layout:not(.is-editor) > .nedit { display: none; }
+  .notes-layout.is-editor > .nlist { display: none; }
+  #notes-drawer-btn, .app[data-page="notes"] #notes-back { display: inline-grid; }
+  .app[data-page="notes"] .notes__area { flex: 1 1 auto; } /* the writing box fills the card */
+  .notes-layout > .grabber { display: none; }
+}
+@media (max-width: 719px) {
+  .notes-layout > .nside { bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
 
 /* Compact rows: saved notes and connections */
 .mini-list { display: flex; flex-direction: column; gap: 6px; }
@@ -1244,7 +1328,10 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 @media (min-width: 1100px) and (min-height: 640px),
        (min-width: 900px) and (orientation: landscape) and (min-height: 640px),
        (min-width: 720px) and (min-height: 960px) {
-  .app[data-page="home"] { height: 100dvh; overflow: hidden; }
+  .app[data-page="home"], .app[data-page="notes"] { height: 100dvh; overflow: hidden; }
+  .app[data-page="notes"] .main { min-height: 0; padding-top: var(--s5); padding-bottom: var(--s5); }
+  .app[data-page="notes"] .notes-layout { min-height: 0; }
+  .app[data-page="notes"] .notes__area { min-height: 80px; flex: 1 1 0; }
   .app[data-page="home"] .main { min-height: 0; padding-top: var(--s5); padding-bottom: var(--s5); }
   .app[data-page="home"] .dashboard { flex: 1; min-height: 0; }
   .app[data-page="home"] .list {
@@ -1484,6 +1571,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   <symbol id="i-highlight" viewBox="0 0 24 24"><path d="m9.5 14.5-3 3 1.5 1.5h3.5l1-1M9.5 14.5l7-7a2.12 2.12 0 0 1 3 3l-7 7M9.5 14.5l3 3"/><path d="M4 21h16"/></symbol>
   <symbol id="i-note-link" viewBox="0 0 24 24"><path d="M14 3.75H7a2 2 0 0 0-2 2v12.5a2 2 0 0 0 2 2h4M8.5 8.5h7M8.5 12h4"/><path d="M15.5 15.75a2.25 2.25 0 0 1 2.25-2.25h.75a2.25 2.25 0 0 1 0 4.5h-.5M18.5 19.75a2.25 2.25 0 0 1-2.25 2.25h-.75a2.25 2.25 0 0 1 0-4.5h.5" transform="translate(-1 -2)"/></symbol>
   <symbol id="i-clear" viewBox="0 0 24 24"><path d="M6 5.5h12M12 5.5 9 18.5M15 13.5l5 5M20 13.5l-5 5"/></symbol>
+  <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="3.75" y="4.75" width="16.5" height="14.5" rx="2.5"/><path d="M9.5 4.75v14.5"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
   <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4.5 9V5.5a1 1 0 0 1 1-1H9M15 4.5h3.5a1 1 0 0 1 1 1V9M19.5 15v3.5a1 1 0 0 1-1 1H15M9 19.5H5.5a1 1 0 0 1-1-1V15"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.75 12a7.25 7.25 0 1 0 2.1-5.1M4.75 4.75v3.5h3.5"/></symbol>
@@ -1616,17 +1704,23 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 
         <!-- Right column: notes -->
         <article class="panel glass panel--notes" aria-label="Notes">
+          <!-- The note editor. It moves into the Notes page's editor card while that page is open. -->
+          <div class="note-pane" id="note-pane">
           <header class="panel__head">
+            <button class="icon-btn icon-btn--sm" type="button" id="notes-back" aria-label="Back to the list"><svg class="icon"><use href="#i-left"/></svg></button>
             <input class="notes__titlefield" id="note-title" type="text" placeholder="Untitled note" aria-label="Title" maxlength="200" autocomplete="off" spellcheck="true">
             <div class="panel__actions">
               <span class="notes__mode" id="notes-mode"></span>
               <span class="notes__status" id="notes-status" aria-live="polite">Saved</span>
               <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Save to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg><span id="notes-send-label">Add to Notes</span></button>
+              <button class="icon-btn icon-btn--sm" type="button" id="notes-new" data-tip="New note" data-tip-align="end" aria-label="New note"><svg class="icon"><use href="#i-plus"/></svg></button>
             </div>
           </header>
           <div class="notes__area notes__editor is-empty" id="quick-notes" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start writing…" spellcheck="true"></div>
           <div class="backlinks" id="note-backlinks" aria-label="Backlinks" hidden></div>
           <div class="note-tools" id="note-tools" role="toolbar" aria-label="Formatting"></div>
+          <p class="note-footer" id="note-footer" aria-live="polite"></p>
+          </div>
           <section class="panel__section notes__saved" aria-labelledby="saved-title">
             <div class="section-head">
               <h3 class="subhead" id="saved-title">Recent</h3>
@@ -1640,18 +1734,25 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 
     <!-- Notes -->
     <section class="page" data-page="notes" aria-labelledby="notes-title" hidden>
-      <header class="page-head">
-        <div>
-          <h1 class="page-head__title" id="notes-title">Notes</h1>
-          <p class="page-head__sub">Everything you capture lands in your Inbox, ready to be shaped into notes.</p>
-        </div>
-        <button class="btn" type="button" data-action="capture"><svg class="icon icon--sm"><use href="#i-capture"/></svg>Capture</button>
-      </header>
-      <div class="section-head">
-        <h2 class="subhead"><svg class="icon icon--sm"><use href="#i-inbox"/></svg>Inbox</h2>
-        <span class="count" id="inbox-count"></span>
+      <h1 class="sr-only" id="notes-title">Notes</h1>
+      <!-- Sidebar (views and folders), the note list, and the editor (the Home card's, moved here). -->
+      <div class="notes-layout" id="notes-layout">
+        <aside class="panel glass nside" id="notes-side" aria-label="Views and folders"></aside>
+        <section class="panel glass nlist" aria-label="Notes list">
+          <div class="nlist__top">
+            <button class="icon-btn icon-btn--sm" type="button" id="notes-drawer-btn" aria-label="Views and folders" aria-controls="notes-side" aria-expanded="false"><svg class="icon"><use href="#i-sidebar"/></svg></button>
+            <label class="search nlist__search">
+              <svg class="icon icon--sm"><use href="#i-search"/></svg>
+              <input class="input" id="notes-search" type="search" placeholder="Search notes…" aria-label="Search notes" autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <div class="nlist__chips" id="notes-chips" role="group" aria-label="Filter"></div>
+          <div class="nlist__bar" id="notes-bar" hidden></div>
+          <div class="list nlist__rows" id="notes-rows" role="listbox" aria-label="Notes"></div>
+        </section>
+        <article class="panel glass nedit" id="notes-editor" aria-label="Note"></article>
+        <div class="notes-scrim" id="notes-scrim" hidden></div>
       </div>
-      <div id="inbox"></div>
     </section>
 
     <!-- Placeholder workspaces: content comes from PAGES in the script. -->
@@ -1850,11 +1951,12 @@ const DEFAULT_SETTINGS = Object.freeze({
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
   cardSizes: null, // Home card sizes from the grabbers: { cols: [a, b, c] fractions, split: Clock/Calendar share } or null for the defaults
+  notesSizes: null, // the Notes page's columns, the same way ({ cols })
 });
 
 function defaultUi() {
   const today = Dates.today();
-  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock', connView: 'graph' };
+  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock', connView: 'graph', notesView: 'all', notesFilter: 'all' };
 }
 /* Timer: stored as timestamps, never as a ticking counter, so it keeps
    time across refreshes. Elapsed time = elapsed + (now - startedAt). */
@@ -1878,7 +1980,7 @@ function normaliseTimer(raw) {
   };
 }
 function defaultState() {
-  return { items: [], settings: clone(DEFAULT_SETTINGS), ui: defaultUi(), timer: defaultTimer() };
+  return seedFolders({ items: [], settings: clone(DEFAULT_SETTINGS), ui: defaultUi(), timer: defaultTimer() });
 }
 function makeItem(type, fields = {}) {
   const t = nowISO();
@@ -1942,7 +2044,16 @@ const ITEM_NORMALISERS = {
     it.meta.category = typeof it.meta.category === 'string' ? it.meta.category : '';
     it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
     it.meta.pinned = it.meta.pinned === true;
+    it.meta.folder = typeof it.meta.folder === 'string' && it.meta.folder ? it.meta.folder : null;
+    it.meta.archived = it.meta.archived === true;
+    it.meta.trashedAt = isIso(it.meta.trashedAt) ? it.meta.trashedAt : null;
     cleanNoteHtml(it);
+    return it;
+  },
+  folder(it) {
+    it.title = it.title.trim().slice(0, 80) || 'Folder';
+    it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
+    it.meta.order = Number.isFinite(it.meta.order) ? it.meta.order : 0;
     return it;
   },
   connection(it) {
@@ -2022,6 +2133,7 @@ function normaliseSettings(raw) {
       return [...v, ...PAGE_IDS.filter((x) => !v.includes(x))];
     })(),
     cardSizes: normaliseCardSizes(s.cardSizes),
+    notesSizes: (() => { const c = normaliseCardSizes(s.notesSizes); return c && c.cols ? { cols: c.cols, split: null } : null; })(),
   };
 }
 /** Card sizes are fractions: three column shares (summing to 1) and the Clock/Calendar card's share of the left column. */
@@ -2049,6 +2161,9 @@ function normaliseUi(raw) {
     settingsSection: u.settingsSection === '' || SETTINGS_SECTIONS.includes(u.settingsSection) ? u.settingsSection : d.settingsSection,
     homeView: u.homeView === 'calendar' ? 'calendar' : 'clock',
     connView: u.connView === 'list' ? 'list' : 'graph',
+    notesView: typeof u.notesView === 'string' && /^(all|today|week|archive|trash|folder:.+)$/.test(u.notesView) ? u.notesView : 'all',
+    notesFilter: ['all', 'text', 'links', 'media', 'pinned', 'coloured', 'tasks'].includes(u.notesFilter) ? u.notesFilter : 'all',
+    foldersSeeded: u.foldersSeeded === true,
   };
 }
 /** Gives every task a position within its day, and every connection a
@@ -2067,6 +2182,15 @@ function assignTaskOrder(items) {
     tasks.forEach((t, i) => { t.meta.order = i; });
   }
 }
+/** Notes folders start as Projects, Ideas, Reference and Personal — once (older backups get them
+    too); after that they're the user's to rename or delete. */
+const DEFAULT_FOLDERS = ['Projects', 'Ideas', 'Reference', 'Personal'];
+function seedFolders(state) {
+  if (state.ui.foldersSeeded) return state;
+  if (!state.items.some((i) => i.type === 'folder')) DEFAULT_FOLDERS.forEach((title, order) => state.items.push(makeItem('folder', { title, meta: { color: null, order } })));
+  state.ui.foldersSeeded = true;
+  return state;
+}
 /** Accepts anything shaped roughly like state and returns a complete, valid state. */
 function normaliseState(raw) {
   const src = isObj(raw) ? raw : {};
@@ -2077,7 +2201,7 @@ function normaliseState(raw) {
     if (it && !seen.has(it.id)) { seen.add(it.id); items.push(it); }
   }
   assignTaskOrder(items);
-  return { ...src, items, settings: normaliseSettings(src.settings), ui: normaliseUi(src.ui), timer: normaliseTimer(src.timer) };
+  return seedFolders({ ...src, items, settings: normaliseSettings(src.settings), ui: normaliseUi(src.ui), timer: normaliseTimer(src.timer) });
 }
 /** Last line of defence before anything is written to storage. */
 function isValidState(s) {
@@ -3016,13 +3140,17 @@ const QuickNotes = (() => {
   const sendLabel = $('#notes-send-label');
   const modeEl = $('#notes-mode');
   const backEl = $('#note-backlinks');
+  const footerEl = $('#note-footer');
   let timer = 0;
+  let context = 'home'; // 'notes' while the editor sits on the Notes page
+  let draft = false;    // Notes page, no note open: the first words make a new note
+  let draftFolder = null;
   let statusTimer = 0;
   let dirty = false;
   let editingId = null; // the saved note open in the writing area, or null for the pad
   let loaded = null;    // the HTML last put into the editor
   const pad = () => Items.all('note').find((n) => n.meta.quick) || null;
-  const current = () => (editingId ? Items.get(editingId) : pad());
+  const current = () => (editingId ? Items.get(editingId) : draft ? null : pad());
   const htmlOf = (n) => (typeof n.meta.html === 'string' ? n.meta.html : RichText.fromText(n.content));
   const read = () => ({ title: titleIn.value, html: RichText.clean(editor.innerHTML), content: RichText.text(editor) });
 
@@ -3039,7 +3167,11 @@ const QuickNotes = (() => {
     loaded = html;
     const n = current();
     if (n) { if (n.title !== title || n.content !== content || htmlOf(n) !== html) Items.update(n.id, { title, content, meta: { html } }); }
-    else if (!editingId && (title || content)) Items.create('note', { title, content, meta: { quick: true, html } });
+    else if (draft && (title.trim() || content.trim())) {
+      const c = Items.create('capture', { title, content, meta: { kind: 'text', category: 'Note', inbox: true, source: 'notes', color: null, pinned: false, html, folder: draftFolder } });
+      editingId = c.id;
+      draft = false;
+    } else if (!editingId && !draft && (title || content)) Items.create('note', { title, content, meta: { quick: true, html } });
     showSaved();
   }
   function paintHead() {
@@ -3050,9 +3182,19 @@ const QuickNotes = (() => {
     sendBtn.disabled = !editing && !titleIn.value.trim() && RichText.isEmpty(editor);
     modeEl.textContent = editing ? 'Editing' : '';
     editor.classList.toggle('is-empty', RichText.isEmpty(editor));
+    paintFooter();
+  }
+  /** Notes page: folder · last edited · word count. */
+  function paintFooter() {
+    if (context !== 'notes') return;
+    const n = editingId && Items.get(editingId);
+    const folder = n && n.meta.folder && Items.get(n.meta.folder);
+    const words = (RichText.text(editor).match(/\S+/g) || []).length;
+    footerEl.textContent = [folder ? folder.title : n ? 'All Notes' : 'New note', n ? `Edited ${NotesData.label(n.updatedAt)}` : null, pluralise(words, 'word')].filter(Boolean).join(' · ');
   }
   function sync(force = false) {
-    if (editingId && !Items.get(editingId)) { editingId = null; force = true; } // deleted elsewhere
+    const it = editingId && Items.get(editingId);
+    if (editingId && (!it || it.meta.trashedAt)) { editingId = null; draft = context === 'notes'; force = true; } // deleted elsewhere
     if (force) { dirty = false; clearTimeout(timer); }
     const active = document.activeElement;
     if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); paintBacklinks(); return; }
@@ -3083,14 +3225,34 @@ const QuickNotes = (() => {
     sel.removeAllRanges();
     sel.addRange(r);
   }
-  function openNote(id) {
+  function openNote(id, { focus = true } = {}) {
     if (!Items.get(id)) return;
+    if (id === editingId) { if (focus) { editor.focus({ preventScroll: true }); caretToEnd(); } return; }
     flush();
     editingId = id;
+    draft = false;
     sync(true);
-    editor.focus({ preventScroll: true });
-    caretToEnd();
+    if (focus) { editor.focus({ preventScroll: true }); caretToEnd(); }
     scheduleRender();
+  }
+  /** Notes page: an empty editor whose first words make a new note (in `folder`, if given). */
+  function newNote(folder = null) {
+    flush();
+    editingId = null;
+    draft = true;
+    draftFolder = folder;
+    sync(true);
+    titleIn.focus({ preventScroll: true });
+    scheduleRender();
+  }
+  /** The editor moved to ('notes') or back from ('home') the Notes page. */
+  function setContext(ctx) {
+    if (ctx === context) return;
+    flush();
+    context = ctx;
+    draft = ctx === 'notes' && !editingId;
+    draftFolder = null;
+    sync(true);
   }
   function done() {
     flush();
@@ -3140,7 +3302,7 @@ const QuickNotes = (() => {
   sendBtn.addEventListener('click', () => (editingId ? done() : sendToNotes()));
   backEl.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
   Persistence.onFlush(flush);
-  return { render: () => sync(false), sync, flush, openNote, editingId: () => editingId, changed: onInput };
+  return { render: () => sync(false), sync, flush, openNote, newNote, setContext, editingId: () => editingId, changed: onInput };
 })();
 
 /* ---------- Calendar ---------- */
@@ -3926,7 +4088,7 @@ const SettingsPanel = (() => {
     },
     {
       id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Theme, accent, font, glass and density',
-      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes'],
+      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes', 'notesSizes'],
       rows(s, refresh) {
         Object.keys(FONTS).forEach((id) => window.StillTheme.loadFont(id)); // for the "Aa" previews
         const pickTheme = (id) => {
@@ -3949,8 +4111,8 @@ const SettingsPanel = (() => {
           row('Corner roundness', range('radius', s.radius, 4, 28, 'Corner roundness', (v) => `${v}px`), { keywords: 'radius rounded corners' }),
           row('Density', seg('density', [['comfortable', 'Comfortable'], ['compact', 'Compact']], s.density, 'Density'), { keywords: 'spacing compact comfortable' }),
           stackRow('Nav icons', navChips(s, refresh), { keywords: 'reorder rearrange order navigation icons top bar' }),
-          row('Card sizes', h('button', { class: 'btn btn--sm', type: 'button', disabled: !s.cardSizes, onclick: () => { CardSizes.reset(); refresh(); } }, 'Reset card sizes'),
-            { keywords: 'resize grabber handle columns width height layout home cards', hint: 'Drag the handles between Home cards to resize them' }),
+          row('Card sizes', h('button', { class: 'btn btn--sm', type: 'button', disabled: !s.cardSizes && !s.notesSizes, onclick: () => { CardSizes.reset(); NotesSizes.reset(); refresh(); } }, 'Reset card sizes'),
+            { keywords: 'resize grabber handle columns width height layout home notes cards', hint: 'Drag the handles between the cards on Home and Notes to resize them' }),
         ];
       },
     },
@@ -4688,41 +4850,11 @@ const NotesData = {
         menuSep(),
         menuItem('pin', n.meta.pinned ? 'Unpin' : 'Pin', () => { Popover.close(true); Items.update(id, { meta: { pinned: !n.meta.pinned } }); }),
         menuSep(),
-        menuItem('trash', 'Delete', () => { Popover.close(false); removeWithUndo(id, 'Note'); }, { danger: true }),
+        menuItem('trash', 'Delete', () => { Popover.close(false); NotesPage.trash(id); }, { danger: true }),
       ],
     });
   },
 };
-
-const NoteEditor = (() => {
-  function open(id) {
-    const n = Items.get(id);
-    if (!n) return;
-    if (RichText.hasFormatting(n.meta.html)) {
-      // Formatted notes are edited in the Home editor, so nothing is lost.
-      Navigation.go('home');
-      setTimeout(() => QuickNotes.openNote(id), 80);
-      return;
-    }
-    const title = h('input', { class: 'input', type: 'text', value: n.title, placeholder: 'Title (optional)', 'aria-label': 'Title', maxlength: 200 });
-    const text = h('textarea', { class: 'input', rows: 9, value: n.content, placeholder: 'Write something…', 'aria-label': 'Note' });
-    const error = h('p', { class: 'form-error', role: 'alert' });
-    Dialog.open({
-      title: 'Note', className: 'dialog--wide', dismissOnBackdrop: false, initialFocus: text,
-      body: h('div', { class: 'form' }, title, text, error),
-      actions: [
-        { label: 'Delete', variant: 'danger', run: (close) => { close(); removeWithUndo(id, 'Note'); } },
-        'spacer', { label: 'Cancel' }, { label: 'Save', variant: 'primary', submit: true },
-      ],
-      onSubmit: (close) => {
-        if (!title.value.trim() && !text.value.trim()) { error.textContent = 'A note needs a title or some text.'; return; }
-        Items.update(id, { title: title.value.trim(), content: text.value.trim(), meta: { html: RichText.fromText(text.value.trim()) } });
-        close();
-      },
-    });
-  }
-  return { open };
-})();
 
 /* Saved notes list on the Home notes card. */
 const SavedNotes = (() => {
@@ -4736,7 +4868,7 @@ const SavedNotes = (() => {
     if (el.dataset.action === 'note-menu') NotesData.menu(row.dataset.id, el, () => list.querySelector(`${rowSel(row.dataset.id)} .row-more`));
   });
   /** The three most recently touched notes (created, edited or saved). */
-  const recent = () => Items.all('capture').slice().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3);
+  const recent = () => Items.all('capture').filter((n) => !n.meta.archived && !n.meta.trashedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3);
   function render() {
     const notes = recent();
     const editing = QuickNotes.editingId();
@@ -4764,7 +4896,7 @@ const SavedNotes = (() => {
    (see syncLinks), so the graph, the list, backlinks and the Home card all
    read the same thing. */
 const Links = (() => {
-  const isNode = (it) => !!it && (it.type === 'capture' || it.type === 'pin');
+  const isNode = (it) => !!it && ((it.type === 'capture' && !it.meta.trashedAt) || it.type === 'pin');
   const node = (id) => { const it = Items.get(id); return isNode(it) ? it : null; };
   const nodes = () => Items.all().filter(isNode);
   function title(it) {
@@ -4795,7 +4927,7 @@ const Links = (() => {
     QuickNotes.flush();
     if (it.type === 'pin') { Navigation.go('pins'); return; }
     Navigation.go('notes');
-    NoteView.open(id);
+    NotesPage.open(id);
   }
   /** "Backlinks" and a button for each note or pin that links here. */
   function backlinkLine(from) {
@@ -4815,49 +4947,6 @@ function openExternal(url) {
   a.click();
   a.remove();
 }
-
-/* Reading a note on the Notes page — where note links, backlinks and the
-   graph lead. Links inside work as they do in the editor; "Edit" takes the
-   note to the Home editor. */
-const NoteView = (() => {
-  let current = null;
-  function open(id) {
-    const n = Items.get(id);
-    if (!n || n.type !== 'capture') return;
-    if (current) current.close();
-    const body = h('div', { class: 'notes__editor note-view' });
-    RichText.set(body, typeof n.meta.html === 'string' && n.meta.html ? n.meta.html : RichText.fromText(n.content));
-    if (RichText.isEmpty(body)) body.replaceChildren(h('p', { class: 'note-view__empty', text: 'This note is empty.' }));
-    const back = h('div', { class: 'backlinks backlinks--view', 'aria-label': 'Backlinks' }, Links.backlinkLine(Links.backlinks(id)));
-    const dlg = Dialog.open({
-      title: NotesData.parts(n).title, className: 'dialog--wide dialog--note',
-      sub: `Edited ${Fmt.dateTime(n.updatedAt)}`,
-      body: [body, back],
-      actions: ['spacer', { label: 'Close' }, {
-        label: 'Edit', variant: 'primary',
-        run: (close) => { close(); Navigation.go('home'); setTimeout(() => QuickNotes.openNote(id), 80); },
-      }],
-      onClose: () => { if (current === dlg) current = null; },
-    });
-    current = dlg;
-    dlg.el.addEventListener('click', (e) => {
-      const a = e.target.closest('.note-view a');
-      if (a) {
-        e.preventDefault();
-        if (a.dataset.note) Links.open(a.dataset.note);
-        else if (a.dataset.wiki) {
-          if (!WikiSearch.isOnline()) Toast.show('Connect to internet to open Wikipedia links', { type: 'error' });
-          else WikiSearch.open(a.dataset.wiki);
-        } else openExternal(a.getAttribute('href'));
-        return;
-      }
-      const b = e.target.closest('[data-open]');
-      if (b) Links.open(b.dataset.open);
-    });
-    Inbox.reveal(id);
-  }
-  return { open };
-})();
 
 /* The graph: notes and pins as nodes, links as lines. Positions come from
    a small force layout run once whenever the nodes or links change (seeded
@@ -5781,7 +5870,7 @@ const NoteTools = (() => {
         const q = input.value.trim();
         const ql = q.toLowerCase();
         const current = QuickNotes.editingId();
-        const notes = Items.all('capture').filter((n) => n.id !== current)
+        const notes = Items.all('capture').filter((n) => n.id !== current && !n.meta.trashedAt)
           .filter((n) => !ql || `${n.title} ${n.content}`.toLowerCase().includes(ql))
           .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
         const name = words || q;
@@ -6092,53 +6181,546 @@ const NoteTools = (() => {
   return { build, paint };
 })();
 
-/* ---------- Inbox (Notes page) ---------- */
-const Inbox = (() => {
-  const host = $('#inbox');
-  let revealId = null; // a note just opened from a link: scrolled into view and outlined
-  host.addEventListener('click', (e) => {
-    const del = e.target.closest('[data-action="capture-delete"]');
-    if (del) { removeWithUndo(del.dataset.id, 'Note'); return; }
-    const card = e.target.closest('.card[data-id]');
-    if (card && !e.target.closest('button:not(.card__open)')) NoteEditor.open(card.dataset.id);
-  });
-  function render() {
-    const captures = NotesData.list();
-    $('#inbox-count').textContent = captures.length ? pluralise(captures.length, 'item') : '';
-    if (!captures.length) {
-      host.replaceChildren(emptyState({
-        icon: 'inbox', title: 'Start collecting ideas',
-        text: 'Thoughts, links and reminders you capture will gather here.',
-        action: { label: 'Quick capture', keys: `${MOD} K` },
-      }));
-      return;
+/* ---------- Notes page ----------
+   Three cards: a sidebar of views (All Notes, Today, This Week, Archive,
+   Trash) and folders; the note list (search, filter chips, notes grouped
+   by when they were last edited); and the editor, which is the Home Notes
+   card's own editor moved in while this page is open, so both always show
+   the same notes. The open note is QuickNotes' (one source of truth).
+   Notes carry meta.folder, meta.archived and meta.trashedAt; folders are
+   items of their own. Deleting moves a note to Trash for 30 days. On
+   narrow screens the list and the editor take turns, and the sidebar is a
+   drawer. */
+const TRASH_DAYS = 30;
+const NotesPage = (() => {
+  const layout = $('#notes-layout');
+  const side = $('#notes-side');
+  const rowsEl = $('#notes-rows');
+  const chipsEl = $('#notes-chips');
+  const barEl = $('#notes-bar');
+  const search = $('#notes-search');
+  const editorCard = $('#notes-editor');
+  const pane = $('#note-pane');
+  const homeCard = $('.panel--notes');
+  const drawerBtn = $('#notes-drawer-btn');
+  const scrim = $('#notes-scrim');
+  const narrowQuery = window.matchMedia('(max-width: 1099px) and (orientation: portrait), (max-width: 899px)');
+  const VIEWS = [['all', 'All Notes', 'notes'], ['today', 'Today', 'clock'], ['week', 'This Week', 'calendar'], ['archive', 'Archive', 'inbox'], ['trash', 'Trash', 'trash']];
+  const CHIPS = [['all', 'All'], ['text', 'Text'], ['links', 'Links'], ['media', 'Media']];
+  const MORE = [['pinned', 'Pinned', 'pin'], ['coloured', 'Coloured', 'palette'], ['tasks', 'Has tasks', 'checklist']];
+  let query = '';
+  let editing = false;   // narrow screens: the editor is showing instead of the list
+  let revealId = null;   // scroll this row into view after the next draw
+
+  /* --- Data --- */
+  const isTrashed = (n) => !!n.meta.trashedAt;
+  const isLive = (n) => !n.meta.archived && !n.meta.trashedAt;
+  const folders = () => Items.all('folder').slice().sort((a, b) => ((a.meta.order ?? 0) - (b.meta.order ?? 0)) || a.createdAt.localeCompare(b.createdAt));
+  const folderOf = (n) => (n.meta.folder ? Items.get(n.meta.folder) : null);
+  const view = () => UI.get().notesView;
+  const filter = () => UI.get().notesFilter;
+  const dayDiff = (iso) => Math.round((Dates.parse(Dates.today()) - Dates.parse(Dates.key(new Date(iso)))) / 86400000);
+  function inView(n, v = view()) {
+    if (v === 'trash') return isTrashed(n);
+    if (isTrashed(n)) return false;
+    if (v === 'archive') return !!n.meta.archived;
+    if (n.meta.archived) return false;
+    if (v === 'today') return dayDiff(n.updatedAt) === 0;
+    if (v === 'week') return dayDiff(n.updatedAt) < 7;
+    if (v.startsWith('folder:')) return n.meta.folder === v.slice(7);
+    return true;
+  }
+  const html = (n) => (typeof n.meta.html === 'string' ? n.meta.html : '');
+  const hasLinks = (n) => /<a\b/i.test(html(n));
+  const hasMedia = (n) => /<(img|video|audio|picture)\b/i.test(html(n));
+  const FILTERS = {
+    all: () => true,
+    text: (n) => !hasLinks(n) && !hasMedia(n),
+    links: hasLinks,
+    media: hasMedia,
+    pinned: (n) => n.meta.pinned,
+    coloured: (n) => !!n.meta.color,
+    tasks: (n) => /class="checklist"/.test(html(n)),
+  };
+  const matches = (n, q) => !q || `${n.title}\n${n.content}`.toLowerCase().includes(q);
+  function visible() {
+    const q = query.trim().toLowerCase();
+    const f = FILTERS[filter()] || FILTERS.all;
+    return Items.all('capture').filter((n) => inView(n) && f(n) && matches(n, q));
+  }
+  const count = (v) => Items.all('capture').filter((n) => inView(n, v)).length;
+
+  /* --- Actions (each with Undo where it can be undone) --- */
+  function trash(id) {
+    const n = Items.get(id);
+    if (!n) return;
+    Items.update(id, { meta: { trashedAt: nowISO() } });
+    Toast.show('Moved to Trash', { action: { label: 'Undo', run: () => Items.update(id, { meta: { trashedAt: null } }) } });
+  }
+  function archive(id, on = true) {
+    Items.update(id, { meta: { archived: on } });
+    Toast.show(on ? 'Archived' : 'Moved out of Archive', { action: { label: 'Undo', run: () => Items.update(id, { meta: { archived: !on } }) } });
+  }
+  function restore(id) { Items.update(id, { meta: { trashedAt: null } }); Toast.show('Restored'); }
+  async function destroy(id) {
+    const n = Items.get(id);
+    if (!n) return;
+    const ok = await Dialog.confirm({ title: 'Delete forever?', message: `“${NotesData.parts(n).title}” will be deleted for good.`, confirmLabel: 'Delete forever', danger: true });
+    if (ok) Items.remove(id);
+  }
+  async function emptyTrash() {
+    const gone = Items.all('capture').filter(isTrashed);
+    if (!gone.length) return;
+    const ok = await Dialog.confirm({ title: 'Empty Trash?', message: `${pluralise(gone.length, 'note')} will be deleted for good.`, confirmLabel: 'Empty Trash', danger: true });
+    if (ok) gone.forEach((n) => Items.remove(n.id));
+  }
+  /** Notes in Trash for more than 30 days are deleted. */
+  function purgeTrash() {
+    const cutoff = Date.now() - TRASH_DAYS * 86400000;
+    Items.all('capture').filter((n) => isTrashed(n) && Date.parse(n.meta.trashedAt) < cutoff).forEach((n) => Items.remove(n.id));
+  }
+  function moveTo(id, folderId) {
+    const n = Items.get(id);
+    if (!n || (n.meta.folder || null) === (folderId || null)) return;
+    const before = n.meta.folder || null;
+    Items.update(id, { meta: { folder: folderId || null } });
+    const f = folderId && Items.get(folderId);
+    Toast.show(f ? `Moved to ${f.title}` : 'Moved out of its folder', { action: { label: 'Undo', run: () => Items.update(id, { meta: { folder: before } }) } });
+  }
+  function newNote() {
+    const v = view();
+    if (v === 'trash' || v === 'archive') UI.set({ notesView: 'all' });
+    QuickNotes.newNote(v.startsWith('folder:') ? v.slice(7) : null);
+    showEditor(true);
+  }
+
+  /* --- Folders --- */
+  function folderDialog(f = null) {
+    const name = h('input', { class: 'input', type: 'text', value: f ? f.title : '', placeholder: 'Folder name', 'aria-label': 'Folder name', maxlength: 80, autocomplete: 'off' });
+    const error = h('p', { class: 'form-error', role: 'alert' });
+    Dialog.open({
+      title: f ? 'Rename folder' : 'New folder', body: h('div', { class: 'form' }, name, error), initialFocus: name, dismissOnBackdrop: false,
+      actions: ['spacer', { label: 'Cancel' }, { label: f ? 'Rename' : 'Create', variant: 'primary', submit: true }],
+      onSubmit: (close) => {
+        const title = name.value.trim();
+        if (!title) { error.textContent = 'Give the folder a name.'; name.focus(); return; }
+        if (f) Items.update(f.id, { title });
+        else Items.create('folder', { title, meta: { color: null, order: folders().reduce((m, x) => Math.max(m, x.meta.order ?? 0), -1) + 1 } });
+        close();
+      },
+    });
+  }
+  function deleteFolder(id) {
+    const f = Items.get(id);
+    if (!f) return;
+    const moved = Items.all('capture').filter((n) => n.meta.folder === id).map((n) => n.id);
+    moved.forEach((nid) => Items.update(nid, { meta: { folder: null } }));
+    const token = Items.remove(id);
+    if (view() === `folder:${id}`) UI.set({ notesView: 'all' });
+    Toast.show(`Folder deleted${moved.length ? ` · ${pluralise(moved.length, 'note')} moved to All Notes` : ''}`, {
+      action: { label: 'Undo', run: () => { Items.restore(token); moved.forEach((nid) => Items.update(nid, { meta: { folder: id } })); } },
+    });
+  }
+  function folderMenu(id, anchor) {
+    const f = Items.get(id);
+    if (!f) return;
+    Popover.open({
+      anchor, key: `folder:${id}`, label: `Options for ${f.title}`,
+      getAnchor: () => side.querySelector(`[data-folder="${CSS.escape(id)}"] .row-more`),
+      content: [
+        menuItem('edit', 'Rename', () => { Popover.close(false); folderDialog(f); }),
+        menuSep(),
+        colourGroup(f.meta.color, (c) => Items.update(id, { meta: { color: c } })),
+        menuSep(),
+        menuItem('trash', 'Delete', () => { Popover.close(false); deleteFolder(id); }, { danger: true }),
+      ],
+    });
+  }
+
+  /* --- Note menu (⋯, or swipe left on touch) --- */
+  function noteMenu(id, anchor) {
+    const n = Items.get(id);
+    if (!n) return;
+    const getAnchor = () => rowsEl.querySelector(`.nrow[data-id="${CSS.escape(id)}"] .row-more`);
+    const items = isTrashed(n) ? [
+      menuItem('reset', 'Restore', () => { Popover.close(false); restore(id); }),
+      menuSep(),
+      menuItem('trash', 'Delete forever', () => { Popover.close(false); destroy(id); }, { danger: true }),
+    ] : [
+      menuItem('pin', n.meta.pinned ? 'Unpin' : 'Pin', () => { Popover.close(true); Items.update(id, { meta: { pinned: !n.meta.pinned } }); }),
+      menuSep(),
+      colourGroup(n.meta.color, (c) => Items.update(id, { meta: { color: c } })),
+      menuSep(),
+      menuItem('files', 'Move to folder…', () => { Popover.close(false); folderPicker(id, getAnchor() || anchor); }),
+      menuItem('inbox', n.meta.archived ? 'Unarchive' : 'Archive', () => { Popover.close(false); archive(id, !n.meta.archived); }),
+      menuSep(),
+      menuItem('trash', 'Delete', () => { Popover.close(false); trash(id); }, { danger: true }),
+    ];
+    Popover.open({ anchor, key: `nrow:${id}`, label: 'Note options', getAnchor, content: items });
+  }
+  function folderPicker(id, anchor) {
+    const n = Items.get(id);
+    const cur = n && (n.meta.folder || null);
+    Popover.open({
+      anchor, key: `nmove:${id}`, label: 'Move to folder',
+      content: [
+        h('div', { class: 'panel__title menu__label', text: 'Move to' }),
+        menuItem('notes', 'No folder', () => { Popover.close(false); moveTo(id, null); }, { disabled: !cur }),
+        ...folders().map((f) => menuItem('files', f.title, () => { Popover.close(false); moveTo(id, f.id); }, { disabled: cur === f.id })),
+      ],
+    });
+  }
+
+  /* --- Drawing --- */
+  function sideItem({ key, label, iconName, n, folder = null, current }) {
+    const main = h('button', { class: 'nside__main', type: 'button', dataset: { view: key } },
+      icon(iconName), h('span', { class: 'nside__label', text: label }), h('span', { class: 'nside__count', text: String(n) }));
+    if (folder && folder.meta.color) main.firstChild.style.color = folder.meta.color;
+    return h('div', { class: `nside__item${folder ? ' nside__folder' : ''}`, 'aria-current': String(current), dataset: folder ? { folder: folder.id, drop: folder.id } : (key === 'all' ? { drop: '' } : {}) },
+      main,
+      folder ? h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'folder-menu' }, 'aria-label': `Options for ${folder.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`folder:${folder.id}`)) }, icon('more')) : null);
+  }
+  function renderSide() {
+    const v = view();
+    const live = Items.all('capture').filter(isLive);
+    side.replaceChildren(
+      h('div', { class: 'nside__head' }, icon('notes'), h('span', { text: 'Notes' })),
+      ...VIEWS.map(([key, label, ic]) => sideItem({ key, label, iconName: ic, n: count(key), current: v === key })),
+      h('div', { class: 'nside__sep', role: 'separator' }),
+      h('div', { class: 'nside__head' }, icon('files'), h('span', { text: 'Files' }),
+        h('button', { class: 'icon-btn icon-btn--sm', type: 'button', dataset: { action: 'folder-new' }, 'aria-label': 'New folder', 'data-tip': 'New folder', 'data-tip-align': 'end' }, icon('plus'))),
+      ...folders().map((f) => sideItem({ key: `folder:${f.id}`, label: f.title, iconName: 'files', n: live.filter((x) => x.meta.folder === f.id).length, folder: f, current: v === `folder:${f.id}` })));
+  }
+  function renderChips() {
+    const f = filter();
+    const more = MORE.find(([k]) => k === f);
+    chipsEl.replaceChildren(
+      ...CHIPS.map(([k, label]) => h('button', { class: 'nchip', type: 'button', 'aria-pressed': String(f === k), dataset: { filter: k }, text: label })),
+      h('button', { class: 'nchip nchip--more', type: 'button', 'aria-pressed': String(!!more), 'aria-label': more ? `More filters: ${more[1]}` : 'More filters', 'aria-haspopup': 'menu', dataset: { action: 'more-filters' } },
+        more ? h('span', { text: more[1] }) : null, icon('more')));
+  }
+  /** "Today", "Yesterday", "Last Week", then the month. */
+  function groupOf(iso) {
+    const d = dayDiff(iso);
+    if (d <= 0) return 'Today';
+    if (d === 1) return 'Yesterday';
+    if (d < 7) return 'Last Week';
+    return Fmt.monthYear(Dates.key(new Date(iso)).slice(0, 7));
+  }
+  /** The time today, the day this week, the date before that. */
+  function whenOf(iso) {
+    const d = new Date(iso);
+    const days = dayDiff(iso);
+    if (days <= 0) return Fmt.time(`${pad2(d.getHours())}:${pad2(d.getMinutes())}`, Settings.get().clock24);
+    if (days < 7) return Fmt.dowShort(d.getDay());
+    return Fmt.shortDate(Dates.key(d));
+  }
+  /** Text with each match of the search wrapped in a highlight. */
+  function marked(text, q) {
+    if (!q) return [text];
+    const out = [];
+    const lower = text.toLowerCase();
+    let i = 0;
+    for (let j = lower.indexOf(q); j >= 0; j = lower.indexOf(q, i)) {
+      if (j > i) out.push(text.slice(i, j));
+      out.push(h('mark', { class: 'hit', text: text.slice(j, j + q.length) }));
+      i = j + q.length;
     }
-    host.replaceChildren(h('div', { class: 'inbox' }, captures.map((c) => {
-      const heading = c.title || c.content.split('\n')[0];
-      const rest = c.title ? c.content : c.content.split('\n').slice(1).join('\n').trim();
-      return h('article', { class: `card glass${c.meta.color ? ' has-color' : ''}`, dataset: { id: c.id }, style: c.meta.color ? `--row-c:${c.meta.color}` : null },
-        h('div', { class: 'card__head' },
-          h('h3', { class: 'card__title' }, h('button', { class: 'card__open', type: 'button', text: heading })),
-          h('button', { class: 'icon-btn icon-btn--sm', type: 'button', dataset: { action: 'capture-delete', id: c.id }, 'aria-label': `Delete “${heading}”` }, icon('trash'))),
-        rest ? h('p', { class: 'card__text', text: rest }) : null,
-        backlinksOf(c.id),
-        h('div', { class: 'card__foot' },
-          c.meta.pinned ? icon('pin') : null,
-          c.meta.category ? h('span', { class: 'tag', text: c.meta.category }) : null,
-          h('time', { datetime: c.createdAt, text: Fmt.dateTime(c.createdAt) })));
-    })));
+    if (i < text.length) out.push(text.slice(i));
+    return out;
+  }
+  function row(n, q, selected) {
+    const { title, preview } = NotesData.parts(n);
+    // With a search, the preview starts near the first match in the body.
+    let pv = preview;
+    if (q && !title.toLowerCase().includes(q)) {
+      const at = n.content.toLowerCase().indexOf(q);
+      if (at > 24) pv = `…${n.content.slice(at - 20).replace(/\s+/g, ' ')}`;
+    }
+    return h('div', {
+      class: `nrow${n.id === selected ? ' is-selected' : ''}${n.meta.color ? ' has-color' : ''}`,
+      dataset: { id: n.id }, style: n.meta.color ? `--row-c:${n.meta.color}` : null, draggable: isTrashed(n) ? null : 'true', role: 'option', 'aria-selected': String(n.id === selected),
+    },
+      h('button', { class: 'nrow__main', type: 'button', dataset: { action: 'open' } },
+        h('span', { class: 'nrow__top' },
+          h('span', { class: 'nrow__title' }, n.meta.pinned ? icon('pin') : null, ...marked(title, q)),
+          h('time', { class: 'nrow__time', datetime: n.updatedAt, text: whenOf(n.updatedAt) })),
+        h('span', { class: 'nrow__preview' }, ...marked(pv, q))),
+      h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'menu' }, 'aria-label': `More options for “${title}”`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`nrow:${n.id}`)) }, icon('more')));
+  }
+  function empty() {
+    const v = view();
+    const q = query.trim();
+    const [ic, title, text, action] = q ? ['search', 'No results', `No notes match “${q}”.`, null]
+      : filter() !== 'all' ? ['search', 'No results', 'No notes here match this filter.', null]
+        : v === 'trash' ? ['trash', 'Trash is empty', `Deleted notes stay here for ${TRASH_DAYS} days.`, null]
+          : v === 'archive' ? ['inbox', 'Nothing archived', 'Archived notes are kept out of the way here.', null]
+            : v.startsWith('folder:') ? ['files', 'This folder is empty', 'Drag notes here, or start a new one.', 'New note']
+              : v === 'all' ? ['notes', 'No notes yet', 'Write your first note.', 'New note']
+                : ['notes', 'Nothing here yet', v === 'today' ? 'Notes you edit today show up here.' : 'Notes you edit this week show up here.', 'New note'];
+    return h('div', { class: 'tasks-empty' },
+      h('span', { class: 'tasks-empty__mark', 'aria-hidden': 'true' }, icon(ic)),
+      h('p', { class: 'tasks-empty__title', text: title }),
+      h('p', { class: 'tasks-empty__text', text }),
+      action ? h('button', { class: 'tasks-empty__add', type: 'button', dataset: { action: 'new' } }, icon('plus'), action) : null);
+  }
+  function renderList() {
+    const q = query.trim().toLowerCase();
+    const selected = QuickNotes.editingId();
+    const notes = visible().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const trashView = view() === 'trash';
+    barEl.hidden = !trashView;
+    if (trashView) barEl.replaceChildren(h('span', { text: `Notes in Trash are deleted after ${TRASH_DAYS} days.` }),
+      h('button', { class: 'btn btn--ghost btn--sm', type: 'button', dataset: { action: 'empty-trash' }, disabled: !count('trash'), text: 'Empty Trash' }));
+    if (!notes.length) { rowsEl.replaceChildren(empty()); return; }
+    const groups = new Map();
+    for (const n of notes) {
+      const g = groupOf(n.updatedAt);
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(n);
+    }
+    const out = [];
+    for (const [g, list] of groups) {
+      list.sort((a, b) => ((b.meta.pinned ? 1 : 0) - (a.meta.pinned ? 1 : 0)) || b.updatedAt.localeCompare(a.updatedAt));
+      out.push(h('div', { class: 'ngroup', role: 'presentation' }, h('span', { text: g }), h('span', { text: String(list.length) })));
+      out.push(...list.map((n) => row(n, q, selected)));
+    }
+    rowsEl.replaceChildren(...out);
     if (revealId) {
-      const card = host.querySelector(`.card[data-id="${CSS.escape(revealId)}"]`);
+      const el = rowsEl.querySelector(`.nrow[data-id="${CSS.escape(revealId)}"]`);
       revealId = null;
-      if (card) { card.classList.add('is-target'); card.scrollIntoView({ block: 'nearest' }); }
+      if (el) el.scrollIntoView({ block: 'nearest' });
     }
   }
-  function backlinksOf(id) {
-    const from = Links.backlinks(id);
-    return from.length ? h('p', { class: 'card__links', text: `Linked from: ${from.map(Links.title).join(', ')}` }) : null;
+  function render() {
+    renderSide();
+    renderChips();
+    renderList();
+    layout.classList.toggle('is-editor', editing);
   }
-  function reveal(id) { revealId = id; scheduleRender(); }
-  return { render, reveal };
+
+  /* --- Narrow screens: list ⇄ editor, sidebar drawer --- */
+  function showEditor(on) {
+    editing = on;
+    layout.classList.toggle('is-editor', on);
+    if (!on && narrowQuery.matches) QuickNotes.flush();
+  }
+  function drawer(on) {
+    layout.classList.toggle('is-drawer', on);
+    drawerBtn.setAttribute('aria-expanded', String(on));
+    scrim.hidden = !on;
+  }
+
+  /** Opens a note here (from the list, or a note link anywhere), showing it in the list too. */
+  function open(id) {
+    const n = Items.get(id);
+    if (!n || isTrashed(n)) return;
+    if (!inView(n) || !(FILTERS[filter()] || FILTERS.all)(n) || !matches(n, query.trim().toLowerCase())) {
+      query = '';
+      search.value = '';
+      UI.set({ notesView: n.meta.archived ? 'archive' : 'all', notesFilter: 'all' });
+    }
+    revealId = id;
+    QuickNotes.openNote(id, { focus: false });
+    showEditor(true);
+    scheduleRender();
+  }
+
+  /** The editor lives in the Home card, or here while this page is open. */
+  function place(page) {
+    const here = page === 'notes';
+    if (here && pane.parentNode !== editorCard) editorCard.append(pane);
+    if (!here && pane.parentNode !== homeCard) homeCard.prepend(pane);
+    QuickNotes.setContext(here ? 'notes' : 'home');
+    if (!here) drawer(false);
+  }
+
+  function build() {
+    side.addEventListener('click', (e) => {
+      const more = e.target.closest('[data-action="folder-menu"]');
+      if (more) { folderMenu(more.closest('[data-folder]').dataset.folder, more); return; }
+      if (e.target.closest('[data-action="folder-new"]')) { folderDialog(); return; }
+      const b = e.target.closest('[data-view]');
+      if (b) { UI.set({ notesView: b.dataset.view }); drawer(false); showEditor(false); }
+    });
+    chipsEl.addEventListener('click', (e) => {
+      const c = e.target.closest('[data-filter]');
+      if (c) { UI.set({ notesFilter: c.dataset.filter }); return; }
+      const m = e.target.closest('[data-action="more-filters"]');
+      if (m) {
+        Popover.open({
+          anchor: m, key: 'notes-more', label: 'More filters',
+          content: MORE.map(([k, label, ic]) => menuItem(ic, label, () => { Popover.close(true); UI.set({ notesFilter: filter() === k ? 'all' : k }); })),
+        });
+      }
+    });
+    search.addEventListener('input', () => { query = search.value; renderList(); });
+    search.addEventListener('keydown', (e) => { if (e.key === 'Escape' && search.value) { e.stopPropagation(); search.value = ''; query = ''; renderList(); } });
+    barEl.addEventListener('click', (e) => { if (e.target.closest('[data-action="empty-trash"]')) emptyTrash(); });
+    rowsEl.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="new"]')) { newNote(); return; }
+      const el = e.target.closest('[data-action]');
+      const r = el && el.closest('.nrow');
+      if (!r) return;
+      if (el.dataset.action === 'menu') noteMenu(r.dataset.id, el);
+      else if (Date.now() - swipedAt > 400) { revealId = null; QuickNotes.openNote(r.dataset.id, { focus: false }); showEditor(true); scheduleRender(); }
+    });
+    // Swipe left on a row (touch) opens its menu.
+    let swipe = null;
+    let swipedAt = 0;
+    rowsEl.addEventListener('pointerdown', (e) => {
+      const r = e.target.closest('.nrow');
+      swipe = r && e.pointerType !== 'mouse' ? { r, x: e.clientX, y: e.clientY } : null;
+    });
+    rowsEl.addEventListener('pointermove', (e) => {
+      if (!swipe) return;
+      const dx = e.clientX - swipe.x;
+      if (Math.abs(e.clientY - swipe.y) > 24) { swipe = null; return; }
+      if (dx < -48) { const { r } = swipe; swipe = null; swipedAt = Date.now(); noteMenu(r.dataset.id, $('.row-more', r)); }
+    });
+    rowsEl.addEventListener('pointerup', () => { swipe = null; });
+    rowsEl.addEventListener('pointercancel', () => { swipe = null; });
+    // Drag a note onto a folder (or All Notes) to move it there.
+    const NOTE_TYPE = 'application/x-still-note';
+    rowsEl.addEventListener('dragstart', (e) => {
+      const r = e.target.closest && e.target.closest('.nrow');
+      if (!r) return;
+      e.dataTransfer.setData(NOTE_TYPE, r.dataset.id);
+      e.dataTransfer.setData('text/plain', NotesData.parts(Items.get(r.dataset.id)).title);
+      e.dataTransfer.effectAllowed = 'move';
+      r.classList.add('is-dragging');
+    });
+    rowsEl.addEventListener('dragend', (e) => { const r = e.target.closest && e.target.closest('.nrow'); if (r) r.classList.remove('is-dragging'); $$('.is-drop', side).forEach((x) => x.classList.remove('is-drop')); });
+    const target = (e) => { const t = e.target.closest && e.target.closest('[data-drop]'); return t && Array.from(e.dataTransfer.types || []).includes(NOTE_TYPE) ? t : null; };
+    side.addEventListener('dragover', (e) => { const t = target(e); if (!t) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; $$('.is-drop', side).forEach((x) => x !== t && x.classList.remove('is-drop')); t.classList.add('is-drop'); });
+    side.addEventListener('dragleave', (e) => { const t = target(e); if (t && !t.contains(e.relatedTarget)) t.classList.remove('is-drop'); });
+    side.addEventListener('drop', (e) => {
+      const t = target(e);
+      if (!t) return;
+      e.preventDefault();
+      t.classList.remove('is-drop');
+      moveTo(e.dataTransfer.getData(NOTE_TYPE), t.dataset.drop || null);
+    });
+    drawerBtn.addEventListener('click', () => drawer(!layout.classList.contains('is-drawer')));
+    scrim.addEventListener('click', () => drawer(false));
+    $('#notes-back').addEventListener('click', () => { showEditor(false); scheduleRender(); });
+    $('#notes-new').addEventListener('click', newNote);
+    narrowQuery.addEventListener('change', () => { drawer(false); scheduleRender(); });
+  }
+  return { build, render, place, open, newNote, trash, purgeTrash, isLive, isTrashed };
+})();
+
+/* Grabbers between the Notes page cards: like Home's (see CardSizes), for
+   its three columns; sizes are kept as fractions in settings.notesSizes. */
+const NotesSizes = (() => {
+  const host = $('#notes-layout');
+  const cols = () => [$('#notes-side'), $('.nlist', host), $('#notes-editor')];
+  const MINS = [200, 260, 320];
+  const DEFAULTS = [0.8, 1.15, 2.15];
+  const fractions = (v) => { const sum = v.reduce((a, b) => a + b, 0); return v.map((x) => x / sum); };
+  const DEFAULT_FRACTIONS = fractions(DEFAULTS);
+  const grabbers = [0, 1].map((i) => h('div', {
+    class: 'grabber grabber--col', role: 'separator', tabindex: '0', 'aria-orientation': 'vertical',
+    'aria-label': i ? 'Resize the list and editor' : 'Resize the sidebar and list', dataset: { split: String(i) },
+  }, h('span', { class: 'grabber__pill' })));
+  let applied = null;
+  const saved = () => (Settings.get().notesSizes && Settings.get().notesSizes.cols) || null;
+  function apply(c = saved()) {
+    const key = JSON.stringify(c);
+    if (key === applied) return;
+    applied = key;
+    ['--ncol-1', '--ncol-2', '--ncol-3'].forEach((v, i) => (c ? host.style.setProperty(v, `${(c[i] * 10).toFixed(4)}fr`) : host.style.removeProperty(v)));
+    place();
+  }
+  function place() {
+    if (!host.offsetParent) return;
+    const d = host.getBoundingClientRect();
+    const [, b, c] = cols().map((el) => el.getBoundingClientRect());
+    const gap = parseFloat(getComputedStyle(host).columnGap) || 0;
+    grabbers[0].style.left = `${b.left - gap / 2 - d.left}px`;
+    grabbers[1].style.left = `${c.left - gap / 2 - d.left}px`;
+  }
+  const tidy = (c) => (c && c.some((v, i) => Math.abs(v - DEFAULT_FRACTIONS[i]) > 0.002) ? { cols: c.map((v) => Math.round(v * 10000) / 10000), split: null } : null);
+  const save = (c) => Settings.set({ notesSizes: tidy(c) });
+  function resize(i, w, dx) {
+    const pair = w[i] + w[i + 1];
+    const left = Math.min(pair - Math.min(MINS[i + 1], w[i + 1]), Math.max(Math.min(MINS[i], w[i]), w[i] + dx));
+    const out = w.slice();
+    out[i] = left;
+    out[i + 1] = pair - left;
+    return fractions(out);
+  }
+  function settle(c) {
+    host.classList.add('is-settling');
+    void host.offsetWidth;
+    apply(c);
+    save(c);
+    setTimeout(() => host.classList.remove('is-settling'), 420);
+  }
+  function resetSplit(i) {
+    const f = (saved() || DEFAULT_FRACTIONS).slice();
+    const pair = f[i] + f[i + 1];
+    f[i] = (pair * DEFAULT_FRACTIONS[i]) / (DEFAULT_FRACTIONS[i] + DEFAULT_FRACTIONS[i + 1]);
+    f[i + 1] = pair - f[i];
+    settle(f);
+  }
+  let lastTap = null;
+  function startDrag(e, g) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    try { g.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+    const i = Number(g.dataset.split);
+    const w = cols().map((el) => el.getBoundingClientRect().width);
+    const x0 = e.clientX;
+    const downAt = e.timeStamp;
+    let next = null;
+    let frame = 0;
+    document.documentElement.classList.add('is-resizing');
+    document.documentElement.dataset.resize = 'col';
+    g.classList.add('is-active');
+    const onMove = (ev) => {
+      if (!next && Math.abs(ev.clientX - x0) < 3) return;
+      next = resize(i, w, ev.clientX - x0);
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; apply(next); });
+    };
+    const onEnd = (ev) => {
+      g.removeEventListener('pointermove', onMove);
+      g.removeEventListener('pointerup', onEnd);
+      g.removeEventListener('pointercancel', onEnd);
+      cancelAnimationFrame(frame);
+      document.documentElement.classList.remove('is-resizing');
+      delete document.documentElement.dataset.resize;
+      g.classList.remove('is-active');
+      if (next) { apply(next); save(next); return; }
+      if (ev.type !== 'pointerup') return;
+      if (lastTap && lastTap.g === g && downAt - lastTap.at < 400) { lastTap = null; resetSplit(i); return; }
+      lastTap = { g, at: ev.timeStamp };
+    };
+    g.addEventListener('pointermove', onMove);
+    g.addEventListener('pointerup', onEnd);
+    g.addEventListener('pointercancel', onEnd);
+  }
+  function build() {
+    host.append(...grabbers);
+    grabbers.forEach((g) => {
+      g.addEventListener('pointerdown', (e) => startDrag(e, g));
+      g.addEventListener('keydown', (e) => {
+        const i = Number(g.dataset.split);
+        if (e.key === 'Enter') { e.preventDefault(); resetSplit(i); return; }
+        const step = { ArrowLeft: -24, ArrowRight: 24 }[e.key];
+        if (!step) return;
+        e.preventDefault();
+        const c = resize(i, cols().map((el) => el.getBoundingClientRect().width), step);
+        apply(c);
+        save(c);
+      });
+    });
+    const ro = new ResizeObserver(place);
+    [host, ...cols()].forEach((el) => ro.observe(el));
+    apply();
+  }
+  function reset() { settle(null); }
+  return { build, apply, reset };
 })();
 
 /* ---------- Placeholder pages ---------- */
@@ -6209,6 +6791,7 @@ const Navigation = (() => {
     const order = Settings.get().navOrder;
     if ($$('[data-page]', nav).map((b) => b.dataset.page).join() !== order.join()) order.forEach((id) => nav.append($(`[data-page="${id}"]`, nav)));
     $$('#nav [data-page]').forEach((b) => (b.getAttribute('data-page') === page ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
+    NotesPage.place(page); // the note editor goes where it's shown
     $$('main > .page').forEach((p) => { p.hidden = p.dataset.page !== page; });
     $('.app').dataset.page = page;
     document.title = page === 'home' ? 'STILL' : `${PAGES[page].title} · STILL`;
@@ -6318,7 +6901,9 @@ function render() {
     Connections.render();
     CardSizes.apply();
   } else if (page === 'notes') {
-    Inbox.render();
+    QuickNotes.render();
+    NotesPage.render();
+    NotesSizes.apply();
   } else if (page === 'connections') {
     Connections.renderPage();
   }
@@ -6328,7 +6913,7 @@ function render() {
 function watchDay() {
   let day = Dates.today();
   setInterval(() => {
-    if (Dates.today() !== day) { day = Dates.today(); scheduleRender(); }
+    if (Dates.today() !== day) { day = Dates.today(); NotesPage.purgeTrash(); scheduleRender(); }
   }, 20000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') scheduleRender(); });
 }
@@ -6346,6 +6931,9 @@ function init() {
   TaskPanel.build();
   TimeCard.build();
   CardSizes.build();
+  NotesPage.build();
+  NotesSizes.build();
+  NotesPage.purgeTrash();
   WikiSearch.build();
   NoteTools.build();
   Timer.build();

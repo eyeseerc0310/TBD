@@ -13,9 +13,12 @@ keeps the analog face, which then uses the card's full width. The card can't be 
 time needs to clear the timer. Drag the pill handles in the gaps between the cards to
 resize them (double-tap one to reset it; Settings → Appearance → Reset card sizes
 resets all). Around it:
-universal Quick Capture, themeable settings, and a versioned backup system. The Connections
-page shows how notes and pins link together, as a graph or a list. Files and Pin Board
-are in place as workspaces ready to grow.
+universal Quick Capture, themeable settings, and a versioned backup system. The Notes
+page has a sidebar of views (All Notes, Today, This Week, Archive, Trash) and folders, a
+searchable, filterable list of notes grouped by when they were edited, and the same editor
+as Home (it moves there while the page is open). The Connections page shows how notes and
+pins link together, as a graph or a list. Files and Pin Board are in place as workspaces
+ready to grow.
 
 ## Running it
 
@@ -74,7 +77,8 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared). Captures are the saved notes shown on the Notes page and the Home notes card |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared), `folder` (a folder id or `null`), `archived`, `trashedAt` (when it went to Trash; notes are deleted 30 days later). Captures are the saved notes shown on the Notes page and the Home notes card |
+| `folder` | `color`, `order`. Notes folders; Projects, Ideas, Reference and Personal are created once (older backups get them too) |
 | `pin` | `attached` (ids the pin is attached to), `html` (optional body), `linkedAt`. The Pin Board UI is still to come; pins already take part in Connections |
 | `connection` | Legacy saved links/contacts from the first Connections page: `target`, `kind`, `color`, `order`. Kept as they are; the Connections page offers to move them into Notes |
 | `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
@@ -96,8 +100,8 @@ Application state is `{ items, settings, ui, timer }`:
     `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons),
     `cardSizes` (`null` for the defaults, or `{ cols: [a, b, c], split }`: the Home columns'
     shares of the width and the Clock/Calendar card's share of the left column, as fractions
-    so they suit any screen)
-- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card)
+    so they suit any screen), `notesSizes` (the Notes page's columns, the same way)
+- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `foldersSeeded`
 
 Older data without the newer fields loads with defaults; tasks without an `order`
 are numbered by creation time.
