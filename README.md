@@ -14,9 +14,9 @@ time needs to clear the timer. Drag the pill handles in the gaps between the car
 resize them (double-tap one to reset it; Settings → Appearance → Reset card sizes
 resets all). Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. The Notes
-page has a sidebar of views (All Notes, Today, This Week, Archive, Trash) and folders, a
-searchable, filterable list of notes grouped by when they were edited, and the same editor
-as Home (it moves there while the page is open). The Connections page shows how notes and
+page has a sidebar and the same editor as Home (it moves there while the page is open). The
+sidebar has a search field (with a filter menu) above two collapsible groups, Notes (All
+Notes, Today, This Week, Archive, Trash) and Files (folders); each opens to list its notes. The Connections page shows how notes and
 pins link together, as a graph or a list. Files and Pin Board are in place as workspaces
 ready to grow.
 
@@ -100,8 +100,8 @@ Application state is `{ items, settings, ui, timer }`:
     `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons),
     `cardSizes` (`null` for the defaults, or `{ cols: [a, b, c], split }`: the Home columns'
     shares of the width and the Clock/Calendar card's share of the left column, as fractions
-    so they suit any screen), `notesSizes` (the Notes page's columns, the same way)
-- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `foldersSeeded`
+    so they suit any screen), `notesSizes` (the Notes page's two columns, the same way)
+- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `notesOpen` (which Notes sidebar groups and sections are open), `foldersSeeded`
 
 Older data without the newer fields loads with defaults; tasks without an `order`
 are numbered by creation time.
