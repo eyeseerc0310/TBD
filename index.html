@@ -589,7 +589,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .clock__meta { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
 /* The face fills the view: capped by its width (cqi) and by its height minus the readout (cqb). */
 /* The face takes whatever height is left; the square SVG scales to fit. */
-.clock__face { flex: 1 1 0; min-height: 72px; width: 100%; }
+.clock__face { position: relative; flex: 1 1 0; min-height: 72px; width: 100%; container-type: size; }
 .clock.no-time .clock__digital { display: none; }
 .clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
 
@@ -605,6 +605,30 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .clock__date { font-size: var(--fs-sm); color: var(--text-2); }
 .clock__location { font-size: var(--fs-sm); color: var(--text-3); }
 .clock[data-face="digital"] .clock__readout { flex: 1; justify-content: center; }
+/* When the face would be too small to read, a digital clock fades in in its place. It covers the
+   face's box plus the time line below it (which fades out), so it sits centred in all the room
+   the clock has, and nothing moves. The time fills that width (cqi) or height (cqb), whichever is tighter. */
+.clock__auto {
+  position: absolute; inset: 0 0 calc(-1 * var(--readout-h, 0px)) 0; container-type: size;
+  pointer-events: none; opacity: 0; transform: scale(0.95); visibility: hidden;
+  transition: opacity 300ms var(--ease), transform 300ms var(--ease), visibility 0s linear 300ms;
+}
+.clock__auto-inner {
+  height: 100%; display: flex; align-items: center; justify-content: center; gap: 0.12em;
+  font: 300 min(24cqi, 82cqb)/1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text);
+}
+.clock__auto-side { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.25em; letter-spacing: normal; }
+.clock__auto-sec { font-size: 0.3em; font-weight: 400; color: var(--text-3); }
+.clock__auto-ampm { font-size: 0.24em; font-weight: 500; letter-spacing: 0.04em; color: var(--text-2); }
+.clock__auto-sec:empty, .clock__auto-ampm:empty { display: none; }
+.clock__auto-side:not(:has(:not(:empty))) { display: none; }
+.clock__face svg, .clock__readout { transition: opacity 300ms var(--ease), transform 300ms var(--ease), visibility 0s linear 0s; }
+.clock.is-auto-digital .clock__face svg { opacity: 0; transform: scale(0.95); }
+.clock.is-auto-digital .clock__auto { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+/* The time under the face would repeat the big one: it fades too, keeping its space. */
+.clock.is-auto-digital .clock__readout { opacity: 0; visibility: hidden; transition: opacity 300ms var(--ease), visibility 0s linear 300ms; }
+/* The first decision (on load, or coming back to Home) is made without a fade. */
+.clock.is-instant .clock__face svg, .clock.is-instant .clock__auto, .clock.is-instant .clock__readout { transition: none; }
 
 /* Timer */
 /* Timer: centred rows pinned to the bottom of the clock view */
@@ -828,6 +852,13 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .conn-notice p { flex: 1; min-width: 0; }
 .conn-notice > .icon { color: var(--accent); }
 .mini-row.mini-row--conn { height: 46px; min-height: 46px; }
+/* A narrow Connections card (resized with the grabbers) keeps just the icon of "Open Connections". */
+.panel--connections { container-type: inline-size; }
+@container (min-width: 300px) { .conn-open[data-tip]::after { display: none; } }
+@container (max-width: 299px) {
+  .conn-open { width: var(--ctl-h-sm); padding: 0; }
+  .conn-open__label { display: none; }
+}
 .conn-pair { display: flex; align-items: center; gap: 6px; }
 .conn-pair .conn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conn-pair .icon { flex: none; margin-right: -2px; }
@@ -1493,6 +1524,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
               </div>
               <div class="clock__face">
                 <svg id="clock-svg" viewBox="0 0 200 200" role="img" aria-label="Analog clock"></svg>
+                <div class="clock__auto" id="clock-auto" aria-hidden="true"><div class="clock__auto-inner"><span class="clock__auto-time" id="clock-auto-time">--:--</span><span class="clock__auto-side"><span class="clock__auto-sec" id="clock-auto-sec"></span><span class="clock__auto-ampm" id="clock-auto-ampm"></span></span></div></div>
               </div>
               <div class="clock__readout">
                 <div class="clock__digital"><time id="clock-time">--:--</time><span class="clock__side"><span class="clock__zone" id="clock-zone"></span><span class="clock__ampm" id="clock-ampm"></span></span></div>
@@ -1544,7 +1576,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             <header class="panel__head">
               <h2 class="panel__title" id="conn-label">Connections</h2>
               <div class="panel__actions">
-                <button class="btn btn--ghost btn--sm" type="button" data-action="go-connections"><svg class="icon icon--sm"><use href="#i-connections"/></svg>Open Connections</button>
+                <button class="btn btn--ghost btn--sm conn-open" type="button" data-action="go-connections" aria-label="Open Connections" data-tip="Open Connections" data-tip-align="end"><svg class="icon icon--sm"><use href="#i-connections"/></svg><span class="conn-open__label">Open Connections</span></button>
               </div>
             </header>
             <ul class="list mini-list" id="conn-list"></ul>
@@ -2669,16 +2701,59 @@ const ClockFace = (() => {
 
 /* ---------- Clock ----------
    One Date per frame drives both the hands and the digits, so they can
-   never disagree. Runs only while Home is visible. */
+   never disagree. Runs only while Home is visible. When the face would be
+   drawn smaller than 220px across (a small card or window), it crossfades
+   to a digital clock in the same box, and back above 250px; the gap
+   between the two stops it flickering at the edge. "Digital only" in
+   Settings never switches. */
+const AUTO_DIGITAL_BELOW = 220;
+const AUTO_ANALOG_ABOVE = 250;
 const Clock = (() => {
   const root = $('#clock');
   const face = $('#clock-svg');
   const timeEl = $('#clock-time');
   const ampmEl = $('#clock-ampm');
+  const faceBox = $('.clock__face', root);
+  const autoEl = $('#clock-auto');
+  const autoTime = $('#clock-auto-time');
+  const autoSec = $('#clock-auto-sec');
+  const autoAmpm = $('#clock-auto-ampm');
+  const readout = $('.clock__readout', root);
   let hands = null;
   let drawn = '';
   let raf = 0;
   let lastDigital = '';
+  let lastAuto = '';
+  let diameter = 0;     // the face box's smaller side: the analog face's size
+  let autoDigital = false;
+  let decided = false;  // has a size been seen since Home was last shown
+
+  /** Analog or digital for the face box's current size (with hysteresis). */
+  function decide() {
+    if (!diameter) return; // hidden: keep what's shown
+    const want = Settings.get().clockFace !== 'digital'
+      && (autoDigital ? diameter < AUTO_ANALOG_ABOVE : diameter < AUTO_DIGITAL_BELOW);
+    const first = !decided;
+    decided = true;
+    if (want === autoDigital && !first) return;
+    autoDigital = want;
+    if (first) {
+      root.classList.add('is-instant');
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('is-instant')));
+    }
+    root.classList.toggle('is-auto-digital', want);
+    face.setAttribute('aria-hidden', String(want));
+    autoEl.setAttribute('aria-hidden', String(!want));
+    lastAuto = '';
+    if (raf) paint(new Date());
+  }
+  new ResizeObserver(() => {
+    diameter = Math.min(faceBox.clientWidth, faceBox.clientHeight);
+    if (!diameter) { decided = false; return; } // Home hidden: the next sight of it is placed without a fade
+    // The digital clock also takes the time line under the face, and the gap above it.
+    root.style.setProperty('--readout-h', `${readout.offsetHeight + (parseFloat(getComputedStyle(root).rowGap) || 0)}px`);
+    decide();
+  }).observe(faceBox);
 
   function ensureFace() {
     const s = Settings.get();
@@ -2699,6 +2774,17 @@ const Clock = (() => {
       timeEl.textContent = p.time;
       timeEl.dateTime = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
       ampmEl.textContent = p.suffix;
+    }
+    if (autoDigital) {
+      const secs = Settings.get().showSeconds ? pad2(now.getSeconds()) : '';
+      const auto = `${digital}|${secs}`;
+      if (auto !== lastAuto) {
+        lastAuto = auto;
+        autoTime.textContent = p.time;
+        autoSec.textContent = secs;
+        autoAmpm.textContent = p.suffix;
+        autoEl.setAttribute('aria-label', [p.time, p.suffix].filter(Boolean).join(' '));
+      }
     }
   }
   function frame() { paint(new Date()); raf = requestAnimationFrame(frame); }
@@ -2729,6 +2815,8 @@ const Clock = (() => {
     dateEl.hidden = !s.showDate;
     if (s.showDate) dateEl.textContent = Fmt.dayMonth(Dates.today());
     lastDigital = '';
+    lastAuto = '';
+    decide(); // "Digital only" switched on or off
     if (raf) paint(new Date());
   }
   return { start, stop, render, autoCity };
