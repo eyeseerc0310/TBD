@@ -638,34 +638,80 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .notes__editor ul.checklist > li[data-checked="true"]::before { background: var(--accent); border-color: var(--accent); }
 .notes__editor ul.checklist > li[data-checked="true"]::after { display: block; }
 .notes__editor mark { background: var(--hl, var(--accent-soft)); color: var(--hl-ink, inherit); border-radius: 3px; padding: 0 2px; }
-.notes__editor a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.chip-link {
-  display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 6px;
-  background: var(--accent-soft); color: var(--text) !important; text-decoration: none !important;
-  font-size: 0.92em; line-height: 1.55; cursor: pointer; white-space: nowrap; vertical-align: baseline;
+/* Links in a note keep the words they were made from. Note links are
+   plain accent text; Wikipedia links carry a small W, web links a ↗. */
+.notes__editor a {
+  color: var(--accent); cursor: pointer; -webkit-touch-callout: none;
+  text-decoration: underline; text-decoration-color: var(--accent-line); text-decoration-thickness: 1px; text-underline-offset: 3px;
+  transition: text-decoration-color var(--t-fast) var(--ease);
 }
-.chip-link--wiki::before { content: "W"; font: 700 0.85em/1 Georgia, "Times New Roman", serif; color: var(--text-2); }
-.chip-link--note::before {
-  content: ""; width: 11px; height: 11px; flex: none; background: currentColor; opacity: 0.7;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='5' y='3.75' width='14' height='16.5' rx='2'/%3E%3Cpath d='M8.5 8.5h7M8.5 12h7M8.5 15.5h4'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='5' y='3.75' width='14' height='16.5' rx='2'/%3E%3Cpath d='M8.5 8.5h7M8.5 12h7M8.5 15.5h4'/%3E%3C/svg%3E") center / contain no-repeat;
+.notes__editor a:hover { text-decoration-color: currentColor; }
+.wiki-link::after { content: "W"; margin-left: 2px; font: 700 0.62em/1 Georgia, "Times New Roman", serif; vertical-align: 0.42em; color: var(--text-3); }
+.web-link::after {
+  content: ""; display: inline-block; width: 0.62em; height: 0.62em; margin-left: 2px; vertical-align: 0.38em; background: currentColor; opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M9 7h8v8'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M9 7h8v8'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-.chip-link.is-missing { background: var(--hover); color: var(--text-3) !important; opacity: 0.7; cursor: default; }
+.notes__editor a.is-missing { color: var(--text-3); text-decoration-color: var(--border-strong); text-decoration-style: dashed; cursor: default; }
+.notes__editor a.is-missing::after { content: "Missing note"; display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: var(--hover); color: var(--text-3); font-size: 0.72em; line-height: 1.5; vertical-align: 0.12em; }
 
-/* Formatting toolbar, just above Recent */
-.note-tools { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: var(--s2); padding: 3px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--surface-sunken); }
-.tool { width: 28px; height: 26px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--text-3); transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
+/* Formatting toolbar, just above Recent: one row of small nav-style
+   buttons that scrolls sideways when the card is narrow. */
+.note-tools {
+  flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; margin-top: var(--s2);
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.note-tools::-webkit-scrollbar { display: none; }
+.note-tools.fade-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.note-tools.fade-start { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px); mask-image: linear-gradient(to right, transparent, #000 28px); }
+.note-tools.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+.tool {
+  width: calc(var(--ctl-h) * 0.75); height: calc(var(--ctl-h) * 0.75); flex: none; display: grid; place-items: center;
+  border-radius: calc(var(--r-ctl) * 0.75); color: var(--text-2);
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
+}
+.tool .icon { width: calc(var(--icon) * 0.75); height: calc(var(--icon) * 0.75); }
 .tool:hover, .tool:focus-visible { color: var(--text); background: var(--hover-strong); }
-.tool[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
-.tool .icon { width: 16px; height: 16px; }
-.tool--w { font: 700 14px/1 Georgia, "Times New Roman", serif; }
-.note-tools__sep { width: 1px; height: 16px; flex: none; margin: 0 3px; background: var(--border-strong); }
+.tool[aria-pressed="true"] { color: var(--text); background: var(--accent-soft); }
+.tool[aria-pressed="true"] .icon, .tool--w[aria-pressed="true"] { color: var(--accent); }
+.tool[aria-disabled="true"] { opacity: 0.38; cursor: default; }
+.tool[aria-disabled="true"]:hover { color: var(--text-2); background: transparent; }
+.tool--w { font: 700 calc(var(--icon) * 0.72)/1 Georgia, "Times New Roman", serif; }
+.note-tools__sep { width: 1px; height: calc(var(--icon) * 0.8); flex: none; margin: 0 4px; background: var(--border-strong); }
+/* Tooltips that float above the page (the toolbar's scrolling would clip ::after tips). */
+.float-tip {
+  position: fixed; z-index: 80; padding: 5px 8px; border-radius: var(--r-sm);
+  background: var(--surface-raised); border: 1px solid var(--border-strong);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  color: var(--text); font: 500 var(--fs-xs)/1.2 var(--font); white-space: nowrap;
+  pointer-events: none; opacity: 0; transform: translateY(-3px);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.float-tip.is-visible { opacity: 1; transform: none; }
 .picker { width: 280px; }
 .picker .input { height: 32px; font-size: var(--fs-sm); margin-bottom: 6px; }
 .picker__list { max-height: 220px; overflow-y: auto; overscroll-behavior: contain; }
 .picker__note { padding: var(--s3) var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
 .picker .menu__item { height: auto; min-height: 32px; padding: 6px 10px; }
 .picker .menu__item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker .picker__label { flex: 1; min-width: 0; }
+.picker .picker__time { flex: none; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.picker__foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.picker__create .icon { color: var(--accent); }
+/* Hover (or long-press) a web link: where it goes, with Edit and Remove. */
+.popover.link-card { min-width: 0; width: max-content; max-width: min(340px, calc(100vw - 16px)); display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.link-card__url { display: block; padding: 2px 4px; font-size: var(--fs-sm); color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+.link-card__url:hover { text-decoration: underline; text-underline-offset: 2px; }
+.link-card__actions { display: flex; gap: 4px; }
+.link-card__actions .btn { height: 28px; padding: 0 var(--s2); }
+/* "Backlinks" under a note: the notes and pins that link to it. */
+.backlinks { flex: none; display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: var(--s2); overflow-x: auto; scrollbar-width: none; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.backlinks::-webkit-scrollbar { display: none; }
+.backlinks__label { flex: none; font-weight: 600; letter-spacing: 0.04em; }
+.backlinks__item { flex: none; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); border-radius: 4px; transition: color var(--t-fast) var(--ease); }
+.backlinks__item:hover { color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; }
+.backlinks__item .icon { width: 11px; height: 11px; margin-right: 3px; vertical-align: -1px; color: var(--accent); }
+.backlinks__none { opacity: 0.8; }
 
 /* Nav icon chips (Settings → Appearance) */
 .navchips-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
@@ -690,6 +736,53 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 }
 .notes__titlefield::placeholder { color: var(--text-3); }
 .notes__mode { font-size: var(--fs-xs); color: var(--accent); font-weight: 600; }
+
+/* Reading a note on the Notes page */
+.dialog--note .dialog__body { max-height: min(62vh, 600px); overflow-y: auto; overscroll-behavior: contain; }
+.note-view { cursor: default; color: var(--text); font: 400 var(--fs-base)/1.6 var(--font); }
+.note-view__empty { color: var(--text-3); }
+.backlinks--view { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--border); flex-wrap: wrap; row-gap: 4px; white-space: normal; }
+.card__links { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.is-target { border-color: var(--accent-line); box-shadow: var(--shadow), 0 0 0 1px var(--accent-line); }
+
+/* ---------- Connections (graph, list, Home rows) ---------- */
+.graph { position: relative; height: clamp(340px, calc(100dvh - 290px), 1100px); border-radius: var(--r-panel); overflow: hidden; touch-action: none; cursor: grab; }
+.graph.is-panning { cursor: grabbing; }
+.graph__svg { display: block; width: 100%; height: 100%; }
+.gedge { stroke: var(--border-strong); stroke-width: 1.25; vector-effect: non-scaling-stroke; transition: stroke var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
+.gnode { cursor: pointer; outline: none; transition: opacity var(--t-fast) var(--ease); }
+.gnode__dot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: stroke-width var(--t-fast) var(--ease); }
+.gnode--pin .gnode__dot { fill: var(--surface-raised); }
+.gnode__icon { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.gnode__label { fill: var(--text-2); font: 500 11px/1 var(--font); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; transition: opacity var(--t-fast) var(--ease); }
+.gnode.is-alone .gnode__dot { fill: var(--hover); stroke: var(--text-3); }
+.gnode.is-alone .gnode__label { fill: var(--text-3); }
+.gnode:hover .gnode__dot, .gnode:focus-visible .gnode__dot { stroke-width: 2.5; }
+.gnode:hover .gnode__label, .gnode:focus-visible .gnode__label { fill: var(--text); }
+.graph.is-focus .gnode:not(.is-near) { opacity: 0.3; }
+.graph.is-focus .gedge:not(.is-near) { opacity: 0.15; }
+.gedge.is-near { stroke: var(--accent); }
+.graph.is-far .gnode__label { opacity: 0; }
+.graph__tools { position: absolute; right: var(--s3); bottom: var(--s3); display: flex; gap: 2px; padding: 3px; border-radius: var(--r-ctl); background: var(--surface-raised); border: 1px solid var(--border); cursor: default; }
+.graph__hint { position: absolute; left: var(--s4); top: var(--s4); right: var(--s4); max-width: 360px; font-size: var(--fs-sm); color: var(--text-3); pointer-events: none; }
+.conn-listview .inbox { align-items: start; }
+.conn-card { min-height: 0; gap: var(--s3); }
+.conn-card .card__open .icon { width: 13px; height: 13px; margin-right: 5px; vertical-align: -1px; color: var(--accent); }
+.conn-rel { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.conn-rel__label { font-size: var(--fs-xs); color: var(--text-3); margin-right: 2px; }
+.conn-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--hover); color: var(--text-2); font-size: var(--fs-sm); transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.conn-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conn-chip .icon { width: 12px; height: 12px; color: var(--accent); }
+.conn-chip:hover { background: var(--hover-strong); color: var(--text); }
+.conn-quiet { margin-top: var(--s4); font-size: var(--fs-sm); color: var(--text-3); }
+.conn-notice { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); margin-bottom: var(--s4); border-radius: var(--r-panel); font-size: var(--fs-sm); color: var(--text-2); }
+.conn-notice p { flex: 1; min-width: 0; }
+.conn-notice > .icon { color: var(--accent); }
+.mini-row.mini-row--conn { height: 46px; min-height: 46px; }
+.conn-pair { display: flex; align-items: center; gap: 6px; }
+.conn-pair .conn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conn-pair .icon { flex: none; margin-right: -2px; }
+.conn-pair__sep { flex: none; font-weight: 400; color: var(--text-3); }
 
 /* Compact rows: saved notes and connections */
 .mini-list { display: flex; flex-direction: column; gap: 6px; }
@@ -1271,6 +1364,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   <symbol id="i-highlight" viewBox="0 0 24 24"><path d="m9.5 14.5-3 3 1.5 1.5h3.5l1-1M9.5 14.5l7-7a2.12 2.12 0 0 1 3 3l-7 7M9.5 14.5l3 3"/><path d="M4 21h16"/></symbol>
   <symbol id="i-note-link" viewBox="0 0 24 24"><path d="M14 3.75H7a2 2 0 0 0-2 2v12.5a2 2 0 0 0 2 2h4M8.5 8.5h7M8.5 12h4"/><path d="M15.5 15.75a2.25 2.25 0 0 1 2.25-2.25h.75a2.25 2.25 0 0 1 0 4.5h-.5M18.5 19.75a2.25 2.25 0 0 1-2.25 2.25h-.75a2.25 2.25 0 0 1 0-4.5h.5" transform="translate(-1 -2)"/></symbol>
   <symbol id="i-clear" viewBox="0 0 24 24"><path d="M6 5.5h12M12 5.5 9 18.5M15 13.5l5 5M20 13.5l-5 5"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4.5 9V5.5a1 1 0 0 1 1-1H9M15 4.5h3.5a1 1 0 0 1 1 1V9M19.5 15v3.5a1 1 0 0 1-1 1H15M9 19.5H5.5a1 1 0 0 1-1-1V15"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.75 12a7.25 7.25 0 1 0 2.1-5.1M4.75 4.75v3.5h3.5"/></symbol>
 </svg>
 
@@ -1372,7 +1467,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             <header class="panel__head">
               <h2 class="panel__title" id="conn-label">Connections</h2>
               <div class="panel__actions">
-                <button class="icon-btn icon-btn--sm" type="button" data-action="connection-new" data-tip="Add connection" aria-label="Add connection"><svg class="icon"><use href="#i-plus"/></svg></button>
                 <button class="btn btn--ghost btn--sm" type="button" data-action="go-connections"><svg class="icon icon--sm"><use href="#i-connections"/></svg>Open Connections</button>
               </div>
             </header>
@@ -1416,6 +1510,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             </div>
           </header>
           <div class="notes__area notes__editor is-empty" id="quick-notes" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Jot something down…" spellcheck="true"></div>
+          <div class="backlinks" id="note-backlinks" aria-label="Backlinks" hidden></div>
           <div class="note-tools" id="note-tools" role="toolbar" aria-label="Formatting"></div>
           <section class="panel__section notes__saved" aria-labelledby="saved-title">
             <div class="section-head">
@@ -1450,9 +1545,12 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
       <header class="page-head">
         <div>
           <h1 class="page-head__title" id="connections-title">Connections</h1>
-          <p class="page-head__sub">Links, people and places you come back to.</p>
+          <p class="page-head__sub">How your notes and pins link together.</p>
         </div>
-        <button class="btn" type="button" data-action="connection-new"><svg class="icon icon--sm"><use href="#i-plus"/></svg>Add connection</button>
+        <div class="seg" id="conn-view" role="group" aria-label="View">
+          <button type="button" data-view="graph" aria-pressed="true">Graph</button>
+          <button type="button" data-view="list" aria-pressed="false">List</button>
+        </div>
       </header>
       <div id="conn-page"></div>
     </section>
@@ -1640,7 +1738,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 function defaultUi() {
   const today = Dates.today();
-  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock' };
+  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock', connView: 'graph' };
 }
 /* Timer: stored as timestamps, never as a ticking counter, so it keeps
    time across refreshes. Elapsed time = elapsed + (now - startedAt). */
@@ -1672,6 +1770,36 @@ function makeItem(type, fields = {}) {
 }
 
 const isIso = (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v));
+
+/* Note links. A saved note's `links` are the notes (and pins) its text
+   links to — the data-note on each <a> in meta.html — so they can never
+   drift from what's written: removing the last link to a note removes the
+   connection. A pin adds what it's attached to (meta.attached).
+   `meta.linkedAt` remembers when each link first appeared, for "recent
+   connections". Both are rebuilt whenever a note or pin is saved or
+   loaded, including from a backup. */
+const LINKING_TYPES = ['capture', 'pin'];
+function noteLinkIds(html) {
+  const ids = new Set();
+  if (typeof html !== 'string') return ids;
+  for (const m of html.matchAll(/<a\b[^>]*?\sdata-note\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) {
+    const id = (m[1] ?? m[2]).replace(/&amp;/g, '&').trim();
+    if (id) ids.add(id);
+  }
+  return ids;
+}
+function syncLinks(it, when) {
+  if (!LINKING_TYPES.includes(it.type)) return it;
+  const ids = noteLinkIds(it.meta.html);
+  if (it.type === 'pin' && Array.isArray(it.meta.attached)) it.meta.attached.forEach((id) => ids.add(id));
+  ids.delete(it.id);
+  const before = isObj(it.meta.linkedAt) ? it.meta.linkedAt : {};
+  const linkedAt = {};
+  for (const id of ids) linkedAt[id] = isIso(before[id]) ? before[id] : when;
+  it.links = [...ids];
+  it.meta.linkedAt = linkedAt;
+  return it;
+}
 
 /** Type-specific clean-up. Unknown types pass through untouched so newer data survives. */
 const ITEM_NORMALISERS = {
@@ -1707,6 +1835,10 @@ const ITEM_NORMALISERS = {
     it.meta.order = Number.isFinite(it.meta.order) ? it.meta.order : null; // filled in by normaliseState
     return it;
   },
+  pin(it) {
+    it.meta.attached = (Array.isArray(it.meta.attached) ? it.meta.attached : it.links).filter((l) => typeof l === 'string' && l);
+    return it;
+  },
   note(it) {
     it.meta.quick = it.meta.quick === true;
     if (it.meta.quick && it.title === 'Quick notes') it.title = '';
@@ -1727,7 +1859,8 @@ function normaliseItem(raw) {
   };
   it.updatedAt = isIso(raw.updatedAt) ? raw.updatedAt : it.createdAt;
   const fix = ITEM_NORMALISERS[it.type];
-  return fix ? fix(it) : it;
+  const out = fix ? fix(it) : it;
+  return out ? syncLinks(out, out.updatedAt) : null;
 }
 function normaliseSettings(raw) {
   const s = isObj(raw) ? raw : {};
@@ -1778,6 +1911,7 @@ function normaliseUi(raw) {
     taskDay: Dates.isKey(u.taskDay) ? u.taskDay : d.taskDay,
     settingsSection: u.settingsSection === '' || SETTINGS_SECTIONS.includes(u.settingsSection) ? u.settingsSection : d.settingsSection,
     homeView: u.homeView === 'calendar' ? 'calendar' : 'clock',
+    connView: u.connView === 'list' ? 'list' : 'graph',
   };
 }
 /** Gives every task a position within its day, and every connection a
@@ -1833,7 +1967,7 @@ const Items = {
   all(type) { const items = Store.get().items; return type ? items.filter((i) => i.type === type) : items; },
   get(id) { return Store.get().items.find((i) => i.id === id) || null; },
   create(type, fields) {
-    const item = makeItem(type, fields);
+    const item = syncLinks(makeItem(type, fields), nowISO());
     Store.update((s) => { s.items.push(item); }, 'items');
     return item;
   },
@@ -1845,6 +1979,7 @@ const Items = {
       Object.assign(it, rest);
       if (meta) it.meta = { ...it.meta, ...meta };
       it.updatedAt = nowISO();
+      syncLinks(it, it.updatedAt);
     }, 'items');
   },
   /** Removes an item and returns a token that `restore` can put back exactly where it was. */
@@ -2520,8 +2655,8 @@ const Clock = (() => {
    version the editor shows. HTML is always cleaned against a short
    allow-list before it is shown or saved, so nothing pasted, typed or
    restored from a backup can run. Older notes (no meta.html) load from
-   their plain text. Link chips store only their target; their label is
-   drawn from the linked note, or "Missing note" once it's gone. */
+   their plain text. Links keep the words they were made from; a note
+   link whose note is gone is greyed and marked "Missing note". */
 const RichText = (() => {
   const TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DEL', 'H1', 'H2', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI', 'MARK', 'A']);
   const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -2549,21 +2684,31 @@ const RichText = (() => {
     walk(doc.body);
     return doc.body.innerHTML;
   }
-  /** Adds the live-only bits (chip labels, highlight colours) after content is set. */
+  /** Adds the live-only bits (link styles, hints and addresses; highlight colours) after content is set.
+      Note and Wikipedia links get an href here too (never saved) so the editor treats them as links:
+      typing just after one doesn't stretch it over the new words. */
+  const WEB = 'a[href]:not([data-note]):not([data-wiki])';
   function hydrate(root) {
+    const attr = (el, k, v) => { if (el.getAttribute(k) !== v) el.setAttribute(k, v); };
     $$('a[data-note]', root).forEach((a) => {
-      const n = Items.get(a.dataset.note);
-      a.contentEditable = 'false';
-      a.className = `chip-link chip-link--note${n ? '' : ' is-missing'}`;
-      const label = n ? NotesData.parts(n).title : 'Missing note';
-      if (a.textContent !== label) a.textContent = label;
+      const n = Links.node(a.dataset.note);
+      attr(a, 'class', `note-link${n ? '' : ' is-missing'}`);
+      attr(a, 'title', n ? `Open “${Links.title(n)}”` : 'Missing note');
+      attr(a, 'href', '#/notes');
+      a.removeAttribute('contenteditable');
     });
     $$('a[data-wiki]', root).forEach((a) => {
-      a.contentEditable = 'false';
-      a.className = 'chip-link chip-link--wiki';
-      if (a.textContent !== a.dataset.wiki) a.textContent = a.dataset.wiki;
+      attr(a, 'class', 'wiki-link');
+      attr(a, 'title', `Wikipedia: ${a.dataset.wiki}`);
+      attr(a, 'href', `https://en.wikipedia.org/wiki/${encodeURIComponent(a.dataset.wiki.replace(/ /g, '_'))}`);
+      a.removeAttribute('contenteditable');
     });
-    $$('a[href]', root).forEach((a) => { a.title = a.getAttribute('href'); });
+    $$(WEB, root).forEach((a) => {
+      attr(a, 'class', 'web-link');
+      attr(a, 'target', '_blank');
+      attr(a, 'rel', 'noopener noreferrer');
+      a.removeAttribute('title');
+    });
     $$('mark[data-c]', root).forEach((m) => { m.style.setProperty('--hl', m.dataset.c); m.style.setProperty('--hl-ink', readable(m.dataset.c)); });
   }
   function set(root, html) { root.innerHTML = clean(html); hydrate(root); }
@@ -2571,7 +2716,7 @@ const RichText = (() => {
   const isEmpty = (root) => !root.textContent.trim() && !root.querySelector('li, a, h1, h2, mark');
   /** True when HTML carries real formatting (not just line breaks). */
   const hasFormatting = (html) => typeof html === 'string' && /<(b|strong|i|em|u|s|strike|del|h1|h2|ul|ol|mark|a)[\s>]/i.test(html);
-  return { clean, hydrate, set, text, isEmpty, fromText, esc, hasFormatting };
+  return { clean, hydrate, set, text, isEmpty, fromText, esc, hasFormatting, WEB };
 })();
 
 /* ---------- Notes writing area ----------
@@ -2589,6 +2734,7 @@ const QuickNotes = (() => {
   const sendIcon = $('#notes-send use');
   const sendLabel = $('#notes-send-label');
   const modeEl = $('#notes-mode');
+  const backEl = $('#note-backlinks');
   let timer = 0;
   let statusTimer = 0;
   let dirty = false;
@@ -2628,13 +2774,25 @@ const QuickNotes = (() => {
     if (editingId && !Items.get(editingId)) { editingId = null; force = true; } // deleted elsewhere
     if (force) { dirty = false; clearTimeout(timer); }
     const active = document.activeElement;
-    if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); return; }
+    if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); paintBacklinks(); return; }
     const n = current();
     const title = n ? n.title : '';
     const html = n ? htmlOf(n) : '';
     if (titleIn.value !== title) titleIn.value = title;
     if (force || loaded !== html) { RichText.set(editor, html); loaded = html; } else RichText.hydrate(editor);
     paintHead();
+    paintBacklinks();
+  }
+  /** "Backlinks" under a saved note while it's open here. */
+  function paintBacklinks() {
+    const n = editingId && Items.get(editingId);
+    backEl.hidden = !n;
+    if (!n) return;
+    const from = Links.backlinks(n.id);
+    const sig = from.map((x) => `${x.id}:${Links.title(x)}`).join('|');
+    if (backEl.dataset.sig === sig && backEl.firstChild) return;
+    backEl.dataset.sig = sig;
+    backEl.replaceChildren(...Links.backlinkLine(from));
   }
   function caretToEnd() {
     const r = document.createRange();
@@ -2699,6 +2857,7 @@ const QuickNotes = (() => {
   });
   editor.addEventListener('drop', (e) => e.preventDefault());
   sendBtn.addEventListener('click', () => (editingId ? done() : sendToNotes()));
+  backEl.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
   Persistence.onFlush(flush);
   return { render: () => sync(false), sync, flush, openNote, editingId: () => editingId, changed: onInput };
 })();
@@ -4093,129 +4252,441 @@ const SavedNotes = (() => {
 })();
 
 /* ---------- Connections ----------
-   Saved links and contacts (items of type "connection"). Each has a name
-   (title) and a target, which is read as a web link, an email address, a
-   phone number or plain text. Shown on the Home card and the Connections
-   page; both read the same items. Icons are drawn locally — no favicons
-   are fetched, so nothing leaves the device. */
-const Connections = (() => {
-  const KIND_ICON = { link: 'link', email: 'mail', phone: 'phone', text: 'user' };
-  function parse(raw) {
-    const v = (raw || '').trim();
-    if (!v) return { kind: 'text', target: '' };
-    if (/^mailto:/i.test(v) || /^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(v)) return { kind: 'email', target: v.replace(/^mailto:/i, '') };
-    if (/^tel:/i.test(v) || /^\+?[\d\s().-]{6,}$/.test(v)) return { kind: 'phone', target: v.replace(/^tel:/i, '') };
-    if (/^https?:\/\//i.test(v)) return { kind: 'link', target: v };
-    if (/^[\w-]+(\.[\w-]+)+(:\d+)?([/?#]\S*)?$/i.test(v)) return { kind: 'link', target: `https://${v}` };
-    return { kind: 'text', target: v };
+   Connections are the links between your notes and pins: a note link in
+   one note (made from the toolbar or with [[) connects it with the note it
+   points to, both ways, and a pin connects with what it's attached to. Web
+   and Wikipedia links are never connections. Nothing is stored apart from
+   the items themselves: each one's `links` is rebuilt from its own content
+   (see syncLinks), so the graph, the list, backlinks and the Home card all
+   read the same thing. */
+const Links = (() => {
+  const isNode = (it) => !!it && (it.type === 'capture' || it.type === 'pin');
+  const node = (id) => { const it = Items.get(id); return isNode(it) ? it : null; };
+  const nodes = () => Items.all().filter(isNode);
+  function title(it) {
+    if (it.type !== 'pin') return NotesData.parts(it).title;
+    return it.title.trim() || it.content.split('\n').map((l) => l.trim()).find(Boolean) || 'Untitled pin';
   }
-  function subtitle(c) {
-    const { kind, target } = c.meta;
-    if (!target) return 'No link or contact';
-    if (kind === 'link') {
-      try { const u = new URL(target); return `${u.host.replace(/^www\./, '')}${u.pathname === '/' ? '' : u.pathname}`.replace(/\/$/, ''); }
-      catch { return target; }
+  /** Every connection once, newest first: { key, from, to, at }. `from` wrote the link (the latest one, if both did). */
+  function edges() {
+    const byId = new Map(nodes().map((n) => [n.id, n]));
+    const seen = new Map();
+    for (const n of byId.values()) {
+      for (const id of n.links) {
+        if (id === n.id || !byId.has(id)) continue;
+        const key = n.id < id ? `${n.id}|${id}` : `${id}|${n.id}`;
+        const at = (n.meta.linkedAt && n.meta.linkedAt[id]) || n.updatedAt;
+        const e = seen.get(key);
+        if (!e || at > e.at) seen.set(key, { key, from: n.id, to: id, at });
+      }
     }
-    return target;
+    return [...seen.values()].sort((a, b) => b.at.localeCompare(a.at));
   }
+  const linksOf = (id) => { const it = node(id); return it ? it.links.map(node).filter((x) => x && x.id !== id) : []; };
+  const backlinks = (id) => nodes().filter((n) => n.id !== id && n.links.includes(id)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  /** Notes open on the Notes page; pins on the Pin Board. */
   function open(id) {
-    const c = Items.get(id);
-    if (!c) return;
-    const { kind, target } = c.meta;
-    if (!target) { ConnectionEditor.open(id); return; }
-    if (kind === 'link') window.open(target, '_blank', 'noopener,noreferrer');
-    else if (kind === 'email') window.location.href = `mailto:${target}`;
-    else if (kind === 'phone') window.location.href = `tel:${target.replace(/[^\d+]/g, '')}`;
-    else if (navigator.clipboard) navigator.clipboard.writeText(target).then(() => Toast.show('Copied to clipboard'), () => Toast.show(target));
-    else Toast.show(target);
+    const it = node(id);
+    if (!it) { Toast.show('That note was deleted'); return; }
+    QuickNotes.flush();
+    if (it.type === 'pin') { Navigation.go('pins'); return; }
+    Navigation.go('notes');
+    NoteView.open(id);
   }
-  function menu(id, anchor, getAnchor) {
-    const c = Items.get(id);
-    if (!c) return;
-    const ids = Ordered.list('connection').map((x) => x.id);
-    const i = ids.indexOf(id);
-    const move = (d) => () => { Popover.close(false); Ordered.move('connection', id, d); };
-    Popover.open({
-      anchor, key: `conn:${id}`, label: `Options for ${c.title}`, getAnchor,
-      content: [
-        menuItem('edit', 'Edit', () => { Popover.close(false); ConnectionEditor.open(id); }),
-        menuSep(),
-        colourGroup(c.meta.color, (col) => Items.update(id, { meta: { color: col } })),
-        menuSep(),
-        menuItem('arrow-up', 'Move up', move(-1), { disabled: i <= 0 }),
-        menuItem('arrow-down', 'Move down', move(1), { disabled: i < 0 || i >= ids.length - 1 }),
-        menuSep(),
-        menuItem('trash', 'Delete', () => { Popover.close(false); removeWithUndo(id, 'Connection'); }, { danger: true }),
-      ],
-    });
+  /** "Backlinks" and a button for each note or pin that links here. */
+  function backlinkLine(from) {
+    return [h('span', { class: 'backlinks__label', text: 'Backlinks' }),
+      ...(from.length
+        ? from.map((x) => h('button', { class: 'backlinks__item', type: 'button', dataset: { open: x.id }, title: `Open “${title(x)}”` }, x.type === 'pin' ? icon('pin') : null, title(x)))
+        : [h('span', { class: 'backlinks__none', text: 'None yet' })])];
   }
-  function row(c) {
-    return h('li', { class: `mini-row${c.meta.color ? ' has-color' : ''}`, dataset: { id: c.id }, style: c.meta.color ? `--row-c:${c.meta.color}` : null },
-      h('span', { class: 'mini-row__icon', 'aria-hidden': 'true' }, icon(KIND_ICON[c.meta.kind] || 'user')),
-      h('button', { class: 'mini-row__main', type: 'button', dataset: { action: 'conn-open' }, 'aria-label': `Open ${c.title}` },
-        h('span', { class: 'mini-row__title', text: c.title }),
-        h('span', { class: 'mini-row__sub', text: subtitle(c) })),
-      h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'conn-menu' }, 'aria-label': `More options for ${c.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`conn:${c.id}`)) }, icon('more')));
-  }
-  function bind(host) {
-    host.addEventListener('click', (e) => {
-      const el = e.target.closest('[data-action]');
-      const r = el && el.closest('.mini-row');
-      if (!r) return;
-      if (el.dataset.action === 'conn-open') open(r.dataset.id);
-      if (el.dataset.action === 'conn-menu') menu(r.dataset.id, el, () => host.querySelector(`.mini-row[data-id="${CSS.escape(r.dataset.id)}"] .row-more`));
-    });
-  }
-  const homeList = $('#conn-list');
-  const page = $('#conn-page');
-  bind(homeList);
-  bind(page);
-  function render() {
-    const items = Ordered.list('connection');
-    homeList.replaceChildren(...(items.length ? items.map(row) : [h('li', { class: 'empty' }, icon('connections'), 'No connections yet')]));
-  }
-  function renderPage() {
-    const items = Ordered.list('connection');
-    if (!items.length) {
-      page.replaceChildren(emptyState({ icon: 'connections', title: 'No connections yet', text: 'Save the links, people and places you come back to. Tap one to open it.', action: { label: 'Add connection', id: 'connection-new', icon: 'plus' } }));
-      return;
-    }
-    page.replaceChildren(h('ul', { class: 'mini-grid' }, items.map(row)));
-  }
-  return { parse, render, renderPage };
+  return { node, nodes, title, edges, linksOf, backlinks, open, backlinkLine };
 })();
 
-const ConnectionEditor = (() => {
-  function open(id = null) {
-    const c = id ? Items.get(id) : null;
-    let color = c ? c.meta.color : null;
-    const name = h('input', { class: 'input', type: 'text', value: c ? c.title : '', placeholder: 'Name', 'aria-label': 'Name', maxlength: 120, autocomplete: 'off' });
-    const target = h('input', { class: 'input', type: 'text', value: c ? c.meta.target : '', placeholder: 'Link, email or phone', 'aria-label': 'Link or contact', maxlength: 500, autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
-    const error = h('p', { class: 'form-error', role: 'alert' });
-    const body = h('div', { class: 'form' },
-      h('label', { class: 'field' }, h('span', { class: 'field__label', text: 'Name' }), name),
-      h('label', { class: 'field' }, h('span', { class: 'field__label', text: 'Link or contact' }), target),
-      h('div', { class: 'field' }, h('span', { class: 'field__label', text: 'Colour (optional)' }),
-        swatchPicker({ value: color, allowNone: true, label: 'Colour', onPick: (v) => { color = v; } })),
-      error);
-    const actions = [];
-    if (c) actions.push({ label: 'Delete', variant: 'danger', run: (close) => { close(); removeWithUndo(c.id, 'Connection'); } });
-    actions.push('spacer', { label: 'Cancel' }, { label: c ? 'Save' : 'Add', variant: 'primary', submit: true });
-    Dialog.open({
-      title: c ? 'Edit connection' : 'New connection', body, actions, dismissOnBackdrop: false, initialFocus: name,
-      onSubmit: (close) => {
-        const title = name.value.trim();
-        name.setAttribute('aria-invalid', String(!title));
-        if (!title) { error.textContent = 'Give the connection a name.'; name.focus(); return; }
-        const parsed = Connections.parse(target.value);
-        if (c) Items.update(c.id, { title, meta: { ...parsed, color } });
-        else Items.create('connection', { title, meta: { ...parsed, color, order: Ordered.next('connection') } });
-        Toast.show(c ? 'Connection updated' : 'Connection added');
-        close();
-      },
+/** Opens a web link outside the app, in the device's own browser — from a home-screen app too. */
+function openExternal(url) {
+  if (!/^(https?:|mailto:)/i.test(url || '')) return;
+  const a = h('a', { href: url, target: '_blank', rel: 'noopener noreferrer', hidden: true });
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
+/* Reading a note on the Notes page — where note links, backlinks and the
+   graph lead. Links inside work as they do in the editor; "Edit" takes the
+   note to the Home editor. */
+const NoteView = (() => {
+  let current = null;
+  function open(id) {
+    const n = Items.get(id);
+    if (!n || n.type !== 'capture') return;
+    if (current) current.close();
+    const body = h('div', { class: 'notes__editor note-view' });
+    RichText.set(body, typeof n.meta.html === 'string' && n.meta.html ? n.meta.html : RichText.fromText(n.content));
+    if (RichText.isEmpty(body)) body.replaceChildren(h('p', { class: 'note-view__empty', text: 'This note is empty.' }));
+    const back = h('div', { class: 'backlinks backlinks--view', 'aria-label': 'Backlinks' }, Links.backlinkLine(Links.backlinks(id)));
+    const dlg = Dialog.open({
+      title: NotesData.parts(n).title, className: 'dialog--wide dialog--note',
+      sub: `Edited ${Fmt.dateTime(n.updatedAt)}`,
+      body: [body, back],
+      actions: ['spacer', { label: 'Close' }, {
+        label: 'Edit', variant: 'primary',
+        run: (close) => { close(); Navigation.go('home'); setTimeout(() => QuickNotes.openNote(id), 80); },
+      }],
+      onClose: () => { if (current === dlg) current = null; },
     });
+    current = dlg;
+    dlg.el.addEventListener('click', (e) => {
+      const a = e.target.closest('.note-view a');
+      if (a) {
+        e.preventDefault();
+        if (a.dataset.note) Links.open(a.dataset.note);
+        else if (a.dataset.wiki) {
+          if (!WikiSearch.isOnline()) Toast.show('Connect to internet to open Wikipedia links', { type: 'error' });
+          else WikiSearch.open(a.dataset.wiki);
+        } else openExternal(a.getAttribute('href'));
+        return;
+      }
+      const b = e.target.closest('[data-open]');
+      if (b) Links.open(b.dataset.open);
+    });
+    Inbox.reveal(id);
   }
   return { open };
+})();
+
+/* The graph: notes and pins as nodes, links as lines. Positions come from
+   a small force layout run once whenever the nodes or links change (seeded
+   from the last positions, so the picture stays put), then the view is
+   panned and zoomed with one transform. Drag to pan; pinch, scroll or the
+   buttons zoom; tap a node to open it. */
+const ConnGraph = (() => {
+  const L = 110;            // preferred link length
+  const REACH2 = (L * 3) ** 2;
+  const pos = new Map();    // id → { x, y }
+  let sig = '';
+  let view = { x: 0, y: 0, k: 1 };
+  let needsFit = true;
+  let touched = false;      // panned or zoomed since the last fit
+  let world = null;
+  let frame = 0;
+  const host = h('div', { class: 'graph glass' });
+  const hash = (str) => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619); return (x >>> 0) / 4294967296; };
+  const clampK = (k) => Math.min(3, Math.max(0.2, k));
+
+  function layout(nodes, edges) {
+    const ids = new Set(nodes.map((n) => n.id));
+    for (const id of [...pos.keys()]) if (!ids.has(id)) pos.delete(id);
+    let fresh = 0;
+    nodes.forEach((n, i) => {
+      if (pos.has(n.id)) return;
+      fresh++;
+      const a = hash(n.id) * Math.PI * 2;
+      const e = edges.find((x) => (x.from === n.id && pos.has(x.to)) || (x.to === n.id && pos.has(x.from)));
+      if (e) { const p = pos.get(e.from === n.id ? e.to : e.from); pos.set(n.id, { x: p.x + Math.cos(a) * L, y: p.y + Math.sin(a) * L }); }
+      else { const r = L * 0.9 * Math.sqrt(i + 1); pos.set(n.id, { x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+    });
+    if (!fresh && !edges.length) return;
+    const P = nodes.map((n) => pos.get(n.id));
+    const index = new Map(nodes.map((n, i) => [n.id, i]));
+    const E = edges.map((e) => [index.get(e.from), index.get(e.to)]);
+    const N = P.length;
+    const dx = new Float64Array(N);
+    const dy = new Float64Array(N);
+    let t = L * (fresh > N / 2 ? 0.6 : 0.2); // settle gently when most nodes already have a place
+    const rounds = N > 160 ? 90 : 220;
+    for (let r = 0; r < rounds; r++) {
+      dx.fill(0); dy.fill(0);
+      for (let i = 0; i < N; i++) {
+        for (let j = i + 1; j < N; j++) {
+          let x = P[i].x - P[j].x;
+          let y = P[i].y - P[j].y;
+          let d2 = x * x + y * y;
+          if (d2 > REACH2) continue; // only near neighbours push, so loose notes stay close
+          if (d2 < 0.01) { x = hash(`${i}:${j}`) - 0.5; y = hash(`${j}:${i}`) - 0.5; d2 = x * x + y * y; }
+          const f = (L * L) / d2; // repulsion, L²/d along the line between them
+          dx[i] += x * f; dy[i] += y * f; dx[j] -= x * f; dy[j] -= y * f;
+        }
+      }
+      for (const [a, b] of E) {
+        const x = P[a].x - P[b].x;
+        const y = P[a].y - P[b].y;
+        const f = Math.sqrt(x * x + y * y) / L; // attraction, d²/L
+        dx[a] -= x * f; dy[a] -= y * f; dx[b] += x * f; dy[b] += y * f;
+      }
+      for (let i = 0; i < N; i++) {
+        dx[i] -= P[i].x * 0.04; dy[i] -= P[i].y * 0.04; // a little gravity keeps loose notes near
+        const m = Math.hypot(dx[i], dy[i]) || 1;
+        const step = Math.min(m, t) / m;
+        P[i].x += dx[i] * step; P[i].y += dy[i] * step;
+      }
+      t = Math.max(0.5, t * 0.975);
+    }
+  }
+
+  function apply() {
+    frame = 0;
+    if (!world) return;
+    world.setAttribute('transform', `translate(${view.x.toFixed(1)} ${view.y.toFixed(1)}) scale(${view.k.toFixed(4)})`);
+    host.classList.toggle('is-far', view.k < 0.55);
+  }
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(apply); };
+  function fit() {
+    const w = host.clientWidth;
+    const hh = host.clientHeight;
+    if (!w || !hh) return;
+    needsFit = false;
+    touched = false;
+    if (!pos.size) { view = { x: w / 2, y: hh / 2, k: 1 }; apply(); return; }
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    for (const p of pos.values()) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    const pad = 64;
+    const k = Math.min(1.4, Math.max(0.25, Math.min((w - pad * 2) / Math.max(x1 - x0, 1), (hh - pad * 2) / Math.max(y1 - y0, 1))));
+    view = { k, x: w / 2 - ((x0 + x1) / 2) * k, y: hh / 2 - ((y0 + y1) / 2) * k };
+    apply();
+  }
+  function zoomAt(px, py, factor) {
+    touched = true;
+    const k = clampK(view.k * factor);
+    const wx = (px - view.x) / view.k;
+    const wy = (py - view.y) / view.k;
+    view = { k, x: px - wx * k, y: py - wy * k };
+    schedule();
+  }
+  const zoomCentre = (factor) => zoomAt(host.clientWidth / 2, host.clientHeight / 2, factor);
+
+  /** Draws the graph; the caller puts `host` in the page, then calls settle(). */
+  function render(nodes, edges) {
+    const s = `${nodes.map((n) => n.id).sort().join()}/${edges.map((e) => e.key).sort().join()}`;
+    if (s !== sig) { layout(nodes, edges); sig = s; needsFit = true; }
+    const degree = new Map();
+    edges.forEach((e) => { degree.set(e.from, (degree.get(e.from) || 0) + 1); degree.set(e.to, (degree.get(e.to) || 0) + 1); });
+    world = svg('g', { class: 'graph__world' });
+    const lines = svg('g', { class: 'graph__edges' });
+    for (const e of edges) {
+      const a = pos.get(e.from);
+      const b = pos.get(e.to);
+      lines.append(svg('line', { class: 'gedge', x1: a.x.toFixed(1), y1: a.y.toFixed(1), x2: b.x.toFixed(1), y2: b.y.toFixed(1), 'data-a': e.from, 'data-b': e.to }));
+    }
+    const dots = svg('g', { class: 'graph__nodes' });
+    for (const n of nodes) {
+      const p = pos.get(n.id);
+      const d = degree.get(n.id) || 0;
+      const pin = n.type === 'pin';
+      const name = Links.title(n);
+      const r = pin ? 11 : 5 + Math.min(d, 6) * 1.1;
+      const g = svg('g', {
+        class: `gnode gnode--${pin ? 'pin' : 'note'}${d ? '' : ' is-alone'}`, transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`,
+        tabindex: '0', role: 'button', 'data-id': n.id, 'aria-label': `${pin ? 'Pin' : 'Note'}: ${name}${d ? `, ${pluralise(d, 'link')}` : ''}`,
+      });
+      g.append(svg('circle', { class: 'gnode__dot', r: r.toFixed(1) }));
+      if (pin) g.append(svg('use', { class: 'gnode__icon', href: '#i-pin', x: '-6.5', y: '-6.5', width: '13', height: '13' }));
+      const label = svg('text', { class: 'gnode__label', y: (r + 15).toFixed(1), 'text-anchor': 'middle' });
+      label.textContent = name.length > 26 ? `${name.slice(0, 25)}…` : name;
+      g.append(label);
+      dots.append(g);
+    }
+    world.append(lines, dots);
+    const canvas = svg('svg', { class: 'graph__svg', role: 'group', 'aria-label': `Graph of ${pluralise(nodes.length, 'note or pin', 'notes and pins')}, ${pluralise(edges.length, 'link')}` });
+    canvas.append(world);
+    const tool = (name, label, run) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': label, 'data-tip': label, 'data-tip-align': 'end', onclick: run }, icon(name));
+    host.replaceChildren();
+    appendChildren(host, [canvas,
+      edges.length ? null : h('p', { class: 'graph__hint', text: 'No links yet. Highlight words in a note and use the note link button (or type [[) to connect it to another note.' }),
+      h('div', { class: 'graph__tools' },
+        tool('minus', 'Zoom out', () => zoomCentre(1 / 1.25)),
+        tool('plus', 'Zoom in', () => zoomCentre(1.25)),
+        tool('fit', 'Fit to view', fit))]);
+    return host;
+  }
+  function settle() { if (needsFit) fit(); else apply(); }
+  // A new window size refits the graph, unless you've moved it yourself.
+  new ResizeObserver(() => { if (host.isConnected && !touched) fit(); }).observe(host);
+
+  /* --- Hover / focus: a node lights up its own links --- */
+  function focusNode(g) {
+    $$('.is-near', host).forEach((x) => x.classList.remove('is-near'));
+    host.classList.toggle('is-focus', !!g);
+    if (!g) return;
+    const id = g.dataset.id;
+    g.classList.add('is-near');
+    $$('.gedge', host).forEach((l) => {
+      if (l.dataset.a !== id && l.dataset.b !== id) return;
+      l.classList.add('is-near');
+      const other = host.querySelector(`.gnode[data-id="${CSS.escape(l.dataset.a === id ? l.dataset.b : l.dataset.a)}"]`);
+      if (other) other.classList.add('is-near');
+    });
+  }
+  host.addEventListener('pointerover', (e) => { if (e.pointerType === 'mouse' && !host.classList.contains('is-panning')) focusNode(e.target.closest('.gnode')); });
+  host.addEventListener('pointerleave', () => focusNode(null));
+  host.addEventListener('focusin', (e) => focusNode(e.target.closest('.gnode')));
+  host.addEventListener('focusout', () => focusNode(null));
+  host.addEventListener('keydown', (e) => {
+    const g = e.target.closest('.gnode');
+    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); Links.open(g.dataset.id); }
+    else if (e.key === '+' || e.key === '=') zoomCentre(1.25);
+    else if (e.key === '-') zoomCentre(1 / 1.25);
+  });
+
+  /* --- Pan (drag), pinch and wheel zoom, tap to open --- */
+  const pointers = new Map();
+  let gesture = null;
+  let moved = false;
+  let downNode = null;
+  const local = (p) => { const r = host.getBoundingClientRect(); return { x: p.x - r.left, y: p.y - r.top }; };
+  function startPan() {
+    const [p] = [...pointers.values()];
+    gesture = { kind: 'pan', x: p.x, y: p.y, vx: view.x, vy: view.y };
+  }
+  function startPinch() {
+    const [a, b] = [...pointers.values()];
+    gesture = { kind: 'pinch', d: Math.hypot(a.x - b.x, a.y - b.y) || 1, m: local({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }), view: { ...view } };
+  }
+  host.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.graph__tools') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    try { host.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) { moved = false; downNode = e.target.closest('.gnode'); startPan(); }
+    else if (pointers.size === 2) { moved = true; startPinch(); }
+  });
+  host.addEventListener('pointermove', (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!gesture) return;
+    if (gesture.kind === 'pan') {
+      const ddx = e.clientX - gesture.x;
+      const ddy = e.clientY - gesture.y;
+      if (!moved && Math.hypot(ddx, ddy) < 5) return;
+      if (!moved) { moved = true; touched = true; host.classList.add('is-panning'); focusNode(null); }
+      view = { ...view, x: gesture.vx + ddx, y: gesture.vy + ddy };
+    } else {
+      const [a, b] = [...pointers.values()];
+      const m = local({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+      const v = gesture.view;
+      const k = clampK(v.k * (Math.hypot(a.x - b.x, a.y - b.y) / gesture.d));
+      const wx = (gesture.m.x - v.x) / v.k;
+      const wy = (gesture.m.y - v.y) / v.k;
+      view = { k, x: m.x - wx * k, y: m.y - wy * k };
+      touched = true;
+    }
+    schedule();
+  });
+  const end = (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size === 1) { startPan(); return; }
+    if (pointers.size) return;
+    host.classList.remove('is-panning');
+    if (e.type === 'pointerup' && !moved && downNode) Links.open(downNode.dataset.id);
+    gesture = null;
+    downNode = null;
+  };
+  host.addEventListener('pointerup', end);
+  host.addEventListener('pointercancel', end);
+  host.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const p = local({ x: e.clientX, y: e.clientY });
+    const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    zoomAt(p.x, p.y, Math.exp(-delta * (e.ctrlKey ? 0.01 : 0.0015))); // ctrl+wheel is a trackpad pinch
+  }, { passive: false });
+  // Safari's trackpad pinch arrives as gesture events (touch pinches are handled above).
+  let gestureK = 1;
+  host.addEventListener('gesturestart', (e) => { e.preventDefault(); gestureK = view.k; });
+  host.addEventListener('gesturechange', (e) => {
+    e.preventDefault();
+    if (pointers.size > 1) return;
+    const p = local({ x: e.clientX, y: e.clientY });
+    zoomAt(p.x, p.y, clampK(gestureK * e.scale) / view.k);
+  });
+  return { render, settle, fit };
+})();
+
+/* The Connections page (graph or list) and the Home card's recent connections. */
+const Connections = (() => {
+  const homeList = $('#conn-list');
+  const page = $('#conn-page');
+  const viewSeg = $('#conn-view');
+  homeList.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
+  page.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
+  viewSeg.addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (b) UI.set({ connView: b.dataset.view }); });
+  const name = (it) => [it.type === 'pin' ? icon('pin') : null, h('span', { class: 'conn-name', text: Links.title(it) })];
+
+  /** Home card: the most recent connections, "Note A ↔ Note B" (a pin first). Tapping one opens the note that holds the link. */
+  function render() {
+    const edges = Links.edges().slice(0, 20);
+    if (!edges.length) { homeList.replaceChildren(h('li', { class: 'empty' }, icon('connections'), 'No connections yet')); return; }
+    homeList.replaceChildren(...edges.map((e) => {
+      let a = Links.node(e.from);
+      let b = Links.node(e.to);
+      if (b.type === 'pin' && a.type !== 'pin') [a, b] = [b, a];
+      return h('li', { class: 'mini-row mini-row--conn' },
+        h('button', { class: 'mini-row__main', type: 'button', dataset: { open: e.from }, 'aria-label': `${Links.title(a)} and ${Links.title(b)}. Open “${Links.title(Links.node(e.from))}”` },
+          h('span', { class: 'mini-row__top' },
+            h('span', { class: 'mini-row__title conn-pair' }, name(a), h('span', { class: 'conn-pair__sep', 'aria-hidden': 'true', text: '↔' }), name(b)),
+            h('span', { class: 'mini-row__date', text: NotesData.label(e.at) }))));
+    }));
+  }
+
+  function chips(list) {
+    return list.map((x) => h('button', { class: 'conn-chip', type: 'button', dataset: { open: x.id } }, icon(x.type === 'pin' ? 'pin' : 'notes'), h('span', { text: Links.title(x) })));
+  }
+  /** Each linked note or pin, with what it links to and what links to it. */
+  function listView(nodes, edges) {
+    const latest = new Map();
+    edges.forEach((e) => { [e.from, e.to].forEach((id) => { if (!latest.has(id)) latest.set(id, e.at); }); });
+    const linked = nodes.filter((n) => latest.has(n.id)).sort((a, b) => latest.get(b.id).localeCompare(latest.get(a.id)));
+    const alone = nodes.length - linked.length;
+    return h('div', { class: 'conn-listview' },
+      linked.length
+        ? h('div', { class: 'inbox' }, linked.map((n) => {
+          const out = Links.linksOf(n.id);
+          const back = Links.backlinks(n.id);
+          return h('article', { class: 'card glass conn-card' },
+            h('h3', { class: 'card__title' }, h('button', { class: 'card__open', type: 'button', dataset: { open: n.id } }, n.type === 'pin' ? icon('pin') : null, Links.title(n))),
+            out.length ? h('div', { class: 'conn-rel' }, h('span', { class: 'conn-rel__label', text: 'Links to:' }), chips(out)) : null,
+            back.length ? h('div', { class: 'conn-rel' }, h('span', { class: 'conn-rel__label', text: 'Linked from:' }), chips(back)) : null);
+        }))
+        : h('p', { class: 'conn-quiet', text: 'No links yet. Highlight words in a note and use the note link button (or type [[) to connect it to another note.' }),
+      alone && linked.length ? h('p', { class: 'conn-quiet', text: `${pluralise(alone, 'note or pin has', 'notes and pins have')} no links yet.` }) : null);
+  }
+
+  /** Links and contacts saved by the earlier Connections page are kept; this moves them into Notes. */
+  function legacyNotice(count) {
+    return h('div', { class: 'conn-notice glass' }, icon('link'),
+      h('p', { text: `${pluralise(count, 'saved link')} from the earlier Connections page ${count === 1 ? 'is' : 'are'} still on this device. Connections now show how your notes and pins link together.` }),
+      h('button', { class: 'btn btn--sm', type: 'button', dataset: { action: 'conn-migrate' }, text: 'Move to Notes' }));
+  }
+  function migrate() {
+    const old = Ordered.list('connection');
+    if (!old.length) return;
+    const created = old.map((c) => {
+      const { kind, target } = c.meta;
+      const href = kind === 'link' ? target : kind === 'email' ? `mailto:${target}` : '';
+      const html = href ? `<a href="${RichText.esc(href)}">${RichText.esc(target)}</a>` : RichText.fromText(target);
+      return Items.create('capture', { title: c.title, content: target, meta: { kind: 'text', category: 'Link', inbox: true, source: 'connections', color: c.meta.color, pinned: false, html } });
+    });
+    const tokens = old.map((c) => Items.remove(c.id));
+    Toast.show(`Moved ${pluralise(old.length, 'link')} to Notes`, {
+      action: { label: 'Undo', run: () => { created.forEach((n) => Items.remove(n.id)); tokens.reverse().forEach((t) => Items.restore(t)); } },
+    });
+  }
+
+  function renderPage() {
+    const view = UI.get().connView;
+    $$('[data-view]', viewSeg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    const nodes = Links.nodes();
+    const edges = Links.edges();
+    const legacy = Items.all('connection').length;
+    const showGraph = nodes.length && view === 'graph';
+    page.replaceChildren();
+    appendChildren(page, [
+      legacy ? legacyNotice(legacy) : null,
+      !nodes.length
+        ? emptyState({ icon: 'connections', title: 'No connections yet', text: 'Link one note to another — highlight words and use the note link button, or type [[ — and they’ll appear here.', action: { label: 'Go to Notes', id: 'go-notes', icon: 'notes' } })
+        : showGraph ? ConnGraph.render(nodes, edges) : listView(nodes, edges)]);
+    if (showGraph) ConnGraph.settle();
+  }
+  return { render, renderPage, migrate };
 })();
 
 /* ---------- Wikipedia search ----------
@@ -4494,15 +4965,20 @@ const WikiSearch = (() => {
 
 /* ---------- Notes formatting toolbar ----------
    Formatting uses the browser's editing commands (so ⌘Z undoes them);
-   highlights and link chips are inserted directly. Toolbar buttons never
-   take focus, so the selection in the note survives a click; popovers
-   that need typing remember the selection and put it back. */
+   highlights are inserted directly. Toolbar buttons never take focus, so
+   the selection in the note survives a tap; popovers that need typing
+   remember the selection and put it back. The three link tools work on
+   highlighted text: the words you selected become a note link, a
+   Wikipedia link or a web link. Tooltips float above the page, since the
+   row scrolls sideways on narrow cards and would clip them. */
 const NoteTools = (() => {
   const editor = $('#quick-notes');
   const bar = $('#note-tools');
   let saved = null;     // the note's selection, kept while a popover has focus
   let brackets = null;  // the "[[" just typed, replaced by the chosen link
   const SEP = 'sep';
+  const LINK_TOOLS = ['note', 'wiki', 'link'];
+  const NEEDS_TEXT = 'Highlight text to add a link';
   const TOOLS = [
     { id: 'bold', icon: 'bold', tip: `Bold (${MOD}B)`, cmd: 'bold' },
     { id: 'italic', icon: 'italic', tip: `Italic (${MOD}I)`, cmd: 'italic' },
@@ -4513,21 +4989,28 @@ const NoteTools = (() => {
     { id: 'ul', icon: 'list', tip: 'Bulleted list', cmd: 'insertUnorderedList' },
     { id: 'ol', icon: 'list-ol', tip: 'Numbered list', cmd: 'insertOrderedList' },
     { id: 'check', icon: 'checklist', tip: 'Checklist' },
+    SEP,
     { id: 'highlight', icon: 'highlight', tip: 'Highlight' },
     SEP,
-    { id: 'note', icon: 'note-link', tip: 'Link to a note ([[)' },
+    { id: 'note', icon: 'notes', tip: 'Link to a note' },
     { id: 'wiki', text: 'W', tip: 'Link to Wikipedia' },
     { id: 'link', icon: 'link', tip: `Web link (${MOD}K)` },
-    SEP,
-    { id: 'clear', icon: 'clear', tip: 'Clear formatting' },
   ];
+  const clip = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t);
 
   /* --- Selection helpers --- */
   const inEditor = (node) => !!node && editor.contains(node.nodeType === 1 ? node : node.parentNode);
+  /** The words highlighted in the note, or '' when nothing is. */
+  function selectedText() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed || !inEditor(sel.anchorNode) || !inEditor(sel.focusNode)) return '';
+    return sel.toString().replace(/\s+/g, ' ').trim();
+  }
   function remember() {
     const sel = window.getSelection();
     saved = sel.rangeCount && inEditor(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
   }
+  const savedText = () => (saved && !saved.collapsed ? saved.toString().replace(/\s+/g, ' ').trim() : '');
   function restore() {
     editor.focus({ preventScroll: true });
     const sel = window.getSelection();
@@ -4550,6 +5033,23 @@ const NoteTools = (() => {
       brackets = null;
     }
     document.execCommand('insertHTML', false, `${html}&nbsp;`);
+    changed();
+  }
+  /** Turns the highlighted words into a link: attrs is { 'data-note' }, { 'data-wiki' } or { href }. */
+  function linkSelection(attrs) {
+    restore();
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
+    const marker = `https://still.invalid/${uid()}`; // createLink keeps undo working; the marker is swapped for the real target
+    document.execCommand('createLink', false, marker);
+    const made = $$('a', editor).filter((a) => a.getAttribute('href') === marker);
+    for (const a of made) {
+      for (const at of [...a.attributes]) a.removeAttribute(at.name);
+      for (const [k, v] of Object.entries(attrs)) a.setAttribute(k, v);
+      $$('a', a).forEach((inner) => inner.replaceWith(...inner.childNodes)); // never a link inside a link
+    }
+    const last = made[made.length - 1];
+    if (last) { const r = document.createRange(); r.setStartAfter(last); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); }
     changed();
   }
 
@@ -4596,16 +5096,6 @@ const NoteTools = (() => {
     sel.addRange(after);
     changed();
   }
-  function clearFormatting() {
-    restore();
-    const sel = window.getSelection();
-    const range = sel.rangeCount ? sel.getRangeAt(0) : null;
-    document.execCommand('removeFormat');
-    document.execCommand('formatBlock', false, '<div>');
-    if (range) $$('mark', editor).filter((m) => range.intersectsNode(m)).forEach((m) => m.replaceWith(...m.childNodes));
-    if (blockOf('li')) { const l = blockOf('ul, ol'); document.execCommand(l && l.tagName === 'OL' ? 'insertOrderedList' : 'insertUnorderedList'); }
-    changed();
-  }
 
   /* --- Popovers --- */
   function headingMenu(anchor) {
@@ -4624,35 +5114,58 @@ const NoteTools = (() => {
         swatchPicker({ value: null, allowNone: true, label: 'Highlight colour', onPick: (c) => { Popover.close(false); highlight(c); } })),
     });
   }
-  /** A small search popover: an input above a list of .menu__item rows. */
-  function picker(anchor, key, label, placeholder, run) {
-    const input = h('input', { class: 'input', type: 'search', placeholder, 'aria-label': label, autocomplete: 'off', spellcheck: 'false' });
+  /** A small search popover: an input, a list of .menu__item rows and an optional row pinned below it. */
+  function picker(anchor, key, label, placeholder, run, value = '') {
+    const input = h('input', { class: 'input', type: 'search', placeholder, 'aria-label': label, autocomplete: 'off', spellcheck: 'false', value });
     const listEl = h('div', { class: 'picker__list', role: 'listbox' });
-    const box = h('div', { class: 'picker' }, input, listEl);
-    Popover.open({ anchor, key, label, content: box });
+    const foot = h('div', { class: 'picker__foot', hidden: true });
+    Popover.open({ anchor, key, label, content: h('div', { class: 'picker' }, input, listEl, foot) });
     input.focus();
-    const setItems = (items, empty) => {
-      listEl.replaceChildren(...(items.length ? items.map((it) => h('button', { class: 'menu__item', type: 'button', role: 'option', onclick: () => { Popover.close(false); it.pick(); } }, it.icon ? icon(it.icon) : h('span', { class: 'tool--w', text: 'W' }), h('span', { text: it.label })))
-        : [h('div', { class: 'picker__note', text: empty })]));
+    if (value) input.select();
+    const row = (it) => h('button', { class: `menu__item${it.cls ? ` ${it.cls}` : ''}`, type: 'button', role: 'option', onclick: () => { Popover.close(false); it.pick(); } },
+      it.icon ? icon(it.icon) : h('span', { class: 'tool--w', text: 'W' }),
+      h('span', { class: 'picker__label', text: it.label }),
+      it.time ? h('span', { class: 'picker__time', text: it.time }) : null);
+    const setItems = (items, empty, extra = null) => {
+      listEl.replaceChildren(...(items.length ? items.map(row) : [h('div', { class: 'picker__note', text: empty })]));
+      foot.replaceChildren(...(extra ? [row(extra)] : []));
+      foot.hidden = !extra;
     };
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); const first = $('.menu__item', listEl); if (first) first.click(); }
+      if (e.key === 'Enter') { e.preventDefault(); const first = $('.menu__item', listEl) || $('.menu__item', foot); if (first) first.click(); }
     });
     run(input, setItems);
   }
+  /** Link the highlighted words (or, after "[[", insert a link) to a note — an existing one or a new one. */
   function notePicker(anchor) {
-    picker(anchor, 'tool:note', 'Link to a note', 'Search your notes', (input, setItems) => {
+    const words = savedText();
+    picker(anchor, 'tool:note', 'Link to a note', 'Search notes', (input, setItems) => {
       const fill = () => {
-        const q = input.value.trim().toLowerCase();
+        const q = input.value.trim();
+        const ql = q.toLowerCase();
         const current = QuickNotes.editingId();
         const notes = Items.all('capture').filter((n) => n.id !== current)
-          .filter((n) => !q || `${n.title} ${n.content}`.toLowerCase().includes(q))
-          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8);
-        setItems(notes.map((n) => ({ icon: 'notes', label: NotesData.parts(n).title, pick: () => insertHTML(`<a data-note="${RichText.esc(n.id)}">${RichText.esc(NotesData.parts(n).title)}</a>`) })), q ? 'No notes match' : 'No notes yet');
+          .filter((n) => !ql || `${n.title} ${n.content}`.toLowerCase().includes(ql))
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+        const name = words || q;
+        setItems(
+          notes.map((n) => ({ icon: 'notes', label: NotesData.parts(n).title, time: NotesData.label(n.updatedAt), pick: () => linkNote(n) })),
+          ql ? 'No notes match' : 'No notes yet',
+          name ? { icon: 'plus', cls: 'picker__create', label: `Create note “${clip(name, 40)}”`, pick: () => createNote(name) } : null);
       };
       input.addEventListener('input', fill);
       fill();
     });
+  }
+  function linkNote(n) {
+    if (brackets) insertHTML(`<a data-note="${RichText.esc(n.id)}">${RichText.esc(NotesData.parts(n).title)}</a>`);
+    else linkSelection({ 'data-note': n.id });
+  }
+  function createNote(name) {
+    const title = name.slice(0, 200);
+    const n = Items.create('capture', { title, content: '', meta: { kind: 'text', category: 'Note', inbox: true, source: 'note-link', color: null, pinned: false, html: '' } });
+    linkNote(n);
+    Toast.show(`Created “${clip(title, 40)}”`);
   }
   function wikiPicker(anchor) {
     picker(anchor, 'tool:wiki', 'Link to Wikipedia', 'Search Wikipedia', (input, setItems) => {
@@ -4660,8 +5173,7 @@ const NoteTools = (() => {
       let seq = 0;
       const offline = () => setItems([], 'Connect to internet to search Wikipedia');
       if (!WikiSearch.isOnline()) { offline(); input.disabled = true; return; }
-      setItems([], 'Type to search Wikipedia');
-      input.addEventListener('input', () => {
+      const search = (wait) => {
         clearTimeout(timer);
         const q = input.value.trim();
         if (!q) { setItems([], 'Type to search Wikipedia'); return; }
@@ -4671,31 +5183,65 @@ const NoteTools = (() => {
           try {
             const found = await WikiSearch.query(q);
             if (my !== seq) return;
-            setItems(found.map((r) => ({ label: r.title, pick: () => insertHTML(`<a data-wiki="${RichText.esc(r.title)}">${RichText.esc(r.title)}</a>`) })), 'No results');
+            setItems(found.map((r) => ({ label: r.title, pick: () => linkSelection({ 'data-wiki': r.title }) })), 'No results');
           } catch (e) {
             if (my !== seq) return;
             if (e instanceof WikiSearch.OfflineError) offline(); else setItems([], 'Search isn’t available right now');
           }
-        }, 250);
-      });
-    });
+        }, wait);
+      };
+      input.addEventListener('input', () => search(250));
+      search(0);
+    }, savedText());
   }
-  function linkPicker(anchor) {
-    remember();
-    const hadText = saved && !saved.collapsed;
-    const input = h('input', { class: 'input', type: 'url', placeholder: 'https://', 'aria-label': 'Web address', autocomplete: 'off', spellcheck: 'false', inputmode: 'url' });
+  /** Web addresses get https:// when typed without a scheme; anything that isn't a web or mail link is refused. */
+  function webAddress(raw) {
+    let v = raw.trim();
+    if (!v) return '';
+    if (!/^(https?:|mailto:)/i.test(v)) v = `https://${v.replace(/^\/+/, '')}`;
+    try { const u = new URL(v); return (u.protocol === 'mailto:' || u.hostname) ? u.href : ''; } catch { return ''; }
+  }
+  /** The URL popover: links the highlighted words, or changes an existing link (`existing`). */
+  function linkPicker(anchor, existing = null) {
+    if (!existing) remember();
+    const input = h('input', { class: 'input', type: 'url', placeholder: 'example.com', 'aria-label': 'Web address', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', inputmode: 'url', value: existing ? existing.getAttribute('href') : '' });
     const apply = () => {
-      let url = input.value.trim();
-      if (!url) return;
-      if (!/^(https?:|mailto:)/i.test(url)) url = `https://${url}`;
+      const url = webAddress(input.value);
+      input.setAttribute('aria-invalid', String(!url));
+      if (!url) { input.focus(); return; }
       Popover.close(false);
-      if (hadText) { exec('createLink', url); return; }
-      insertHTML(`<a href="${RichText.esc(url)}">${RichText.esc(url.replace(/^https?:\/\//, ''))}</a>`);
+      if (existing) { existing.setAttribute('href', url); editor.focus({ preventScroll: true }); changed(); return; }
+      linkSelection({ href: url });
     };
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
-    Popover.open({ anchor, key: 'tool:link', label: 'Web link', content: h('div', { class: 'picker' }, input, h('button', { class: 'menu__item', type: 'button', onclick: apply }, icon('link'), hadText ? 'Link the selected text' : 'Insert link')) });
+    Popover.open({ anchor, key: 'tool:link', label: 'Web link', content: h('div', { class: 'picker' }, input, h('button', { class: 'menu__item', type: 'button', onclick: apply }, icon('link'), existing ? 'Save link' : 'Link the highlighted text')) });
     input.focus();
+    if (existing) input.select();
   }
+
+  /* --- Floating tooltips --- */
+  const tip = h('div', { class: 'float-tip', role: 'tooltip' });
+  let tipTimer = 0;
+  let tipFor = null;
+  const tipText = (b) => (b.getAttribute('aria-disabled') === 'true' ? NEEDS_TEXT : b.dataset.hint);
+  function showTip(b, delay = 400, hold = 0) {
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => {
+      tipFor = b;
+      tip.textContent = tipText(b);
+      if (!tip.isConnected) document.body.append(tip);
+      const r = b.getBoundingClientRect();
+      const w = tip.offsetWidth;
+      const th = tip.offsetHeight;
+      let top = r.bottom + 8;
+      if (top + th > window.innerHeight - 8) top = r.top - th - 8;
+      tip.style.left = `${Math.round(Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8)))}px`;
+      tip.style.top = `${Math.round(top)}px`;
+      tip.classList.add('is-visible');
+      if (hold) tipTimer = setTimeout(hideTip, hold);
+    }, delay);
+  }
+  function hideTip() { clearTimeout(tipTimer); tipFor = null; tip.classList.remove('is-visible'); }
 
   /* --- Toolbar state --- */
   function paint() {
@@ -4704,15 +5250,34 @@ const NoteTools = (() => {
     const state = (cmd) => { try { return inside && document.queryCommandState(cmd); } catch { return false; } };
     const block = inside ? String(document.queryCommandValue('formatBlock') || '').toLowerCase() : '';
     const inChecklist = !!(inside && blockOf('ul.checklist'));
+    const link = inside ? blockOf('a') : null;
     const pressed = {
       bold: state('bold'), italic: state('italic'), underline: state('underline'), strike: state('strikeThrough'),
       heading: block === 'h1' || block === 'h2',
       ul: state('insertUnorderedList') && !inChecklist, ol: state('insertOrderedList'), check: inChecklist,
       highlight: !!(inside && blockOf('mark')),
+      note: !!(link && link.dataset.note), wiki: !!(link && link.dataset.wiki), link: !!(link && link.matches(RichText.WEB)),
     };
-    $$('.tool', bar).forEach((b) => { if (b.dataset.tool in pressed) b.setAttribute('aria-pressed', String(!!pressed[b.dataset.tool])); });
+    const canLink = !!selectedText();
+    $$('.tool', bar).forEach((b) => {
+      const id = b.dataset.tool;
+      b.setAttribute('aria-pressed', String(!!pressed[id]));
+      if (!LINK_TOOLS.includes(id)) return;
+      b.setAttribute('aria-disabled', String(!canLink));
+      if (canLink) b.removeAttribute('aria-description'); else b.setAttribute('aria-description', NEEDS_TEXT);
+    });
+    if (tipFor) tip.textContent = tipText(tipFor);
   }
+  /** Fades the row's edges while there's more to scroll to. */
+  function paintEdges() {
+    const max = bar.scrollWidth - bar.clientWidth;
+    bar.classList.toggle('fade-start', bar.scrollLeft > 2);
+    bar.classList.toggle('fade-end', max - bar.scrollLeft > 2);
+  }
+  const toolBtn = (id) => $(`.tool[data-tool="${id}"]`, bar);
   function run(id, anchor) {
+    hideTip();
+    if (LINK_TOOLS.includes(id) && anchor.getAttribute('aria-disabled') === 'true') { showTip(anchor, 0, 1800); return; }
     const tool = TOOLS.find((t) => t !== SEP && t.id === id);
     if (id === 'heading') headingMenu(anchor);
     else if (id === 'ul' || id === 'ol') list(tool.cmd);
@@ -4722,38 +5287,93 @@ const NoteTools = (() => {
     else if (id === 'note') { remember(); notePicker(anchor); }
     else if (id === 'wiki') { remember(); wikiPicker(anchor); }
     else if (id === 'link') linkPicker(anchor);
-    else if (id === 'clear') clearFormatting();
   }
-  const toolBtn = (id) => $(`.tool[data-tool="${id}"]`, bar);
+
+  /* --- Web link card: hover (or long-press) a web link to see where it goes --- */
+  const card = h('div', { class: 'popover link-card', role: 'group', 'aria-label': 'Web link' });
+  let cardFor = null;
+  let cardTimer = 0;
+  let press = null;       // a touch held on a web link: { x, y, timer }
+  let longPressAt = 0;    // when a long-press opened the card (its click is ignored)
+  function showCard(a) {
+    clearTimeout(cardTimer);
+    if (!a.isConnected || !editor.contains(a)) return;
+    cardFor = a;
+    const url = a.getAttribute('href');
+    card.replaceChildren(
+      h('a', { class: 'link-card__url', href: url, target: '_blank', rel: 'noopener noreferrer', text: url.replace(/^https?:\/\//i, '').replace(/\/$/, ''), onclick: () => hideCard(true) }),
+      h('div', { class: 'link-card__actions' },
+        h('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => { const t = cardFor; hideCard(true); linkPicker(t, t); } }, icon('edit', 'icon--sm'), 'Edit'),
+        h('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => { const t = cardFor; hideCard(true); unlink(t); } }, icon('trash', 'icon--sm'), 'Remove')));
+    document.body.append(card);
+    const r = a.getClientRects()[0] || a.getBoundingClientRect();
+    const w = card.offsetWidth;
+    const ch = card.offsetHeight;
+    let top = r.bottom + 6;
+    if (top + ch > window.innerHeight - 8) top = Math.max(8, r.top - ch - 6);
+    card.style.left = `${Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8)))}px`;
+    card.style.top = `${Math.round(top)}px`;
+  }
+  function hideCard(now) {
+    clearTimeout(cardTimer);
+    const go = () => { card.remove(); cardFor = null; };
+    if (now) go(); else cardTimer = setTimeout(go, 250);
+  }
+  function unlink(a) {
+    if (!a || !a.isConnected) return;
+    editor.focus({ preventScroll: true });
+    const sel = window.getSelection();
+    const r = document.createRange();
+    r.selectNodeContents(a);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    document.execCommand('unlink');
+    sel.collapseToEnd();
+    changed();
+  }
 
   /* --- Opening links --- */
   function openLink(a) {
-    if (a.dataset.note) {
-      if (!Items.get(a.dataset.note)) { Toast.show('That note was deleted'); return; }
-      Items.update(a.dataset.note, {}); // touching it moves it to the top of Recent
-      QuickNotes.openNote(a.dataset.note);
-    } else if (a.dataset.wiki) {
+    if (a.dataset.note) Links.open(a.dataset.note);
+    else if (a.dataset.wiki) {
       if (!WikiSearch.isOnline()) { Toast.show('Connect to internet to open Wikipedia links', { type: 'error' }); return; }
       WikiSearch.open(a.dataset.wiki);
-    } else if (a.getAttribute('href')) {
-      window.open(a.getAttribute('href'), '_blank', 'noopener,noreferrer');
-    }
+    } else if (a.getAttribute('href')) openExternal(a.getAttribute('href'));
   }
 
   function build() {
     bar.replaceChildren(...TOOLS.map((t) => (t === SEP ? h('span', { class: 'note-tools__sep', 'aria-hidden': 'true' })
-      : h('button', { class: `tool${t.text ? ' tool--w' : ''}`, type: 'button', 'data-tip': t.tip, 'aria-label': t.tip, 'aria-pressed': t.cmd || ['heading', 'check', 'highlight'].includes(t.id) ? 'false' : null, dataset: { tool: t.id } },
+      : h('button', { class: `tool${t.text ? ' tool--w' : ''}`, type: 'button', 'aria-label': t.tip, 'aria-pressed': 'false', 'aria-disabled': LINK_TOOLS.includes(t.id) ? 'true' : null, 'aria-description': LINK_TOOLS.includes(t.id) ? NEEDS_TEXT : null, dataset: { tool: t.id, hint: t.tip } },
         t.icon ? icon(t.icon) : t.text))));
     // Buttons never take focus from the note, so its selection survives.
-    bar.addEventListener('pointerdown', (e) => { if (e.target.closest('.tool')) e.preventDefault(); });
+    const keep = (e) => { if (e.target.closest('.tool')) e.preventDefault(); };
+    bar.addEventListener('pointerdown', keep);
+    bar.addEventListener('mousedown', keep);
     bar.addEventListener('click', (e) => { const b = e.target.closest('.tool'); if (b) run(b.dataset.tool, b); });
-    document.addEventListener('selectionchange', () => { if (inEditor(window.getSelection().anchorNode)) paint(); });
+    bar.addEventListener('pointerover', (e) => { const b = e.target.closest('.tool'); if (b && e.pointerType === 'mouse') showTip(b); });
+    bar.addEventListener('pointerout', (e) => { const b = e.target.closest('.tool'); if (b && e.pointerType === 'mouse' && !b.contains(e.relatedTarget)) hideTip(); });
+    bar.addEventListener('focusin', (e) => { const b = e.target.closest('.tool'); if (b && document.documentElement.dataset.input === 'key') showTip(b, 0); });
+    bar.addEventListener('focusout', hideTip);
+    bar.addEventListener('scroll', () => { hideTip(); paintEdges(); }, { passive: true });
+    new ResizeObserver(paintEdges).observe(bar);
+    let wasInside = false;
+    document.addEventListener('selectionchange', () => {
+      const inside = inEditor(window.getSelection().anchorNode);
+      if (inside || wasInside) paint();
+      wasInside = inside;
+    });
     editor.addEventListener('keydown', (e) => {
+      hideCard(true);
       const mod = IS_MAC ? e.metaKey : e.ctrlKey;
       if (!mod || e.altKey) return;
       const k = e.key.toLowerCase();
       if (!e.shiftKey && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); exec({ b: 'bold', i: 'italic', u: 'underline' }[k]); }
-      else if (!e.shiftKey && k === 'k') { e.preventDefault(); e.stopPropagation(); linkPicker(toolBtn('link')); } // in a note, ⌘K adds a link
+      else if (!e.shiftKey && k === 'k') { // in a note, ⌘K links the highlighted text
+        e.preventDefault(); e.stopPropagation();
+        const b = toolBtn('link');
+        b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        if (selectedText()) linkPicker(b); else showTip(b, 0, 1800);
+      }
     });
     editor.addEventListener('input', (e) => {
       // Typing "[[" opens the note picker.
@@ -4767,11 +5387,20 @@ const NoteTools = (() => {
       brackets.setStart(node, off - 2);
       brackets.setEnd(node, off);
       saved = sel.getRangeAt(0).cloneRange();
-      notePicker(toolBtn('note'));
+      const b = toolBtn('note');
+      b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      notePicker(b);
     });
     editor.addEventListener('click', (e) => {
       const a = e.target.closest('a');
-      if (a && editor.contains(a)) { e.preventDefault(); openLink(a); return; }
+      if (a && editor.contains(a)) {
+        e.preventDefault();
+        if (Date.now() - longPressAt < 800) return;          // the long-press showed the link card instead
+        if (!window.getSelection().isCollapsed) return;      // selecting words, not following the link
+        hideCard(true);
+        openLink(a);
+        return;
+      }
       const li = e.target.closest('ul.checklist > li');
       if (li && e.clientX - li.getBoundingClientRect().left < 24) { // the tick box
         e.preventDefault();
@@ -4780,6 +5409,40 @@ const NoteTools = (() => {
         changed();
       }
     });
+    // The web link card: a pointer resting on a link, or a finger held on one.
+    const webLink = (t) => { const a = t && t.closest && t.closest(RichText.WEB); return a && editor.contains(a) ? a : null; };
+    editor.addEventListener('pointerover', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const a = webLink(e.target);
+      if (!a) return;
+      clearTimeout(cardTimer);
+      if (cardFor !== a) cardTimer = setTimeout(() => showCard(a), 450);
+    });
+    editor.addEventListener('pointerout', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const a = webLink(e.target);
+      if (!a || a.contains(e.relatedTarget) || card.contains(e.relatedTarget)) return;
+      if (cardFor === a) hideCard(false); else clearTimeout(cardTimer);
+    });
+    card.addEventListener('pointerenter', () => clearTimeout(cardTimer));
+    card.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideCard(false); });
+    const endPress = () => { if (press) { clearTimeout(press.timer); press = null; } };
+    editor.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      const a = webLink(e.target);
+      endPress();
+      if (!a) return;
+      press = { x: e.clientX, y: e.clientY, timer: setTimeout(() => { press = null; longPressAt = Date.now(); showCard(a); }, 450) };
+    });
+    editor.addEventListener('pointermove', (e) => { if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) endPress(); });
+    editor.addEventListener('pointerup', endPress);
+    editor.addEventListener('scroll', () => { endPress(); hideCard(true); }, { passive: true });
+    document.addEventListener('pointerdown', (e) => {
+      if (card.isConnected && !card.contains(e.target) && !(cardFor && cardFor.contains(e.target))) hideCard(true);
+    }, true);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && card.isConnected) hideCard(true); });
+    window.addEventListener('resize', () => { hideTip(); hideCard(true); });
+    paintEdges();
   }
   return { build, paint };
 })();
@@ -4787,6 +5450,7 @@ const NoteTools = (() => {
 /* ---------- Inbox (Notes page) ---------- */
 const Inbox = (() => {
   const host = $('#inbox');
+  let revealId = null; // a note just opened from a link: scrolled into view and outlined
   host.addEventListener('click', (e) => {
     const del = e.target.closest('[data-action="capture-delete"]');
     if (del) { removeWithUndo(del.dataset.id, 'Note'); return; }
@@ -4812,13 +5476,24 @@ const Inbox = (() => {
           h('h3', { class: 'card__title' }, h('button', { class: 'card__open', type: 'button', text: heading })),
           h('button', { class: 'icon-btn icon-btn--sm', type: 'button', dataset: { action: 'capture-delete', id: c.id }, 'aria-label': `Delete “${heading}”` }, icon('trash'))),
         rest ? h('p', { class: 'card__text', text: rest }) : null,
+        backlinksOf(c.id),
         h('div', { class: 'card__foot' },
           c.meta.pinned ? icon('pin') : null,
           c.meta.category ? h('span', { class: 'tag', text: c.meta.category }) : null,
           h('time', { datetime: c.createdAt, text: Fmt.dateTime(c.createdAt) })));
     })));
+    if (revealId) {
+      const card = host.querySelector(`.card[data-id="${CSS.escape(revealId)}"]`);
+      revealId = null;
+      if (card) { card.classList.add('is-target'); card.scrollIntoView({ block: 'nearest' }); }
+    }
   }
-  return { render };
+  function backlinksOf(id) {
+    const from = Links.backlinks(id);
+    return from.length ? h('p', { class: 'card__links', text: `Linked from: ${from.map(Links.title).join(', ')}` }) : null;
+  }
+  function reveal(id) { revealId = id; scheduleRender(); }
+  return { render, reveal };
 })();
 
 /* ---------- Placeholder pages ---------- */
@@ -4914,7 +5589,7 @@ const ACTIONS = {
   'view-prev': () => TimeCard.step(-1),
   'agenda-toggle': () => TimeCard.toggleExpanded(),
   'view-next': () => TimeCard.step(1),
-  'connection-new': () => ConnectionEditor.open(),
+  'conn-migrate': () => Connections.migrate(),
   'go-notes': () => Navigation.go('notes'),
   'go-connections': () => Navigation.go('connections'),
   'week-prev': () => TaskPanel.shiftWeek(-1),
@@ -4950,7 +5625,6 @@ function bindKeyboard() {
     if (key === 'n') {
       if (page === 'home') { e.preventDefault(); TaskPanel.openComposer(); }
       else if (page === 'notes') { e.preventDefault(); Capture.open(); }
-      else if (page === 'connections') { e.preventDefault(); ConnectionEditor.open(); }
     } else if (e.key === '/' && page === 'home') {
       e.preventDefault(); TaskPanel.focusSearch();
     }
