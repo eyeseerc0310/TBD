@@ -716,6 +716,9 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .notes__editor ul.checklist > li[data-checked="true"]::before { background: var(--accent); border-color: var(--accent); }
 .notes__editor ul.checklist > li[data-checked="true"]::after { display: block; }
 .notes__editor mark { background: var(--hl, var(--accent-soft)); color: var(--hl-ink, inherit); border-radius: 3px; padding: 0 2px; }
+/* A highlighted link reads in the highlight's ink (dark on light colours, light on dark), underline included. */
+.notes__editor a mark { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--hl-ink, currentColor) 55%, transparent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.notes__editor mark a { color: var(--hl-ink, inherit); }
 /* Links in a note keep the words they were made from. Note links are
    plain accent text; Wikipedia links carry a small W, web links a ↗. */
 .notes__editor a {
@@ -5632,8 +5635,103 @@ const NoteTools = (() => {
       t.replaceWith(mark);
       mark.append(t);
     }
-    RichText.select(editor, start, end);
     changed();
+    caretAfter(end); // typing next carries on unhighlighted
+  }
+  /** Collapses the selection to `offset`, stepping out of any highlight or link that ends there. */
+  function caretAfter(offset) {
+    RichText.select(editor, offset, offset);
+    const sel = window.getSelection();
+    const outer = edgesAt().filter((x) => x.side === 'end').pop();
+    if (!outer) return;
+    const r = document.createRange();
+    r.setStartAfter(outer.el);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+
+  /* --- Typing at the edge of a highlight or link never extends it ---
+     Browsers put text typed at the end (Safari: also the start) of an inline element inside it,
+     and copy a highlight onto the line after Enter or onto the next word ("typing style"). Just
+     before each insertion we note the highlights and links the caret is at the edge of; just
+     after, text that went into one of them at that edge moves outside it, and any highlight,
+     link or styled span the typing itself created is unwrapped. Bold, italic, underline and
+     strikethrough carry on as usual. Compositions (iOS predictive text, dictation, IMEs) are
+     handled once they end; autocorrect replacements change text where it is. */
+  const EDGE = 'mark, a';
+  let pending = null;
+  let composing = false;
+  /** The highlights and links the caret is at the start or end of, innermost first. */
+  function edgesAt() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed || !inEditor(sel.anchorNode)) return [];
+    let node = sel.anchorNode;
+    let off = sel.anchorOffset;
+    // A caret between elements (e.g. just after a highlight) is where the browser will type: the
+    // end of the text before it, or else the start of the text after it.
+    if (node.nodeType === 1) {
+      const deepest = (n, last) => { while (n && n.nodeType === 1 && n.firstChild) n = last ? n.lastChild : n.firstChild; return n; };
+      const prev = deepest(node.childNodes[off - 1], true);
+      const next = deepest(node.childNodes[off], false);
+      if (prev && prev.nodeType === 3) { node = prev; off = prev.length; }
+      else if (next && next.nodeType === 3) { node = next; off = 0; }
+    }
+    const out = [];
+    for (let el = node.nodeType === 1 ? node : node.parentElement; el && el !== editor; el = el.parentElement) {
+      if (!el.matches(EDGE)) continue;
+      const before = document.createRange();
+      before.selectNodeContents(el);
+      before.setEnd(node, off);
+      const at = before.toString().length;
+      const len = el.textContent.length;
+      if (at === len) out.push({ el, side: 'end', len });
+      else if (at === 0) out.push({ el, side: 'start', len });
+    }
+    return out;
+  }
+  function beginTyping(kind) {
+    if (pending) return;
+    pending = { kind, known: new Set($$('mark, a, span, font', editor)), edges: edgesAt() };
+  }
+  function endTyping() {
+    const p = pending;
+    pending = null;
+    if (!p) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !inEditor(sel.anchorNode)) return;
+    // The caret is kept as a node and offset (moving nodes keeps them; character counts can't
+    // tell the end of one line from the start of the next).
+    let caret = [sel.anchorNode, sel.anchorOffset];
+    let touched = false;
+    // 1. Text that went into a highlight or link at its edge moves just outside it.
+    const inner = p.kind !== 'replace' && p.edges.find((x) => x.el.isConnected && x.el.textContent.length > x.len);
+    const t = caret[0];
+    if (inner && t.nodeType === 3) {
+      const added = inner.el.textContent.length - inner.len;
+      const outer = p.edges.filter((x) => x.side === inner.side && x.el.isConnected && x.el.contains(inner.el)).pop().el;
+      const from = caret[1] - added;
+      if (from >= 0 && outer.contains(t)) {
+        const typed = t.splitText(from);
+        typed.splitText(added);
+        if (inner.side === 'end') outer.after(typed); else outer.before(typed);
+        caret = [typed, typed.length];
+        touched = true;
+      }
+    }
+    // 2. Highlights, links or styled spans the typing created are unwrapped.
+    for (const el of $$('mark, a, span, font', editor)) {
+      if (p.known.has(el)) continue;
+      if (caret[0] === el) caret = [el.parentNode, [...el.parentNode.childNodes].indexOf(el) + caret[1]];
+      el.replaceWith(...el.childNodes);
+      touched = true;
+    }
+    if (!touched) return;
+    const r = document.createRange();
+    r.setStart(caret[0], Math.min(caret[1], caret[0].nodeType === 3 ? caret[0].length : caret[0].childNodes.length));
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
   }
 
   /* --- Popovers --- */
@@ -5914,6 +6012,14 @@ const NoteTools = (() => {
         if (selectedText()) linkPicker(b); else showTip(b, 0, 1800);
       }
     });
+    editor.addEventListener('compositionstart', () => { composing = true; beginTyping('compose'); });
+    editor.addEventListener('compositionend', () => { composing = false; setTimeout(endTyping, 0); });
+    editor.addEventListener('beforeinput', (e) => {
+      if (composing || e.isComposing) return;
+      if (e.inputType === 'insertText' || e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak') beginTyping('type');
+      else if (e.inputType === 'insertReplacementText') beginTyping('replace');
+    });
+    editor.addEventListener('input', (e) => { if (!composing && !e.isComposing) endTyping(); });
     editor.addEventListener('input', (e) => {
       // Typing "[[" opens the note picker.
       if (e.inputType && !e.inputType.startsWith('insert')) return;
