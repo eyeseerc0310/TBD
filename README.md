@@ -39,7 +39,7 @@ Without a connection the app falls back to local fonts.
 | `Ctrl/⌘ S` | Download a backup |
 | `Esc` | Close dialogs, cancel edits |
 | `N` | New task (Home) · Quick Capture (Notes) |
-| `/` | Search tasks (Home) |
+| `/` | Go to the search bar |
 | Arrow keys, `PgUp`/`PgDn`, `Home`/`End` | Move through the calendar |
 | `Ctrl/⌘ Enter` | Save a capture |
 
