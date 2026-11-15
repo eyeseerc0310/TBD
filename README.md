@@ -32,6 +32,9 @@ Without a connection the app falls back to local fonts.
 | --- | --- |
 | `Ctrl/⌘ K` | Quick Capture (from any page) |
 | `Ctrl/⌘ Shift K` | Focus the Wikipedia search bar |
+| `Ctrl/⌘ B` / `I` / `U` | Bold / italic / underline (in a note) |
+| `Ctrl/⌘ K` in a note | Insert a web link (Quick Capture everywhere else) |
+| `[[` in a note | Link to another note |
 | `Ctrl/⌘ S` | Download a backup |
 | `Esc` | Close dialogs, cancel edits |
 | `N` | New task (Home) · Quick Capture (Notes) |
@@ -65,7 +68,7 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`. Captures are the saved notes shown on the Notes page and the Home notes card |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text). Captures are the saved notes shown on the Notes page and the Home notes card |
 | `connection` | `target` (link, email, phone or text), `kind` (`link` · `email` · `phone` · `text`), `color`, `order` |
 | `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
 
@@ -83,7 +86,7 @@ Application state is `{ items, settings, ui, timer }`:
   - Appearance: `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
-    `density` (`comfortable` · `compact`)
+    `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons)
 - `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card)
 
 Older data without the newer fields loads with defaults; tasks without an `order`
@@ -162,3 +165,15 @@ redraws once per animation frame and persistence writes after a short debounce.
   files, screenshots, voice notes).
 - **Global search:** `Search.query(q, { types })` already searches every item type.
 - **Relationships:** every item has `links`; Connections can render them.
+
+## Rich-text notes
+
+The Notes card body is a rich-text editor (bold, italic, underline, strikethrough,
+headings, bulleted / numbered / check lists, highlights, note links, Wikipedia links
+and web links). Notes keep two copies of their body: `content` (plain text, used for
+previews, search and the Notes page) and `meta.html` (the formatted version). HTML
+is always cleaned against a short allow-list before it is shown or saved, so nothing
+pasted, typed or restored from a backup can run. Notes from older versions have no
+`meta.html` and load from their plain text. Link chips store only their target
+(`data-note` id or `data-wiki` title); a chip whose note was deleted shows
+"Missing note".
