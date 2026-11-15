@@ -1935,6 +1935,7 @@ const ITEM_NORMALISERS = {
     it.meta.category = typeof it.meta.category === 'string' ? it.meta.category : '';
     it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
     it.meta.pinned = it.meta.pinned === true;
+    cleanNoteHtml(it);
     return it;
   },
   connection(it) {
@@ -1951,10 +1952,16 @@ const ITEM_NORMALISERS = {
   note(it) {
     it.meta.quick = it.meta.quick === true;
     if (it.meta.quick && it.title === 'Quick notes') it.title = '';
+    cleanNoteHtml(it);
     return it;
   },
 };
 
+/** Stored note HTML is cleaned and normalised as it loads (see RichText), so older notes and
+    backups come in repaired: no split or emptied links, so no doubled link badges. */
+function cleanNoteHtml(it) {
+  if (typeof it.meta.html === 'string' && it.meta.html) it.meta.html = RichText.clean(it.meta.html);
+}
 function normaliseItem(raw) {
   if (!isObj(raw) || typeof raw.id !== 'string' || !raw.id || typeof raw.type !== 'string' || !raw.type) return null;
   const t = nowISO();
@@ -2875,8 +2882,82 @@ const RichText = (() => {
       }
     };
     walk(doc.body);
+    normalize(doc.body);
     return doc.body.innerHTML;
   }
+
+  /* A link's badge (W, ↗) is drawn by CSS on the link itself, so it can only be duplicated by
+     the link itself being split: two pieces, or an emptied copy left behind, each draw one.
+     normalize() keeps one link per run of linked text: formatting (bold, highlight…) always
+     sits inside links, never around or across them; neighbouring pieces of the same link or
+     the same formatting are joined; empty leftovers go. It runs on every save and load (so
+     older notes are repaired) and after every formatting action in the editor. */
+  const FORMAT = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DEL', 'MARK']);
+  const linkKey = (a) => (a.dataset.note ? `n:${a.dataset.note}` : a.dataset.wiki ? `w:${a.dataset.wiki}` : `h:${a.getAttribute('href') || ''}`);
+  const sameFormat = (x, y) => x.tagName === y.tagName && (x.tagName !== 'MARK' || (x.dataset.c || '') === (y.dataset.c || ''));
+  function normalize(root) {
+    $$('a a', root).forEach((inner) => inner.replaceWith(...inner.childNodes)); // never a link inside a link
+    // Formatting around a link moves inside it: <mark>a <a>b</a> c</mark> → <mark>a </mark><a><mark>b</mark></a><mark> c</mark>
+    for (const a of $$('a', root)) {
+      let f = a.parentElement;
+      while (f && f !== root && FORMAT.has(f.tagName)) {
+        const before = f.cloneNode(false);
+        const after = f.cloneNode(false);
+        const inner = f.cloneNode(false);
+        while (f.firstChild !== a) before.append(f.firstChild);
+        while (a.nextSibling) after.append(a.nextSibling);
+        inner.append(...a.childNodes);
+        a.append(inner);
+        f.replaceWith(before, a, after);
+        f = a.parentElement;
+      }
+    }
+    // Empty links and formatting (deepest first) — including the emptied halves of a split.
+    $$('a, b, strong, i, em, u, s, strike, del, mark, span', root).reverse().forEach((el) => { if (!el.textContent && !el.querySelector('br')) el.remove(); });
+    // Join neighbours: the same link, or the same formatting.
+    const join = (parent) => {
+      let n = parent.firstChild;
+      while (n) {
+        const next = n.nextSibling;
+        const same = next && n.nodeType === 1 && next.nodeType === 1
+          && ((n.tagName === 'A' && next.tagName === 'A' && linkKey(n) === linkKey(next)) || (FORMAT.has(n.tagName) && sameFormat(n, next)));
+        if (same) { n.append(...next.childNodes); next.remove(); continue; }
+        n = next;
+      }
+    };
+    [root, ...$$('*', root)].forEach(join);
+    root.normalize(); // and neighbouring text
+  }
+
+  /* Selections as character offsets, so they survive the DOM being rearranged. */
+  function offsetOf(root, node, offset) {
+    const r = document.createRange();
+    r.selectNodeContents(root);
+    r.setEnd(node, offset);
+    return r.toString().length;
+  }
+  /** The text position `n` characters in; at a boundary, the start of the next text node (`next`) or the end of the previous one. */
+  function pointAt(root, n, next = false) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let acc = 0;
+    let last = null;
+    while (walker.nextNode()) {
+      const t = walker.currentNode;
+      if (n < acc + t.length || (n === acc + t.length && !next)) return [t, n - acc];
+      acc += t.length;
+      last = t;
+    }
+    return last ? [last, last.length] : [root, root.childNodes.length];
+  }
+  function select(root, start, end) {
+    const r = document.createRange();
+    r.setStart(...pointAt(root, start, start !== end));
+    r.setEnd(...pointAt(root, end, false));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+
   /** Adds the live-only bits (link styles, hints and addresses; highlight colours) after content is set.
       Note and Wikipedia links get an href here too (never saved) so the editor treats them as links:
       typing just after one doesn't stretch it over the new words. */
@@ -2909,7 +2990,7 @@ const RichText = (() => {
   const isEmpty = (root) => !root.textContent.trim() && !root.querySelector('li, a, h1, h2, mark');
   /** True when HTML carries real formatting (not just line breaks). */
   const hasFormatting = (html) => typeof html === 'string' && /<(b|strong|i|em|u|s|strike|del|h1|h2|ul|ol|mark|a)[\s>]/i.test(html);
-  return { clean, hydrate, set, text, isEmpty, fromText, esc, hasFormatting, WEB };
+  return { clean, hydrate, set, text, isEmpty, fromText, esc, hasFormatting, WEB, normalize, offsetOf, pointAt, select };
 })();
 
 /* ---------- Notes writing area ----------
@@ -5436,7 +5517,16 @@ const NoteTools = (() => {
     else { const r = document.createRange(); r.selectNodeContents(editor); r.collapse(false); sel.addRange(r); }
     saved = null;
   }
-  const changed = () => { RichText.hydrate(editor); QuickNotes.changed(); paint(); };
+  /** Normalises the note (see RichText.normalize), keeping the selection where it was. */
+  function tidy() {
+    const sel = window.getSelection();
+    const r = sel.rangeCount && inEditor(sel.anchorNode) ? sel.getRangeAt(0) : null;
+    const at = r && [RichText.offsetOf(editor, r.startContainer, r.startOffset), RichText.offsetOf(editor, r.endContainer, r.endOffset)];
+    const before = editor.innerHTML;
+    RichText.normalize(editor);
+    if (at && editor.innerHTML !== before) RichText.select(editor, ...at);
+  }
+  const changed = () => { tidy(); RichText.hydrate(editor); QuickNotes.changed(); paint(); };
   function exec(cmd, value = null) { restore(); document.execCommand(cmd, false, value); changed(); }
   const blockOf = (tag) => { const sel = window.getSelection(); if (!sel.rangeCount) return null; const n = sel.anchorNode; const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && inEditor(el) ? el.closest(tag) : null; };
   function insertHTML(html) {
@@ -5500,16 +5590,45 @@ const NoteTools = (() => {
       return;
     }
     if (range.collapsed) { if (host) { host.dataset.c = color; changed(); } return; }
-    const frag = range.extractContents();
-    frag.querySelectorAll('mark').forEach((m) => m.replaceWith(...m.childNodes));
-    const mark = document.createElement('mark');
-    mark.dataset.c = color;
-    mark.append(frag);
-    range.insertNode(mark);
-    sel.removeAllRanges();
-    const after = document.createRange();
-    after.selectNodeContents(mark);
-    sel.addRange(after);
+    // Text by text: each selected piece of text gets the highlight where it is (inside a link,
+    // if it's in one), so links are never cut in two. Work in character offsets, as the DOM moves.
+    tidy();
+    const r0 = window.getSelection().getRangeAt(0);
+    const start = RichText.offsetOf(editor, r0.startContainer, r0.startOffset);
+    const end = RichText.offsetOf(editor, r0.endContainer, r0.endOffset);
+    const markAt = (node) => { const m = node.parentElement && node.parentElement.closest('mark'); return m && editor.contains(m) ? m : null; };
+    // Split highlights that cross the selection's edges, so each is wholly in or out.
+    for (const [n, next] of [[start, true], [end, false]]) {
+      const [node, off] = RichText.pointAt(editor, n, next);
+      const m = node.nodeType === 3 ? markAt(node) : null;
+      if (!m) continue;
+      const cut = document.createRange();
+      cut.setStartBefore(m);
+      cut.setEnd(node, off);
+      m.before(cut.extractContents()); // marks hold no links (normalize), so only formatting is cut
+    }
+    // Split the edge text nodes, then highlight every text node in between.
+    let [a, ao] = RichText.pointAt(editor, start, true);
+    if (a.nodeType === 3 && ao > 0) a.splitText(ao);
+    const [b, bo] = RichText.pointAt(editor, end, false);
+    if (b.nodeType === 3 && bo < b.length) b.splitText(bo);
+    const texts = [];
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let acc = 0;
+    while (walker.nextNode()) {
+      const t = walker.currentNode;
+      if (t.length && acc >= start && acc + t.length <= end) texts.push(t);
+      acc += t.length;
+    }
+    for (const t of texts) {
+      const m = markAt(t);
+      if (m) { m.dataset.c = color; continue; }
+      const mark = document.createElement('mark');
+      mark.dataset.c = color;
+      t.replaceWith(mark);
+      mark.append(t);
+    }
+    RichText.select(editor, start, end);
     changed();
   }
 
