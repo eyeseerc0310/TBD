@@ -4,11 +4,12 @@ A calm, local-first personal workspace — a place to capture, organise and revi
 thoughts, tasks, events and ideas.
 
 Home has three columns: a clock / calendar card (swipe or use the arrows to switch
-views) above a Connections card, a task manager with weekly progress, colours and
+views) above a Connections card (your most recent note-to-note links), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a
 stopwatch / countdown timer. Around it:
-universal Quick Capture, themeable settings, and a versioned backup system. Notes, Files, Connections and Pin Board
+universal Quick Capture, themeable settings, and a versioned backup system. The Connections
+page shows how notes and pins link together, as a graph or a list. Files and Pin Board
 are in place as workspaces ready to grow.
 
 ## Running it
@@ -33,7 +34,7 @@ Without a connection the app falls back to local fonts.
 | `Ctrl/⌘ K` | Quick Capture (from any page) |
 | `Ctrl/⌘ Shift K` | Focus the Wikipedia search bar |
 | `Ctrl/⌘ B` / `I` / `U` | Bold / italic / underline (in a note) |
-| `Ctrl/⌘ K` in a note | Insert a web link (Quick Capture everywhere else) |
+| `Ctrl/⌘ K` in a note | Link the highlighted text to a web address (Quick Capture everywhere else) |
 | `[[` in a note | Link to another note |
 | `Ctrl/⌘ S` | Download a backup |
 | `Esc` | Close dialogs, cancel edits |
@@ -58,7 +59,7 @@ backups and relationships work the same way for every kind of content:
   title: "",
   content: "",
   meta: { /* type-specific fields */ },
-  links: ["id", …]          // ids of related items, any type
+  links: ["id", …]          // ids of related items; for notes and pins, rebuilt from their content
 }
 ```
 
@@ -68,8 +69,9 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text). Captures are the saved notes shown on the Notes page and the Home notes card |
-| `connection` | `target` (link, email, phone or text), `kind` (`link` · `email` · `phone` · `text`), `color`, `order` |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared). Captures are the saved notes shown on the Notes page and the Home notes card |
+| `pin` | `attached` (ids the pin is attached to), `html` (optional body), `linkedAt`. The Pin Board UI is still to come; pins already take part in Connections |
+| `connection` | Legacy saved links/contacts from the first Connections page: `target`, `kind`, `color`, `order`. Kept as they are; the Connections page offers to move them into Notes |
 | `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
 
 Dates and times are stored as local wall-clock values ("floating" time), so a 9:00
@@ -164,7 +166,7 @@ redraws once per animation frame and persistence writes after a short debounce.
 - **Capture kinds:** add entries to `KINDS` in the Capture module (links, images,
   files, screenshots, voice notes).
 - **Global search:** `Search.query(q, { types })` already searches every item type.
-- **Relationships:** every item has `links`; Connections can render them.
+- **Relationships:** every item has `links`; notes and pins already show up in Connections.
 
 ## Rich-text notes
 
@@ -174,6 +176,32 @@ and web links). Notes keep two copies of their body: `content` (plain text, used
 previews, search and the Notes page) and `meta.html` (the formatted version). HTML
 is always cleaned against a short allow-list before it is shown or saved, so nothing
 pasted, typed or restored from a backup can run. Notes from older versions have no
-`meta.html` and load from their plain text. Link chips store only their target
-(`data-note` id or `data-wiki` title); a chip whose note was deleted shows
-"Missing note".
+`meta.html` and load from their plain text.
+
+### Formatting toolbar and links
+
+The toolbar is one row of small icon buttons (text styles | headings and lists |
+highlight | links) that scrolls sideways on narrow cards. The three link buttons work
+on highlighted text and stay dimmed until something is highlighted:
+
+- **Note link** — search your notes (or create one named after the highlighted
+  words) and link to it. Tapping the link opens that note on the Notes page. A link
+  whose note was deleted is greyed and marked "Missing note". Typing `[[` also opens
+  the note picker and inserts a link.
+- **W** — link to a Wikipedia article; opens in the in-app reader.
+- **Web link** (`Ctrl/⌘ K`) — type an address (`https://` is added for you). The link
+  shows a ↗ and opens in the device's browser, also from a home-screen app.
+  Hover (or long-press on touch) shows the address with Edit / Remove.
+
+Links keep the words they were made from: `<a data-note="id">`, `<a data-wiki="Title">`
+or `<a href="https://…">`.
+
+### Connections
+
+Connections are the links between notes and pins: a note link connects two notes
+both ways, and a pin connects with what it's attached to. Web and Wikipedia links are
+never connections. Nothing is stored apart from the items: a note's `links` are read
+from the `data-note` links in its text whenever it is saved or loaded (backups
+included), so removing the last link to a note removes the connection. The Connections
+page draws them as a graph (drag to pan, pinch or scroll to zoom, tap a node to open
+it) or a list with "Links to" and "Linked from". Each open note shows its Backlinks.
