@@ -489,13 +489,47 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 @media (hover: none) { .card .icon-btn { opacity: 1; } }
 
 /* ---------- 6. Home panels ---------- */
-.dashboard { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1.3fr); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
+/* Column widths default to 1 : 0.85 : 1.3; the grabbers override them (as fr) through --col-1..3.
+   The floor (260px, or less on small windows, never above the defaults) keeps sizes saved on
+   another screen or in a backup from squeezing a column. */
+.dashboard {
+  --col-min: min(260px, 22%);
+  position: relative; flex: 1; display: grid;
+  grid-template-columns: minmax(var(--col-min), var(--col-1, 1fr)) minmax(var(--col-min), var(--col-2, 0.85fr)) minmax(var(--col-min), var(--col-3, 1.3fr)); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
 .panel { display: flex; flex-direction: column; min-height: 0; padding: var(--pad); border-radius: var(--r-panel); }
 /* Every card's first row (header, search bar, month bar) has this height. */
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s4); flex: none; }
 .panel__title { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
 .panel__section { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--border); }
 .list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* Grabbers: pill handles in the gaps between Home cards (see CardSizes). The hit
+   area is far larger than the pill so a finger finds it easily. Shown only where
+   the cards sit in three columns; the left column's split only when Home fits the window. */
+.grabber { display: none; position: absolute; z-index: 5; place-items: center; transform: translate(-50%, -50%); touch-action: none; -webkit-user-select: none; user-select: none; outline: none; }
+.grabber--col { width: 24px; height: 72px; top: 50%; cursor: col-resize; }
+.grabber--row { width: 72px; height: 24px; cursor: row-resize; }
+.grabber__pill {
+  width: 4px; height: 40px; border-radius: 999px; background: var(--text); opacity: 0.2;
+  transition: opacity var(--t-fast) var(--ease), width var(--t-fast) var(--ease), height var(--t-fast) var(--ease);
+}
+.grabber--row .grabber__pill { width: 40px; height: 4px; }
+.grabber:hover .grabber__pill, .grabber:active .grabber__pill, .grabber.is-active .grabber__pill, html[data-input="key"] .grabber:focus-visible .grabber__pill { opacity: 0.55; }
+.grabber--col:hover .grabber__pill, .grabber--col:active .grabber__pill, .grabber--col.is-active .grabber__pill, html[data-input="key"] .grabber--col:focus-visible .grabber__pill { width: 5px; height: 48px; }
+.grabber--row:hover .grabber__pill, .grabber--row:active .grabber__pill, .grabber--row.is-active .grabber__pill, html[data-input="key"] .grabber--row:focus-visible .grabber__pill { width: 48px; height: 5px; }
+/* While dragging: no text selection, and the resize cursor everywhere. */
+html.is-resizing, html.is-resizing * { -webkit-user-select: none !important; user-select: none !important; }
+html.is-resizing[data-resize="col"] * { cursor: col-resize !important; }
+html.is-resizing[data-resize="row"] * { cursor: row-resize !important; }
+/* A double-tap reset glides back rather than jumping. */
+.dashboard.is-settling { transition: grid-template-columns var(--t-slow) var(--ease); }
+.dashboard.is-settling .panel--time, .dashboard.is-settling .panel--connections { transition: flex-grow var(--t-slow) var(--ease); }
+@media (min-width: 1100px), (min-width: 900px) and (orientation: landscape) {
+  .grabber--col { display: grid; }
+}
+@media (min-width: 1100px) and (min-height: 640px), (min-width: 900px) and (orientation: landscape) and (min-height: 640px) {
+  .grabber--row { display: grid; }
+}
 
 /* Left column: the clock/calendar card above the connections card */
 .stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
@@ -873,7 +907,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .wday.is-today .wday__num { color: var(--accent); font-weight: 600; }
 
 .tasks__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); flex: none; }
-.tasks__head .subhead { flex: 1; min-width: 0; }
+.tasks__head .subhead { flex: 1; min-width: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tasks__add { width: var(--ctl-h-sm); height: var(--ctl-h-sm); border-radius: var(--r-sm); }
 .tasks__add .icon { width: var(--icon-sm); height: var(--icon-sm); }
 .task-list { display: flex; flex-direction: column; gap: 6px; position: relative; }
@@ -1179,8 +1213,9 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   /* The empty state reaches over the list's fade padding, so it centres in the card's free space. */
   .app[data-page="home"] .tasks-empty { margin-bottom: calc(var(--s3) * -1); }
   /* The left column's two cards share its height. */
-  .app[data-page="home"] .panel--time { height: auto; flex: 2.2 1 0; min-height: 0; }
-  .app[data-page="home"] .panel--connections { flex: 1 1 0; min-height: 0; }
+  /* Floors of 220px (less on short windows, never above the defaults), as for the columns. */
+  .app[data-page="home"] .panel--time { height: auto; flex: var(--split-time, 2.2) 1 0; min-height: min(220px, 30%); }
+  .app[data-page="home"] .panel--connections { flex: var(--split-conn, 1) 1 0; min-height: min(220px, 30%); }
 }
 /* Two-row tablet layout, fitted. */
 @media (min-width: 720px) and (max-width: 1099px) and (orientation: portrait) and (min-height: 960px),
@@ -1769,6 +1804,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   // Appearance
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
+  cardSizes: null, // Home card sizes from the grabbers: { cols: [a, b, c] fractions, split: Clock/Calendar share } or null for the defaults
 });
 
 function defaultUi() {
@@ -1933,7 +1969,21 @@ function normaliseSettings(raw) {
       const v = Array.isArray(s.navOrder) ? s.navOrder.filter((x, i, a) => PAGE_IDS.includes(x) && a.indexOf(x) === i) : [];
       return [...v, ...PAGE_IDS.filter((x) => !v.includes(x))];
     })(),
+    cardSizes: normaliseCardSizes(s.cardSizes),
   };
+}
+/** Card sizes are fractions: three column shares (summing to 1) and the Clock/Calendar card's share of the left column. */
+function normaliseCardSizes(raw) {
+  if (!isObj(raw)) return null;
+  let cols = Array.isArray(raw.cols) && raw.cols.length === 3 && raw.cols.every((v) => Number.isFinite(v) && v > 0) ? raw.cols : null;
+  if (cols) {
+    const sum = cols.reduce((a, b) => a + b, 0);
+    cols = cols.map((v) => Math.min(0.8, Math.max(0.08, v / sum)));
+    const again = cols.reduce((a, b) => a + b, 0);
+    cols = cols.map((v) => Math.round((v / again) * 10000) / 10000);
+  }
+  const split = Number.isFinite(raw.split) ? Math.round(Math.min(0.92, Math.max(0.08, raw.split)) * 10000) / 10000 : null;
+  return cols || split !== null ? { cols, split } : null;
 }
 function normaliseUi(raw) {
   const u = isObj(raw) ? raw : {};
@@ -3382,7 +3432,10 @@ const TaskPanel = (() => {
 
     const tasks = Tasks.on(taskDay);
     const done = tasks.filter((t) => t.meta.done).length;
-    $('#tasks-day').textContent = taskDay === today ? 'Today’s tasks' : `Tasks for ${Fmt.dayMonth(taskDay)}`;
+    const dayEl = $('#tasks-day');
+    dayEl.dataset.long = taskDay === today ? 'Today’s tasks' : `Tasks for ${Fmt.dayMonth(taskDay)}`;
+    dayEl.dataset.short = taskDay === today ? 'Today’s tasks' : `Tasks · ${Fmt.shortDay(taskDay)}`;
+    fitDay();
     $('#tasks-count').textContent = tasks.length ? `${done} of ${tasks.length} done` : '';
     const rows = tasks.map((t) => taskRow(t));
     // The composer row stays in place across redraws so its input keeps focus.
@@ -3397,6 +3450,14 @@ const TaskPanel = (() => {
       focusAfter = null;
     }
   }
+  /** The day heading in full, or "Tasks · Sat, Nov 14" when the card is too narrow for it on one line. */
+  function fitDay() {
+    const el = $('#tasks-day');
+    if (!el.dataset.long) return;
+    el.textContent = el.dataset.long;
+    if (el.scrollWidth > el.clientWidth + 1) el.textContent = el.dataset.short;
+  }
+  new ResizeObserver(fitDay).observe($('.tasks__head'));
   /** No tasks on the day: "You're all caught up", with a way to add one. */
   function emptyState(day) {
     return h('li', { class: 'tasks-empty' },
@@ -3669,7 +3730,7 @@ const SettingsPanel = (() => {
     },
     {
       id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Theme, accent, font, glass and density',
-      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder'],
+      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes'],
       rows(s, refresh) {
         Object.keys(FONTS).forEach((id) => window.StillTheme.loadFont(id)); // for the "Aa" previews
         const pickTheme = (id) => {
@@ -3692,6 +3753,8 @@ const SettingsPanel = (() => {
           row('Corner roundness', range('radius', s.radius, 4, 28, 'Corner roundness', (v) => `${v}px`), { keywords: 'radius rounded corners' }),
           row('Density', seg('density', [['comfortable', 'Comfortable'], ['compact', 'Compact']], s.density, 'Density'), { keywords: 'spacing compact comfortable' }),
           stackRow('Nav icons', navChips(s, refresh), { keywords: 'reorder rearrange order navigation icons top bar' }),
+          row('Card sizes', h('button', { class: 'btn btn--sm', type: 'button', disabled: !s.cardSizes, onclick: () => { CardSizes.reset(); refresh(); } }, 'Reset card sizes'),
+            { keywords: 'resize grabber handle columns width height layout home cards', hint: 'Drag the handles between Home cards to resize them' }),
         ];
       },
     },
@@ -4000,6 +4063,227 @@ const TimeCard = (() => {
   }
   const show = (view) => { if (view !== shown) step(1); };
   return { build, render, step, show, toggleExpanded: () => setExpanded(!expanded), collapseNow, isExpanded: () => expanded };
+})();
+
+/* ---------- Card sizes ----------
+   Grabbers in the gaps between the Home cards resize them. The two vertical
+   ones move the boundary between neighbouring columns (the total width
+   stays the same); the horizontal one splits the left column between the
+   Clock/Calendar card and Connections. Sizes are kept as fractions
+   (settings.cardSizes) so they suit any screen, and reach the layout as CSS
+   variables: --col-1..3 (fr) on the grid and --split-time / --split-conn
+   (flex-grow) in the left column. Double-tap or double-click a grabber to
+   put that split back to its default. */
+const DEFAULT_COLS = [1, 0.85, 1.3];  // matches the grid's defaults in CSS
+const DEFAULT_SPLIT = 2.2 / 3.2;      // Clock/Calendar's share of the left column
+const CardSizes = (() => {
+  const dash = $('.dashboard');
+  const MIN_COL = 260;
+  const MIN_CARD = 220;
+  const colEls = () => [$('.stack', dash), $('.panel--tasks', dash), $('.panel--notes', dash)];
+  const timeEl = () => $('.panel--time', dash);
+  const connEl = () => $('.panel--connections', dash);
+  const fractions = (v) => { const sum = v.reduce((a, b) => a + b, 0); return v.map((x) => x / sum); };
+  /** The left column's two heights, and what flex-grow shares out: the height left after each card's own padding and border. */
+  function rowMetrics() {
+    const fixed = (el) => { const c = getComputedStyle(el); return ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'].reduce((a, k) => a + parseFloat(c[k]), 0); };
+    const t = timeEl().getBoundingClientRect().height;
+    const k = connEl().getBoundingClientRect().height;
+    const ft = fixed(timeEl());
+    const fk = fixed(connEl());
+    return { t, k, total: t + k, ft, free: t + k - ft - fk, minT: Math.min(MIN_CARD, t), minK: Math.min(MIN_CARD, k) };
+  }
+  /** The split (flex-grow share) that gives the Clock/Calendar card height `t`. */
+  const splitFor = (m, t) => (t - m.ft) / m.free;
+  const DEFAULT_FRACTIONS = fractions(DEFAULT_COLS);
+  const grabber = (kind, split, label) => h('div', {
+    class: `grabber grabber--${kind}`, role: 'separator', tabindex: '0', 'aria-label': label,
+    'aria-orientation': kind === 'col' ? 'vertical' : 'horizontal', 'aria-valuemin': '0', 'aria-valuemax': '100', dataset: { split },
+  }, h('span', { class: 'grabber__pill' }));
+  const grabbers = [
+    grabber('col', '0', 'Resize the clock and tasks columns'),
+    grabber('col', '1', 'Resize the tasks and notes columns'),
+    grabber('row', 'stack', 'Resize the clock and connections cards'),
+  ];
+  let applied = null;
+
+  const saved = () => Settings.get().cardSizes || { cols: null, split: null };
+  /** Close enough to the defaults to store nothing. */
+  function tidy({ cols, split }) {
+    const c = cols && cols.some((v, i) => Math.abs(v - DEFAULT_FRACTIONS[i]) > 0.002) ? cols.map((v) => Math.round(v * 10000) / 10000) : null;
+    const sp = split !== null && Math.abs(split - DEFAULT_SPLIT) > 0.002 ? Math.round(split * 10000) / 10000 : null;
+    return c || sp !== null ? { cols: c, split: sp } : null;
+  }
+
+  /** Puts sizes on the layout (the saved ones by default). Cheap when nothing changed. */
+  function apply(sizes = saved()) {
+    const key = JSON.stringify(sizes);
+    if (key === applied) return;
+    applied = key;
+    const cols = sizes.cols;
+    // ×10: if a column sits at its floor, the others still share all the space (fr values summing below 1 would leave some unused).
+    ['--col-1', '--col-2', '--col-3'].forEach((v, i) => (cols ? dash.style.setProperty(v, `${(cols[i] * 10).toFixed(4)}fr`) : dash.style.removeProperty(v)));
+    if (sizes.split !== null) {
+      // As a ratio to Connections' 1 (like the default 2.2 : 1): a flex-grow below 1 would leave
+      // Connections short of its slot while an expanded Scheduled list takes the Clock card out of the flow.
+      dash.style.setProperty('--split-time', String(sizes.split / (1 - sizes.split)));
+      dash.style.setProperty('--split-conn', '1');
+    } else {
+      dash.style.removeProperty('--split-time');
+      dash.style.removeProperty('--split-conn');
+    }
+    const f = cols || DEFAULT_FRACTIONS;
+    grabbers[0].setAttribute('aria-valuenow', String(Math.round((f[0] / (f[0] + f[1])) * 100)));
+    grabbers[1].setAttribute('aria-valuenow', String(Math.round((f[1] / (f[1] + f[2])) * 100)));
+    grabbers[2].setAttribute('aria-valuenow', String(Math.round((sizes.split ?? DEFAULT_SPLIT) * 100)));
+    place();
+  }
+
+  /** Centres each grabber in its gap. */
+  function place() {
+    if (!dash.offsetParent) return; // Home is hidden
+    const d = dash.getBoundingClientRect();
+    const [a, b, c] = colEls().map((el) => el.getBoundingClientRect());
+    const gap = parseFloat(getComputedStyle(dash).columnGap) || 0;
+    grabbers[0].style.left = `${b.left - gap / 2 - d.left}px`;
+    grabbers[1].style.left = `${c.left - gap / 2 - d.left}px`;
+    const rowGap = parseFloat(getComputedStyle(colEls()[0]).rowGap) || 0;
+    // From Connections' top, so an expanded Scheduled list (which overlays Connections) doesn't move it.
+    grabbers[2].style.top = `${connEl().getBoundingClientRect().top - rowGap / 2 - d.top}px`;
+    grabbers[2].style.left = `${(a.left + a.right) / 2 - d.left}px`;
+  }
+
+  /* --- Dragging --- */
+  function startDrag(e, g) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    TimeCard.collapseNow();
+    try { g.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+    const which = g.dataset.split;
+    const row = which === 'stack';
+    const base = saved();
+    let next = { cols: base.cols, split: base.split };
+    let moved = false;
+    let frame = 0;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const downAt = e.timeStamp;
+    let size;
+    if (row) size = rowMetrics();
+    else {
+      const i = Number(which);
+      const w = colEls().map((el) => el.getBoundingClientRect().width);
+      size = { i, w, minL: Math.min(MIN_COL, w[i]), minR: Math.min(MIN_COL, w[i + 1]) };
+    }
+    document.documentElement.classList.add('is-resizing');
+    document.documentElement.dataset.resize = row ? 'row' : 'col';
+    g.classList.add('is-active');
+    const onMove = (ev) => {
+      const dx = ev.clientX - x0;
+      const dy = ev.clientY - y0;
+      if (!moved && Math.hypot(dx, dy) < 3) return;
+      moved = true;
+      if (row) {
+        const t = Math.min(size.total - size.minK, Math.max(size.minT, size.t + dy));
+        next = { cols: next.cols, split: splitFor(size, t) };
+      } else {
+        const { i, w } = size;
+        const pair = w[i] + w[i + 1];
+        const left = Math.min(pair - size.minR, Math.max(size.minL, w[i] + dx));
+        const widths = w.slice();
+        widths[i] = left;
+        widths[i + 1] = pair - left;
+        next = { cols: fractions(widths), split: next.split };
+      }
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; apply(next); });
+    };
+    const onEnd = (ev) => {
+      g.removeEventListener('pointermove', onMove);
+      g.removeEventListener('pointerup', onEnd);
+      g.removeEventListener('pointercancel', onEnd);
+      cancelAnimationFrame(frame);
+      frame = 0;
+      document.documentElement.classList.remove('is-resizing');
+      delete document.documentElement.dataset.resize;
+      g.classList.remove('is-active');
+      if (moved) { apply(next); save(next); return; }
+      if (ev.type === 'pointerup') tapped(g, ev, downAt);
+    };
+    g.addEventListener('pointermove', onMove);
+    g.addEventListener('pointerup', onEnd);
+    g.addEventListener('pointercancel', onEnd);
+  }
+  function save(sizes) { Settings.set({ cardSizes: tidy(sizes) }); }
+
+  /* --- Double-tap / double-click: back to the default for that split --- */
+  let lastTap = null;
+  /** A second tap counts when it starts within 400ms of the first one ending, in about the same place. */
+  function tapped(g, ev, downAt) {
+    if (lastTap && lastTap.g === g && downAt - lastTap.at < 400 && Math.hypot(ev.clientX - lastTap.x, ev.clientY - lastTap.y) < 24) {
+      lastTap = null;
+      resetSplit(g.dataset.split);
+      return;
+    }
+    lastTap = { g, at: ev.timeStamp, x: ev.clientX, y: ev.clientY };
+  }
+  function settle(sizes) {
+    if (prefersReducedMotion()) { apply(sizes); save(sizes); return; }
+    dash.classList.add('is-settling');
+    void dash.offsetWidth;
+    apply(sizes);
+    save(sizes);
+    setTimeout(() => dash.classList.remove('is-settling'), 420);
+  }
+  function resetSplit(which) {
+    const cur = saved();
+    if (which === 'stack') { settle({ cols: cur.cols, split: null }); return; }
+    const i = Number(which);
+    const f = (cur.cols || DEFAULT_FRACTIONS).slice();
+    const pair = f[i] + f[i + 1];
+    f[i] = (pair * DEFAULT_FRACTIONS[i]) / (DEFAULT_FRACTIONS[i] + DEFAULT_FRACTIONS[i + 1]);
+    f[i + 1] = pair - f[i];
+    settle({ cols: f, split: cur.split });
+  }
+  /** Settings → Appearance → Reset card sizes. */
+  function reset() { settle({ cols: null, split: null }); }
+
+  /* --- Keyboard: arrows move a focused grabber; Enter resets it --- */
+  function onKey(e, g) {
+    const which = g.dataset.split;
+    const row = which === 'stack';
+    if (e.key === 'Enter') { e.preventDefault(); resetSplit(which); return; }
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -1, ArrowDown: 1 }[e.key];
+    if (!step || (row ? !/Up|Down/.test(e.key) : !/Left|Right/.test(e.key))) return;
+    e.preventDefault();
+    const cur = saved();
+    if (row) {
+      const m = rowMetrics();
+      const nt = Math.min(m.total - m.minK, Math.max(m.minT, m.t + step * 24));
+      const sizes = { cols: cur.cols, split: splitFor(m, nt) };
+      apply(sizes); save(sizes);
+    } else {
+      const i = Number(which);
+      const w = colEls().map((el) => el.getBoundingClientRect().width);
+      const pair = w[i] + w[i + 1];
+      const left = Math.min(pair - Math.min(MIN_COL, w[i + 1]), Math.max(Math.min(MIN_COL, w[i]), w[i] + step * 24));
+      w[i] = left;
+      w[i + 1] = pair - left;
+      const sizes = { cols: fractions(w), split: cur.split };
+      apply(sizes); save(sizes);
+    }
+  }
+
+  function build() {
+    dash.append(...grabbers);
+    grabbers.forEach((g) => {
+      g.addEventListener('pointerdown', (e) => startDrag(e, g));
+      g.addEventListener('keydown', (e) => onKey(e, g));
+    });
+    const ro = new ResizeObserver(place);
+    [dash, ...colEls(), timeEl(), connEl()].forEach((el) => ro.observe(el));
+    apply();
+  }
+  return { build, apply, reset };
 })();
 
 /* ---------- Timer ----------
@@ -5695,6 +5979,7 @@ function render() {
     QuickNotes.render();
     SavedNotes.render();
     Connections.render();
+    CardSizes.apply();
   } else if (page === 'notes') {
     Inbox.render();
   } else if (page === 'connections') {
@@ -5723,6 +6008,7 @@ function init() {
   Calendar.build();
   TaskPanel.build();
   TimeCard.build();
+  CardSizes.build();
   WikiSearch.build();
   NoteTools.build();
   Timer.build();

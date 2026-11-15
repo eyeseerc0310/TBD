@@ -7,7 +7,9 @@ Home has three columns: a clock / calendar card (swipe or use the arrows to swit
 views) above a Connections card (your most recent note-to-note links), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a
-stopwatch / countdown timer. Around it:
+stopwatch / countdown timer. Drag the pill handles in the gaps between the cards to
+resize them (double-tap one to reset it; Settings → Appearance → Reset card sizes
+resets all). Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. The Connections
 page shows how notes and pins link together, as a graph or a list. Files and Pin Board
 are in place as workspaces ready to grow.
@@ -88,7 +90,10 @@ Application state is `{ items, settings, ui, timer }`:
   - Appearance: `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
-    `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons)
+    `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons),
+    `cardSizes` (`null` for the defaults, or `{ cols: [a, b, c], split }`: the Home columns'
+    shares of the width and the Clock/Calendar card's share of the left column, as fractions
+    so they suit any screen)
 - `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card)
 
 Older data without the newer fields loads with defaults; tasks without an `order`
