@@ -476,15 +476,16 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
    tinted border and background only. */
 
 /* Clock */
-.clock { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s3); }
+/* Date/location at the top; the face takes all the height left between
+   them and the timer (the square SVG scales to fit and stays centred). */
+.clock { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
 .clock__meta { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
 /* The face fills the view: capped by its width (cqi) and by its height minus the readout (cqb). */
 /* The face takes whatever height is left; the square SVG scales to fit. */
-.clock__face { flex: 1 1 0; min-height: 72px; max-height: 250px; width: 100%; }
-.clock.no-time .clock__face { max-height: 320px; }
+.clock__face { flex: 1 1 0; min-height: 72px; width: 100%; }
 .clock.no-time .clock__digital { display: none; }
 .clock__face svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.clock[data-face="digital"] { padding: var(--s6) 0 var(--s2); }
+
 .clock[data-face="digital"] .clock__face { display: none; }
 .clock[data-face="digital"] .clock__digital { font-size: calc(var(--fs-display) * 1.45); }
 .clock__readout { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
@@ -496,21 +497,22 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .clock__ampm:empty { display: none; }
 .clock__date { font-size: var(--fs-sm); color: var(--text-2); }
 .clock__location { font-size: var(--fs-sm); color: var(--text-3); }
-.clock[data-face="digital"] { justify-content: center; }
+.clock[data-face="digital"] .clock__readout { flex: 1; justify-content: center; }
 
 /* Timer */
 /* Timer: centred rows pinned to the bottom of the clock view */
-.timer { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-top: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--border); text-align: center; }
-.seg--sm { padding: 2px; }
-.seg--sm button { height: 22px; padding: 0 var(--s2); font-size: var(--fs-xs); }
+.timer { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-top: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--border); text-align: center; }
+/* Time on the left, Start over Reset on the right, centred as one group. */
+.timer__row { display: flex; align-items: center; justify-content: center; gap: var(--s4); }
 .timer__time { font: 300 32px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); padding: 3px 6px; border-radius: var(--r-sm); transition: color var(--t) var(--ease), background var(--t-fast) var(--ease); }
 .timer__time:not(:disabled):hover { background: var(--hover); }
 .timer__time:disabled { cursor: default; }
 .timer.is-running .timer__time { color: var(--accent); }
 .timer__edit { display: flex; align-items: center; justify-content: center; gap: 4px; font: 300 24px/1 var(--font); color: var(--text-2); }
-.timer__edit .input { width: 58px; height: 34px; padding: 0 6px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
-.timer__btns { display: flex; justify-content: center; gap: var(--s2); }
-.timer__btns .btn { min-width: 68px; }
+.timer__edit .input { width: 58px; height: 34px; padding: 0 6px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.timer__edit .input::-webkit-inner-spin-button, .timer__edit .input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.timer__btns { display: flex; flex-direction: column; gap: 6px; }
+.timer__btns .btn { width: 72px; height: 26px; padding: 0; }
 .timer__presets { display: flex; justify-content: center; gap: 4px; }
 .timer__presets .chip { height: 22px; padding: 0 var(--s2); font-size: var(--fs-xs); }
 .timer-pill {
@@ -1170,19 +1172,17 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
               </div>
             </div>
             <section class="timer" id="timer" aria-label="Timer">
-              <div class="seg seg--sm" id="timer-mode" role="group" aria-label="Timer mode">
-                <button type="button" data-mode="stopwatch" aria-pressed="true">Stopwatch</button>
-                <button type="button" data-mode="countdown" aria-pressed="false">Countdown</button>
+              <div class="timer__row">
+                <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
+                <div class="timer__edit" id="timer-edit" hidden>
+                  <input class="input" id="timer-min" type="number" inputmode="numeric" min="0" max="999" aria-label="Minutes"><span>:</span><input class="input" id="timer-sec" type="number" inputmode="numeric" min="0" max="59" aria-label="Seconds">
+                </div>
+                <div class="timer__btns">
+                  <button class="btn btn--primary btn--sm" id="timer-toggle" type="button">Start</button>
+                  <button class="btn btn--sm" id="timer-reset" type="button">Reset</button>
+                </div>
               </div>
-              <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
-              <div class="timer__edit" id="timer-edit" hidden>
-                <input class="input" id="timer-min" type="number" inputmode="numeric" min="0" max="999" aria-label="Minutes"><span>:</span><input class="input" id="timer-sec" type="number" inputmode="numeric" min="0" max="59" aria-label="Seconds">
-              </div>
-              <div class="timer__btns">
-                <button class="btn btn--primary btn--sm" id="timer-toggle" type="button">Start</button>
-                <button class="btn btn--sm" id="timer-reset" type="button">Reset</button>
-              </div>
-              <div class="timer__presets" id="timer-presets" role="group" aria-label="Countdown presets">
+              <div class="timer__presets" id="timer-presets" role="group" aria-label="Countdown presets" hidden>
                 <button class="chip" type="button" data-min="5">5m</button><button class="chip" type="button" data-min="15">15m</button><button class="chip" type="button" data-min="25">25m</button><button class="chip" type="button" data-min="60">60m</button>
               </div>
             </section>
@@ -1474,7 +1474,7 @@ function detect24h() {
 const DEFAULT_CUSTOM_THEME = Object.freeze({ bg: THEMES.graphite.bg, panel: THEMES.graphite.panel, line: THEMES.graphite.line, text: THEMES.graphite.text });
 const DEFAULT_SETTINGS = Object.freeze({
   // Clock
-  clock24: detect24h(), location: '', clockFace: 'minimal', clockShape: 'circle', showTime: true, showSeconds: true, showDate: false,
+  clock24: detect24h(), location: '', clockFace: 'minimal', clockShape: 'circle', showTime: true, showSeconds: true, showDate: false, showTimer: true, timerMode: 'stopwatch',
   // Calendar
   weekStart: 1, highlightWeekends: false,
   // Appearance
@@ -1587,6 +1587,8 @@ function normaliseSettings(raw) {
     showSeconds: bool(s.showSeconds, d.showSeconds),
     showTime: bool(s.showTime, d.showTime),
     showDate: bool(s.showDate, d.showDate),
+    showTimer: bool(s.showTimer, d.showTimer),
+    timerMode: oneOf(s.timerMode, TIMER_MODES, d.timerMode),
     weekStart: s.weekStart === 0 || s.weekStart === 1 ? s.weekStart : d.weekStart,
     highlightWeekends: bool(s.highlightWeekends, d.highlightWeekends),
     theme: oneOf(s.theme, THEME_IDS, d.theme),
@@ -3143,7 +3145,7 @@ const SettingsPanel = (() => {
   const SECTIONS = [
     {
       id: 'clock', icon: 'clock', title: 'Clock', desc: 'Time format, location, face and shape',
-      keys: ['clock24', 'location', 'clockFace', 'clockShape', 'showTime', 'showSeconds', 'showDate'],
+      keys: ['clock24', 'location', 'clockFace', 'clockShape', 'showTime', 'showSeconds', 'showDate', 'showTimer', 'timerMode'],
       rows(s, refresh) {
         const location = h('input', { class: 'input', type: 'text', value: s.location, placeholder: Clock.autoCity(), 'aria-label': 'Location', maxlength: 80, dataset: { key: 'location' } });
         location.addEventListener('input', () => set({ location: location.value }));
@@ -3158,6 +3160,11 @@ const SettingsPanel = (() => {
             { keywords: 'digital time numbers bigger larger clock', hint: s.clockFace === 'digital' ? 'Always shown on the Digital face' : 'Turn off for a larger clock face' }),
           row('Show second hand', toggle('showSeconds', s.showSeconds, 'Show second hand'), { keywords: 'seconds' }),
           row('Show date above the clock', toggle('showDate', s.showDate, 'Show date above the clock'), { keywords: 'day' }),
+          row('Timer', h('label', { class: 'switch' }, h('input', {
+            type: 'checkbox', checked: s.showTimer, 'aria-label': 'Timer', dataset: { key: 'showTimer' },
+            onchange: (e) => { set({ showTimer: e.target.checked }); refresh(); },
+          })), { keywords: 'stopwatch countdown timer', hint: 'Off gives the clock face more room' }),
+          s.showTimer ? row('Timer mode', seg('timerMode', [['stopwatch', 'Stopwatch'], ['countdown', 'Countdown']], s.timerMode, 'Timer mode'), { keywords: 'stopwatch countdown timer' }) : null,
         ];
       },
     },
@@ -3513,7 +3520,6 @@ const Timer = (() => {
   const timeEl = $('#timer-time');
   const toggleBtn = $('#timer-toggle');
   const resetBtn = $('#timer-reset');
-  const modeSeg = $('#timer-mode');
   const presets = $('#timer-presets');
   const editEl = $('#timer-edit');
   const minIn = $('#timer-min');
@@ -3553,10 +3559,6 @@ const Timer = (() => {
     setTimer({ running: false, startedAt: null, elapsed: T().duration });
     if (!quiet) { chime(); pulse(); }
     Toast.show('Timer done');
-  }
-  function setMode(mode) {
-    if (mode === T().mode) return;
-    setTimer({ mode, running: false, startedAt: null, elapsed: 0 });
   }
   function setDuration(ms) {
     setTimer({ mode: 'countdown', running: false, startedAt: null, elapsed: 0, duration: Math.max(1000, Math.min(ms, 100 * 3600000)) });
@@ -3625,7 +3627,7 @@ const Timer = (() => {
     const ms = valueMs(t);
     const up = t.mode === 'countdown';
     timeEl.textContent = hms(ms, up);
-    pill.hidden = !t.running;
+    pill.hidden = !t.running || !Settings.get().showTimer;
     if (t.running) pillTime.textContent = compact(ms, up);
   }
   function tick() {
@@ -3634,17 +3636,21 @@ const Timer = (() => {
     paint();
   }
   function render() {
+    const { showTimer, timerMode } = Settings.get();
+    // The mode is a setting; switching it starts the timer afresh.
+    if (T().mode !== timerMode) { editing = false; setTimer({ mode: timerMode, running: false, startedAt: null, elapsed: 0 }); }
     const t = T();
+    root.hidden = !showTimer;
     root.classList.toggle('is-running', t.running);
-    $$('button', modeSeg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === t.mode)));
     toggleBtn.textContent = t.running ? 'Pause' : 'Start';
     resetBtn.disabled = !t.running && t.elapsed === 0;
     timeEl.hidden = editing;
     editEl.hidden = !editing;
     timeEl.disabled = t.mode !== 'countdown' || t.running;
     timeEl.setAttribute('aria-label', t.mode === 'countdown' && !t.running ? 'Set countdown time' : 'Timer');
-    presets.hidden = t.mode !== 'countdown' || t.running;
+    presets.hidden = !editing;
     paint();
+    if (!showTimer) pill.hidden = true;
     if (t.running && !tickId) tickId = setInterval(tick, 250);
     if (!t.running && tickId) { clearInterval(tickId); tickId = 0; }
   }
@@ -3652,14 +3658,20 @@ const Timer = (() => {
   function build() {
     toggleBtn.addEventListener('click', () => (T().running ? pause() : start()));
     resetBtn.addEventListener('click', reset);
-    modeSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
-    presets.addEventListener('click', (e) => { const b = e.target.closest('[data-min]'); if (b) setDuration(Number(b.dataset.min) * 60000); });
+    presets.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-min]')) e.preventDefault(); }); // keep focus in the picker
+    presets.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-min]');
+      if (!b) return;
+      editing = false;
+      setDuration(Number(b.dataset.min) * 60000);
+      render();
+    });
     timeEl.addEventListener('click', beginEdit);
     editEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); endEdit(true); }
       else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endEdit(false); }
     });
-    editEl.addEventListener('focusout', (e) => { if (!editEl.contains(e.relatedTarget)) endEdit(true); });
+    editEl.addEventListener('focusout', (e) => { if (!editEl.contains(e.relatedTarget) && !presets.contains(e.relatedTarget)) endEdit(true); });
     pill.addEventListener('click', () => TimeCard.show('clock'));
     // A countdown that ended while STILL was closed finishes quietly.
     const t = T();
