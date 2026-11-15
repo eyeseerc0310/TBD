@@ -378,8 +378,8 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .actions { margin-left: auto; display: flex; align-items: center; gap: var(--s1); }
 
 /* ---------- Wikipedia search (top bar) ---------- */
-.topsearch { position: relative; flex: 0 1 40%; min-width: 240px; max-width: 520px; margin: 0 auto; }
-.topsearch + .actions { margin-left: 0; }
+/* Sits right after the section icons, with the icons' own gap. */
+.topsearch { position: relative; flex: 0 1 40%; min-width: 240px; max-width: 520px; margin-left: calc(var(--s1) - var(--s4)); }
 .topsearch__field {
   display: flex; align-items: center; gap: var(--s2);
   height: var(--ctl-h); padding: 0 var(--s3);
@@ -621,6 +621,62 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
   overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
 }
 .notes__area::placeholder { color: var(--text-3); }
+
+/* ---------- Notes rich-text editor ---------- */
+.notes__editor { cursor: text; overflow-wrap: anywhere; }
+/* Typed notes are selectable (with Wikipedia articles, the exceptions to the app's no-select rule). */
+.notes__editor, .notes__editor * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+.notes__editor.is-empty::before { content: attr(data-placeholder); float: left; height: 0; color: var(--text-3); pointer-events: none; }
+.notes__editor h1 { font: 600 1.45em/1.25 var(--font-head); margin: 0.35em 0 0.15em; }
+.notes__editor h2 { font: 600 1.2em/1.3 var(--font-head); margin: 0.35em 0 0.15em; }
+.notes__editor ul, .notes__editor ol { margin: 0.2em 0; padding-left: 1.4em; }
+.notes__editor ul.checklist { list-style: none; padding-left: 0; }
+.notes__editor ul.checklist > li { position: relative; padding-left: 26px; }
+.notes__editor ul.checklist > li::before { content: ""; position: absolute; left: 2px; top: 0.3em; width: 15px; height: 15px; box-sizing: border-box; border: 1.5px solid var(--text-3); border-radius: 4px; cursor: pointer; }
+.notes__editor ul.checklist > li::after { content: ""; position: absolute; left: 7px; top: calc(0.3em + 3.5px); width: 6px; height: 3px; border: solid var(--on-accent); border-width: 0 0 2px 2px; transform: rotate(-45deg); display: none; }
+.notes__editor ul.checklist > li[data-checked="true"] { color: var(--text-3); text-decoration: line-through; }
+.notes__editor ul.checklist > li[data-checked="true"]::before { background: var(--accent); border-color: var(--accent); }
+.notes__editor ul.checklist > li[data-checked="true"]::after { display: block; }
+.notes__editor mark { background: var(--hl, var(--accent-soft)); color: var(--hl-ink, inherit); border-radius: 3px; padding: 0 2px; }
+.notes__editor a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.chip-link {
+  display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 6px;
+  background: var(--accent-soft); color: var(--text) !important; text-decoration: none !important;
+  font-size: 0.92em; line-height: 1.55; cursor: pointer; white-space: nowrap; vertical-align: baseline;
+}
+.chip-link--wiki::before { content: "W"; font: 700 0.85em/1 Georgia, "Times New Roman", serif; color: var(--text-2); }
+.chip-link--note::before {
+  content: ""; width: 11px; height: 11px; flex: none; background: currentColor; opacity: 0.7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='5' y='3.75' width='14' height='16.5' rx='2'/%3E%3Cpath d='M8.5 8.5h7M8.5 12h7M8.5 15.5h4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Crect x='5' y='3.75' width='14' height='16.5' rx='2'/%3E%3Cpath d='M8.5 8.5h7M8.5 12h7M8.5 15.5h4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.chip-link.is-missing { background: var(--hover); color: var(--text-3) !important; opacity: 0.7; cursor: default; }
+
+/* Formatting toolbar, just above Recent */
+.note-tools { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: var(--s2); padding: 3px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--surface-sunken); }
+.tool { width: 28px; height: 26px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--text-3); transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
+.tool:hover, .tool:focus-visible { color: var(--text); background: var(--hover-strong); }
+.tool[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.tool .icon { width: 16px; height: 16px; }
+.tool--w { font: 700 14px/1 Georgia, "Times New Roman", serif; }
+.note-tools__sep { width: 1px; height: 16px; flex: none; margin: 0 3px; background: var(--border-strong); }
+.picker { width: 280px; }
+.picker .input { height: 32px; font-size: var(--fs-sm); margin-bottom: 6px; }
+.picker__list { max-height: 220px; overflow-y: auto; overscroll-behavior: contain; }
+.picker__note { padding: var(--s3) var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
+.picker .menu__item { height: auto; min-height: 32px; padding: 6px 10px; }
+.picker .menu__item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Nav icon chips (Settings → Appearance) */
+.navchips-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.navchips { display: flex; gap: var(--s2); }
+.navchip {
+  width: 40px; height: 40px; display: grid; place-items: center; flex: none;
+  border-radius: var(--r-ctl); border: 1px solid var(--border-strong); background: var(--surface-sunken); color: var(--text-2);
+  cursor: grab; touch-action: none; transition: transform var(--t) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t) var(--ease);
+}
+.navchip:hover { border-color: var(--accent-line); color: var(--text); }
+.navchip.is-dragging { z-index: 2; transition: none; cursor: grabbing; border-color: var(--accent-line); color: var(--accent); background: var(--surface-raised); box-shadow: var(--shadow-pop); }
 /* Recent: always sized to its rows (at most three), never scrolls. */
 .notes__saved { flex: none; }
 #saved-notes.list { flex: none; height: calc(3 * 46px + 2 * 6px); overflow: hidden; max-height: none; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
@@ -1204,6 +1260,17 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M13.5 5h5.5v5.5M19 5l-8 8M17 14v4.5A1.5 1.5 0 0 1 15.5 20h-10A1.5 1.5 0 0 1 4 18.5v-10A1.5 1.5 0 0 1 5.5 7H10"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6.75"/><path d="M12 10.25v3.25l2 1.5M9.75 3.75h4.5M12 3.75v3"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3.5 3.5l17 17"/><path d="M8.6 15.9a4.8 4.8 0 0 1 6.1-.5M5.2 12.5a9.6 9.6 0 0 1 4-2.3M18.8 12.5a9.6 9.6 0 0 0-2.3-1.6M2 9a14.5 14.5 0 0 1 4.1-2.6M22 9a14.5 14.5 0 0 0-11.3-3.5"/><circle cx="12" cy="19.25" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7.5 5h5.25a3.5 3.5 0 0 1 0 7H7.5zM7.5 12h6.25a3.5 3.5 0 0 1 0 7H7.5z"/></symbol>
+  <symbol id="i-italic" viewBox="0 0 24 24"><path d="M10.5 5h6.5M7 19h6.5M14 5l-4 14"/></symbol>
+  <symbol id="i-underline" viewBox="0 0 24 24"><path d="M7.5 4.5v6.25a4.5 4.5 0 0 0 9 0V4.5M6 20h12"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 24 24"><path d="M5 12h14M15.75 7.25C15.1 5.9 13.7 5 12 5c-2.35 0-4 1.3-4 3 0 1.2.75 2.1 2.2 2.7M8.25 16.5C8.9 18.05 10.3 19 12.1 19c2.4 0 4.05-1.35 4.05-3.1 0-.7-.25-1.3-.75-1.8"/></symbol>
+  <symbol id="i-heading" viewBox="0 0 24 24"><path d="M6.5 5v14M17.5 5v14M6.5 12h11"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9.5 7h10M9.5 12h10M9.5 17h10"/><circle cx="5" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-list-ol" viewBox="0 0 24 24"><path d="M10 7h10M10 12h10M10 17h10M4.25 5.25H5.5V9M4.25 14.5h2.5l-2.5 3.25h2.5"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="3.75" y="4.5" width="5.5" height="5.5" rx="1.25"/><path d="m4.5 16 1.75 1.75L9.5 14.5M12.5 7.25h7.5M12.5 16.25h7.5"/></symbol>
+  <symbol id="i-highlight" viewBox="0 0 24 24"><path d="m9.5 14.5-3 3 1.5 1.5h3.5l1-1M9.5 14.5l7-7a2.12 2.12 0 0 1 3 3l-7 7M9.5 14.5l3 3"/><path d="M4 21h16"/></symbol>
+  <symbol id="i-note-link" viewBox="0 0 24 24"><path d="M14 3.75H7a2 2 0 0 0-2 2v12.5a2 2 0 0 0 2 2h4M8.5 8.5h7M8.5 12h4"/><path d="M15.5 15.75a2.25 2.25 0 0 1 2.25-2.25h.75a2.25 2.25 0 0 1 0 4.5h-.5M18.5 19.75a2.25 2.25 0 0 1-2.25 2.25h-.75a2.25 2.25 0 0 1 0-4.5h.5" transform="translate(-1 -2)"/></symbol>
+  <symbol id="i-clear" viewBox="0 0 24 24"><path d="M6 5.5h12M12 5.5 9 18.5M15 13.5l5 5M20 13.5l-5 5"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.75 12a7.25 7.25 0 1 0 2.1-5.1M4.75 4.75v3.5h3.5"/></symbol>
 </svg>
 
@@ -1348,7 +1415,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
               <button class="btn btn--ghost btn--sm" type="button" id="notes-send" data-tip="Save to your Notes page" data-tip-align="end" disabled><svg class="icon icon--sm"><use href="#i-notes"/></svg><span id="notes-send-label">Add to Notes</span></button>
             </div>
           </header>
-          <textarea class="notes__area" id="quick-notes" placeholder="Jot something down…" aria-label="Note" spellcheck="true"></textarea>
+          <div class="notes__area notes__editor is-empty" id="quick-notes" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Jot something down…" spellcheck="true"></div>
+          <div class="note-tools" id="note-tools" role="toolbar" aria-label="Formatting"></div>
           <section class="panel__section notes__saved" aria-labelledby="saved-title">
             <div class="section-head">
               <h3 class="subhead" id="saved-title">Recent</h3>
@@ -1567,7 +1635,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   weekStart: 1, highlightWeekends: false,
   // Appearance
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
-  transparency: 42, blur: 22, radius: 16, density: 'comfortable',
+  transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
 });
 
 function defaultUi() {
@@ -1693,6 +1761,10 @@ function normaliseSettings(raw) {
     blur: clampNum(s.blur, 0, 40, d.blur),
     radius: clampNum(s.radius, 4, 28, d.radius),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
+    navOrder: (() => {
+      const v = Array.isArray(s.navOrder) ? s.navOrder.filter((x, i, a) => PAGE_IDS.includes(x) && a.indexOf(x) === i) : [];
+      return [...v, ...PAGE_IDS.filter((x) => !v.includes(x))];
+    })(),
   };
 }
 function normaliseUi(raw) {
@@ -2442,14 +2514,75 @@ const Clock = (() => {
   return { start, stop, render, autoCity };
 })();
 
+/* ---------- Rich text ----------
+   Notes keep two copies of their body: `content`, plain text used for
+   previews, search and the Notes page, and `meta.html`, the formatted
+   version the editor shows. HTML is always cleaned against a short
+   allow-list before it is shown or saved, so nothing pasted, typed or
+   restored from a backup can run. Older notes (no meta.html) load from
+   their plain text. Link chips store only their target; their label is
+   drawn from the linked note, or "Missing note" once it's gone. */
+const RichText = (() => {
+  const TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DEL', 'H1', 'H2', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI', 'MARK', 'A']);
+  const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fromText = (t) => (t ? esc(t).replace(/\n/g, '<br>') : '');
+  function clean(html) {
+    const doc = new DOMParser().parseFromString(`<!doctype html><body>${html || ''}</body>`, 'text/html');
+    const walk = (node) => {
+      for (const el of [...node.children]) {
+        walk(el);
+        if (!TAGS.has(el.tagName)) { el.replaceWith(...el.childNodes); continue; }
+        const keep = {};
+        if (el.tagName === 'A') {
+          if (el.dataset.note) keep['data-note'] = el.dataset.note;
+          else if (el.dataset.wiki) keep['data-wiki'] = el.dataset.wiki;
+          else { const href = el.getAttribute('href') || ''; if (/^(https?:|mailto:)/i.test(href)) keep.href = href; }
+        }
+        if (el.tagName === 'MARK' && isHex(el.dataset.c)) keep['data-c'] = el.dataset.c.toLowerCase();
+        if (el.tagName === 'UL' && el.classList.contains('checklist')) keep.class = 'checklist';
+        if (el.tagName === 'LI' && el.dataset.checked === 'true') keep['data-checked'] = 'true';
+        for (const a of [...el.attributes]) el.removeAttribute(a.name);
+        for (const [k, v] of Object.entries(keep)) el.setAttribute(k, v);
+        if (el.tagName === 'A' && !Object.keys(keep).length) el.replaceWith(...el.childNodes);
+      }
+    };
+    walk(doc.body);
+    return doc.body.innerHTML;
+  }
+  /** Adds the live-only bits (chip labels, highlight colours) after content is set. */
+  function hydrate(root) {
+    $$('a[data-note]', root).forEach((a) => {
+      const n = Items.get(a.dataset.note);
+      a.contentEditable = 'false';
+      a.className = `chip-link chip-link--note${n ? '' : ' is-missing'}`;
+      const label = n ? NotesData.parts(n).title : 'Missing note';
+      if (a.textContent !== label) a.textContent = label;
+    });
+    $$('a[data-wiki]', root).forEach((a) => {
+      a.contentEditable = 'false';
+      a.className = 'chip-link chip-link--wiki';
+      if (a.textContent !== a.dataset.wiki) a.textContent = a.dataset.wiki;
+    });
+    $$('a[href]', root).forEach((a) => { a.title = a.getAttribute('href'); });
+    $$('mark[data-c]', root).forEach((m) => { m.style.setProperty('--hl', m.dataset.c); m.style.setProperty('--hl-ink', readable(m.dataset.c)); });
+  }
+  function set(root, html) { root.innerHTML = clean(html); hydrate(root); }
+  const text = (root) => root.innerText.replace(/ /g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  const isEmpty = (root) => !root.textContent.trim() && !root.querySelector('li, a, h1, h2, mark');
+  /** True when HTML carries real formatting (not just line breaks). */
+  const hasFormatting = (html) => typeof html === 'string' && /<(b|strong|i|em|u|s|strike|del|h1|h2|ul|ol|mark|a)[\s>]/i.test(html);
+  return { clean, hydrate, set, text, isEmpty, fromText, esc, hasFormatting };
+})();
+
 /* ---------- Notes writing area ----------
-   The Notes card's Title field and body edit one of two things: the
-   scratch pad (a single "note" item with meta.quick) or, after tapping a
-   Recent row, that saved note itself ("Done" goes back to the pad, whose
-   text is kept). Typing is buffered briefly so the app doesn't redraw on
-   every key; the buffer is flushed before every save and backup. */
+   The Notes card's Title field and rich-text body edit one of two things:
+   the scratch pad (a single "note" item with meta.quick) or, after
+   tapping a Recent row or a note link, that saved note itself ("Done"
+   goes back to the pad, whose text is kept). Typing is buffered briefly
+   so the app doesn't redraw on every key; the buffer is flushed before
+   every save and backup. */
 const QuickNotes = (() => {
-  const area = $('#quick-notes');
+  const editor = $('#quick-notes');
   const titleIn = $('#note-title');
   const status = $('#notes-status');
   const sendBtn = $('#notes-send');
@@ -2460,8 +2593,11 @@ const QuickNotes = (() => {
   let statusTimer = 0;
   let dirty = false;
   let editingId = null; // the saved note open in the writing area, or null for the pad
+  let loaded = null;    // the HTML last put into the editor
   const pad = () => Items.all('note').find((n) => n.meta.quick) || null;
   const current = () => (editingId ? Items.get(editingId) : pad());
+  const htmlOf = (n) => (typeof n.meta.html === 'string' ? n.meta.html : RichText.fromText(n.content));
+  const read = () => ({ title: titleIn.value, html: RichText.clean(editor.innerHTML), content: RichText.text(editor) });
 
   function showSaved() {
     status.classList.add('is-visible');
@@ -2472,11 +2608,11 @@ const QuickNotes = (() => {
     clearTimeout(timer);
     if (!dirty) return;
     dirty = false;
-    const title = titleIn.value;
-    const content = area.value;
+    const { title, html, content } = read();
+    loaded = html;
     const n = current();
-    if (n) { if (n.title !== title || n.content !== content) Items.update(n.id, { title, content }); }
-    else if (!editingId && (title || content)) Items.create('note', { title, content, meta: { quick: true } });
+    if (n) { if (n.title !== title || n.content !== content || htmlOf(n) !== html) Items.update(n.id, { title, content, meta: { html } }); }
+    else if (!editingId && (title || content)) Items.create('note', { title, content, meta: { quick: true, html } });
     showSaved();
   }
   function paintHead() {
@@ -2484,28 +2620,37 @@ const QuickNotes = (() => {
     sendIcon.setAttribute('href', editing ? '#i-check' : '#i-notes');
     sendLabel.textContent = editing ? 'Done' : 'Add to Notes';
     sendBtn.dataset.tip = editing ? 'Finish editing and return to your scratch pad' : 'Save to your Notes page';
-    sendBtn.disabled = !editing && !titleIn.value.trim() && !area.value.trim();
+    sendBtn.disabled = !editing && !titleIn.value.trim() && RichText.isEmpty(editor);
     modeEl.textContent = editing ? 'Editing' : '';
+    editor.classList.toggle('is-empty', RichText.isEmpty(editor));
   }
   function sync(force = false) {
     if (editingId && !Items.get(editingId)) { editingId = null; force = true; } // deleted elsewhere
     if (force) { dirty = false; clearTimeout(timer); }
     const active = document.activeElement;
-    if (!force && (dirty || active === area || active === titleIn)) { paintHead(); return; }
+    if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); return; }
     const n = current();
     const title = n ? n.title : '';
-    const content = n ? n.content : '';
+    const html = n ? htmlOf(n) : '';
     if (titleIn.value !== title) titleIn.value = title;
-    if (area.value !== content) area.value = content;
+    if (force || loaded !== html) { RichText.set(editor, html); loaded = html; } else RichText.hydrate(editor);
     paintHead();
+  }
+  function caretToEnd() {
+    const r = document.createRange();
+    r.selectNodeContents(editor);
+    r.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
   }
   function openNote(id) {
     if (!Items.get(id)) return;
     flush();
     editingId = id;
     sync(true);
-    area.focus({ preventScroll: true });
-    area.setSelectionRange(area.value.length, area.value.length);
+    editor.focus({ preventScroll: true });
+    caretToEnd();
     scheduleRender();
   }
   function done() {
@@ -2516,19 +2661,18 @@ const QuickNotes = (() => {
     sync(true);
     scheduleRender();
   }
-  /** Saves the pad (title + body) as a note on the Notes page and clears it, with Undo. */
+  /** Saves the pad (title + body, with formatting) as a note on the Notes page and clears it, with Undo. */
   function sendToNotes() {
     flush();
+    const { html } = read();
     const title = titleIn.value.trim();
-    const text = area.value.trim();
+    const text = RichText.text(editor);
     const it = pad();
-    if ((!title && !text) || !it) { (title ? area : titleIn).focus(); return; }
-    const previous = { title: it.title, content: it.content };
-    const capture = Items.create('capture', { title, content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes', color: null, pinned: false } });
-    Items.update(it.id, { title: '', content: '' });
-    titleIn.value = '';
-    area.value = '';
-    paintHead();
+    if ((!title && !text) || !it) { (title ? editor : titleIn).focus(); return; }
+    const previous = { title: it.title, content: it.content, meta: { html: htmlOf(it) } };
+    const capture = Items.create('capture', { title, content: text, meta: { kind: 'text', category: 'Note', inbox: true, source: 'quick-notes', color: null, pinned: false, html } });
+    Items.update(it.id, { title: '', content: '', meta: { html: '' } });
+    sync(true);
     Toast.show('Added to Notes', {
       action: {
         label: 'Undo',
@@ -2542,14 +2686,21 @@ const QuickNotes = (() => {
     });
   }
   const onInput = () => { dirty = true; paintHead(); clearTimeout(timer); timer = setTimeout(flush, 500); };
-  area.addEventListener('input', onInput);
+  editor.addEventListener('input', onInput);
   titleIn.addEventListener('input', onInput);
-  area.addEventListener('blur', flush);
+  editor.addEventListener('blur', flush);
   titleIn.addEventListener('blur', flush);
-  titleIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); area.focus(); } });
+  titleIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); editor.focus(); caretToEnd(); } });
+  // Paste as plain text: formatting comes from the toolbar, never from the clipboard.
+  editor.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const t = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, t);
+  });
+  editor.addEventListener('drop', (e) => e.preventDefault());
   sendBtn.addEventListener('click', () => (editingId ? done() : sendToNotes()));
   Persistence.onFlush(flush);
-  return { render: () => sync(false), sync, flush, openNote, editingId: () => editingId };
+  return { render: () => sync(false), sync, flush, openNote, editingId: () => editingId, changed: onInput };
 })();
 
 /* ---------- Calendar ---------- */
@@ -3219,6 +3370,74 @@ const SettingsPanel = (() => {
     });
     return h('label', { class: 'color-field' }, dot, text, input);
   }
+  /** Nav icon chips: drag (mouse, pen or touch) or ←/→ to reorder; the top bar follows live. */
+  const NAV_ICONS = { home: 'home', notes: 'notes', files: 'files', connections: 'connections', pins: 'pin' };
+  function navChips(s, refresh) {
+    const list = h('div', { class: 'navchips', role: 'list', 'aria-label': 'Nav icon order' },
+      s.navOrder.map((id) => h('button', {
+        class: 'navchip', type: 'button', role: 'listitem', title: PAGES[id].title,
+        'aria-label': `${PAGES[id].title}. Drag, or use the arrow keys, to move it`, dataset: { id, key: `nav:${id}` },
+      }, icon(NAV_ICONS[id]))));
+    const order = () => $$('.navchip', list).map((c) => c.dataset.id);
+    list.addEventListener('keydown', (e) => {
+      const chip = e.target.closest('.navchip');
+      if (!chip || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      e.preventDefault();
+      const ids = order();
+      const i = ids.indexOf(chip.dataset.id);
+      const j = i + (e.key === 'ArrowLeft' ? -1 : 1);
+      if (j < 0 || j >= ids.length) return;
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+      set({ navOrder: ids });
+      refresh();
+    });
+    list.addEventListener('pointerdown', (e) => {
+      const chip = e.target.closest('.navchip');
+      if (!chip || e.button !== 0) return;
+      e.preventDefault();
+      const chips = $$('.navchip', list);
+      const from = chips.indexOf(chip);
+      const rects = chips.map((c) => c.getBoundingClientRect());
+      const step = chips.length > 1 ? rects[1].left - rects[0].left : rects[0].width;
+      const minDx = rects[0].left - rects[from].left;
+      const maxDx = rects[rects.length - 1].left - rects[from].left;
+      const startX = e.clientX;
+      const base = order();
+      let to = from;
+      let moved = false;
+      chip.classList.add('is-dragging');
+      try { chip.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      const onMove = (ev) => {
+        const dx = Math.max(minDx, Math.min(maxDx, ev.clientX - startX));
+        if (Math.abs(dx) > 3) moved = true;
+        chip.style.transform = `translateX(${dx}px)`;
+        const next = Math.max(0, Math.min(chips.length - 1, from + Math.round(dx / step)));
+        if (next === to) return;
+        to = next;
+        chips.forEach((c, i) => {
+          if (i === from) return;
+          const shift = i > from && i <= to ? -step : i < from && i >= to ? step : 0;
+          c.style.transform = shift ? `translateX(${shift}px)` : '';
+        });
+        const ids = base.slice();
+        const [m] = ids.splice(from, 1);
+        ids.splice(to, 0, m);
+        set({ navOrder: ids }); // the top bar reorders live
+      };
+      const onEnd = () => {
+        chip.removeEventListener('pointermove', onMove);
+        chip.removeEventListener('pointerup', onEnd);
+        chip.removeEventListener('pointercancel', onEnd);
+        chip.classList.remove('is-dragging');
+        if (moved) refresh(); else chips.forEach((c) => { c.style.transform = ''; });
+      };
+      chip.addEventListener('pointermove', onMove);
+      chip.addEventListener('pointerup', onEnd);
+      chip.addEventListener('pointercancel', onEnd);
+    });
+    const reset = h('button', { class: 'link-btn', type: 'button', onclick: () => { set({ navOrder: [...PAGE_IDS] }); refresh(); } }, icon('reset'), 'Reset');
+    return h('div', { class: 'navchips-row' }, list, reset);
+  }
   function facePreview(face, shape) {
     const el = svg('svg', { class: 'tile__svg', viewBox: '0 0 200 200', 'aria-hidden': 'true' });
     ClockFace.draw(el, { face, shape, preview: true });
@@ -3267,7 +3486,7 @@ const SettingsPanel = (() => {
     },
     {
       id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Theme, accent, font, glass and density',
-      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density'],
+      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder'],
       rows(s, refresh) {
         Object.keys(FONTS).forEach((id) => window.StillTheme.loadFont(id)); // for the "Aa" previews
         const pickTheme = (id) => {
@@ -3289,6 +3508,7 @@ const SettingsPanel = (() => {
           row('Blur strength', range('blur', s.blur, 0, 40, 'Blur strength', (v) => `${v}px`), { keywords: 'frosted glass' }),
           row('Corner roundness', range('radius', s.radius, 4, 28, 'Corner roundness', (v) => `${v}px`), { keywords: 'radius rounded corners' }),
           row('Density', seg('density', [['comfortable', 'Comfortable'], ['compact', 'Compact']], s.density, 'Density'), { keywords: 'spacing compact comfortable' }),
+          stackRow('Nav icons', navChips(s, refresh), { keywords: 'reorder rearrange order navigation icons top bar' }),
         ];
       },
     },
@@ -3815,6 +4035,12 @@ const NoteEditor = (() => {
   function open(id) {
     const n = Items.get(id);
     if (!n) return;
+    if (RichText.hasFormatting(n.meta.html)) {
+      // Formatted notes are edited in the Home editor, so nothing is lost.
+      Navigation.go('home');
+      setTimeout(() => QuickNotes.openNote(id), 80);
+      return;
+    }
     const title = h('input', { class: 'input', type: 'text', value: n.title, placeholder: 'Title (optional)', 'aria-label': 'Title', maxlength: 200 });
     const text = h('textarea', { class: 'input', rows: 9, value: n.content, placeholder: 'Write something…', 'aria-label': 'Note' });
     const error = h('p', { class: 'form-error', role: 'alert' });
@@ -3827,7 +4053,7 @@ const NoteEditor = (() => {
       ],
       onSubmit: (close) => {
         if (!title.value.trim() && !text.value.trim()) { error.textContent = 'A note needs a title or some text.'; return; }
-        Items.update(id, { title: title.value.trim(), content: text.value.trim() });
+        Items.update(id, { title: title.value.trim(), content: text.value.trim(), meta: { html: RichText.fromText(text.value.trim()) } });
         close();
       },
     });
@@ -4085,22 +4311,29 @@ const WikiSearch = (() => {
     const el = $(`#wiki-opt-${active}`);
     if (el) el.scrollIntoView({ block: 'nearest' });
   }
-  async function search(q) {
-    const my = ++seq;
-    skeleton();
+  /** Search results [{ title, snippet, thumb }]; throws OfflineError when the network is down. */
+  async function query(q) {
     const url = `${API}?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=8`
       + `&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=8&prop=pageimages&piprop=thumbnail&pithumbsize=96&format=json&origin=*`;
     try {
       const data = await get(url);
-      if (my !== seq) return; // a newer search has started
       const pages = Object.values((data.query && data.query.pages) || {});
       const thumbs = new Map(pages.map((pg) => [pg.title, pg.thumbnail && /^https:\/\//.test(pg.thumbnail.source) ? pg.thumbnail.source : null]));
-      results = ((data.query && data.query.search) || []).map((r) => ({ title: r.title, snippet: textOf(r.snippet), thumb: thumbs.get(r.title) || null }));
+      return ((data.query && data.query.search) || []).map((r) => ({ title: r.title, snippet: textOf(r.snippet), thumb: thumbs.get(r.title) || null }));
+    } catch (e) { failed(e); throw e; }
+  }
+  async function search(q) {
+    const my = ++seq;
+    skeleton();
+    try {
+      const found = await query(q);
+      if (my !== seq) return; // a newer search has started
+      results = found;
       active = -1;
       paintResults();
     } catch (e) {
       if (my !== seq) return;
-      if (!failed(e)) { box.replaceChildren(h('div', { class: 'wiki-empty', text: 'Search isn’t available right now.' })); open(); }
+      if (!(e instanceof OfflineError)) { box.replaceChildren(h('div', { class: 'wiki-empty', text: 'Search isn’t available right now.' })); open(); }
     }
   }
 
@@ -4256,7 +4489,299 @@ const WikiSearch = (() => {
     box.addEventListener('click', (e) => { const b = e.target.closest('.wiki-result'); if (b) openArticle(results[Number(b.dataset.index)].title); });
     document.addEventListener('pointerdown', (e) => { if (!box.hidden && !root.contains(e.target)) close(); });
   }
-  return { build, focus: () => { if (online) { input.focus(); input.select(); } }, isOnline: () => online };
+  return { build, focus: () => { if (online) { input.focus(); input.select(); } }, isOnline: () => online, query, open: openArticle, OfflineError };
+})();
+
+/* ---------- Notes formatting toolbar ----------
+   Formatting uses the browser's editing commands (so ⌘Z undoes them);
+   highlights and link chips are inserted directly. Toolbar buttons never
+   take focus, so the selection in the note survives a click; popovers
+   that need typing remember the selection and put it back. */
+const NoteTools = (() => {
+  const editor = $('#quick-notes');
+  const bar = $('#note-tools');
+  let saved = null;     // the note's selection, kept while a popover has focus
+  let brackets = null;  // the "[[" just typed, replaced by the chosen link
+  const SEP = 'sep';
+  const TOOLS = [
+    { id: 'bold', icon: 'bold', tip: `Bold (${MOD}B)`, cmd: 'bold' },
+    { id: 'italic', icon: 'italic', tip: `Italic (${MOD}I)`, cmd: 'italic' },
+    { id: 'underline', icon: 'underline', tip: `Underline (${MOD}U)`, cmd: 'underline' },
+    { id: 'strike', icon: 'strike', tip: 'Strikethrough', cmd: 'strikeThrough' },
+    SEP,
+    { id: 'heading', icon: 'heading', tip: 'Heading' },
+    { id: 'ul', icon: 'list', tip: 'Bulleted list', cmd: 'insertUnorderedList' },
+    { id: 'ol', icon: 'list-ol', tip: 'Numbered list', cmd: 'insertOrderedList' },
+    { id: 'check', icon: 'checklist', tip: 'Checklist' },
+    { id: 'highlight', icon: 'highlight', tip: 'Highlight' },
+    SEP,
+    { id: 'note', icon: 'note-link', tip: 'Link to a note ([[)' },
+    { id: 'wiki', text: 'W', tip: 'Link to Wikipedia' },
+    { id: 'link', icon: 'link', tip: `Web link (${MOD}K)` },
+    SEP,
+    { id: 'clear', icon: 'clear', tip: 'Clear formatting' },
+  ];
+
+  /* --- Selection helpers --- */
+  const inEditor = (node) => !!node && editor.contains(node.nodeType === 1 ? node : node.parentNode);
+  function remember() {
+    const sel = window.getSelection();
+    saved = sel.rangeCount && inEditor(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+  }
+  function restore() {
+    editor.focus({ preventScroll: true });
+    const sel = window.getSelection();
+    if (sel.rangeCount && inEditor(sel.anchorNode) && !saved) return;
+    sel.removeAllRanges();
+    if (saved) sel.addRange(saved);
+    else { const r = document.createRange(); r.selectNodeContents(editor); r.collapse(false); sel.addRange(r); }
+    saved = null;
+  }
+  const changed = () => { RichText.hydrate(editor); QuickNotes.changed(); paint(); };
+  function exec(cmd, value = null) { restore(); document.execCommand(cmd, false, value); changed(); }
+  const blockOf = (tag) => { const sel = window.getSelection(); if (!sel.rangeCount) return null; const n = sel.anchorNode; const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && inEditor(el) ? el.closest(tag) : null; };
+  function insertHTML(html) {
+    restore();
+    if (brackets) { // replace the "[[" that opened the picker
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(brackets);
+      brackets.deleteContents();
+      brackets = null;
+    }
+    document.execCommand('insertHTML', false, `${html}&nbsp;`);
+    changed();
+  }
+
+  /* --- Commands --- */
+  function checklist() {
+    restore();
+    const list = blockOf('ul');
+    if (list && list.classList.contains('checklist')) { document.execCommand('insertUnorderedList'); changed(); return; }
+    if (!list) document.execCommand('insertUnorderedList');
+    const ul = blockOf('ul');
+    if (ul) ul.classList.add('checklist');
+    changed();
+  }
+  function list(cmd) {
+    restore();
+    const ul = blockOf('ul');
+    if (cmd === 'insertUnorderedList' && ul && ul.classList.contains('checklist')) { ul.classList.remove('checklist'); changed(); return; }
+    document.execCommand(cmd);
+    changed();
+  }
+  function highlight(color) {
+    restore();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const host = blockOf('mark');
+    if (!color) { // remove highlights touching the selection
+      const marks = $$('mark', editor).filter((m) => range.intersectsNode(m));
+      if (host && !marks.includes(host)) marks.push(host);
+      marks.forEach((m) => m.replaceWith(...m.childNodes));
+      changed();
+      return;
+    }
+    if (range.collapsed) { if (host) { host.dataset.c = color; changed(); } return; }
+    const frag = range.extractContents();
+    frag.querySelectorAll('mark').forEach((m) => m.replaceWith(...m.childNodes));
+    const mark = document.createElement('mark');
+    mark.dataset.c = color;
+    mark.append(frag);
+    range.insertNode(mark);
+    sel.removeAllRanges();
+    const after = document.createRange();
+    after.selectNodeContents(mark);
+    sel.addRange(after);
+    changed();
+  }
+  function clearFormatting() {
+    restore();
+    const sel = window.getSelection();
+    const range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    document.execCommand('removeFormat');
+    document.execCommand('formatBlock', false, '<div>');
+    if (range) $$('mark', editor).filter((m) => range.intersectsNode(m)).forEach((m) => m.replaceWith(...m.childNodes));
+    if (blockOf('li')) { const l = blockOf('ul, ol'); document.execCommand(l && l.tagName === 'OL' ? 'insertOrderedList' : 'insertUnorderedList'); }
+    changed();
+  }
+
+  /* --- Popovers --- */
+  function headingMenu(anchor) {
+    remember();
+    const pick = (block) => () => { Popover.close(false); exec('formatBlock', block); };
+    Popover.open({
+      anchor, key: 'tool:heading', label: 'Heading',
+      content: [menuItem('heading', 'Heading 1', pick('<h1>')), menuItem('heading', 'Heading 2', pick('<h2>')), menuItem('notes', 'Normal text', pick('<div>'))],
+    });
+  }
+  function highlightMenu(anchor) {
+    remember();
+    Popover.open({
+      anchor, key: 'tool:highlight', label: 'Highlight',
+      content: h('div', { class: 'menu__group' }, h('div', { class: 'panel__title menu__label', text: 'Highlight' }),
+        swatchPicker({ value: null, allowNone: true, label: 'Highlight colour', onPick: (c) => { Popover.close(false); highlight(c); } })),
+    });
+  }
+  /** A small search popover: an input above a list of .menu__item rows. */
+  function picker(anchor, key, label, placeholder, run) {
+    const input = h('input', { class: 'input', type: 'search', placeholder, 'aria-label': label, autocomplete: 'off', spellcheck: 'false' });
+    const listEl = h('div', { class: 'picker__list', role: 'listbox' });
+    const box = h('div', { class: 'picker' }, input, listEl);
+    Popover.open({ anchor, key, label, content: box });
+    input.focus();
+    const setItems = (items, empty) => {
+      listEl.replaceChildren(...(items.length ? items.map((it) => h('button', { class: 'menu__item', type: 'button', role: 'option', onclick: () => { Popover.close(false); it.pick(); } }, it.icon ? icon(it.icon) : h('span', { class: 'tool--w', text: 'W' }), h('span', { text: it.label })))
+        : [h('div', { class: 'picker__note', text: empty })]));
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); const first = $('.menu__item', listEl); if (first) first.click(); }
+    });
+    run(input, setItems);
+  }
+  function notePicker(anchor) {
+    picker(anchor, 'tool:note', 'Link to a note', 'Search your notes', (input, setItems) => {
+      const fill = () => {
+        const q = input.value.trim().toLowerCase();
+        const current = QuickNotes.editingId();
+        const notes = Items.all('capture').filter((n) => n.id !== current)
+          .filter((n) => !q || `${n.title} ${n.content}`.toLowerCase().includes(q))
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8);
+        setItems(notes.map((n) => ({ icon: 'notes', label: NotesData.parts(n).title, pick: () => insertHTML(`<a data-note="${RichText.esc(n.id)}">${RichText.esc(NotesData.parts(n).title)}</a>`) })), q ? 'No notes match' : 'No notes yet');
+      };
+      input.addEventListener('input', fill);
+      fill();
+    });
+  }
+  function wikiPicker(anchor) {
+    picker(anchor, 'tool:wiki', 'Link to Wikipedia', 'Search Wikipedia', (input, setItems) => {
+      let timer = 0;
+      let seq = 0;
+      const offline = () => setItems([], 'Connect to internet to search Wikipedia');
+      if (!WikiSearch.isOnline()) { offline(); input.disabled = true; return; }
+      setItems([], 'Type to search Wikipedia');
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (!q) { setItems([], 'Type to search Wikipedia'); return; }
+        timer = setTimeout(async () => {
+          const my = ++seq;
+          setItems([], 'Searching…');
+          try {
+            const found = await WikiSearch.query(q);
+            if (my !== seq) return;
+            setItems(found.map((r) => ({ label: r.title, pick: () => insertHTML(`<a data-wiki="${RichText.esc(r.title)}">${RichText.esc(r.title)}</a>`) })), 'No results');
+          } catch (e) {
+            if (my !== seq) return;
+            if (e instanceof WikiSearch.OfflineError) offline(); else setItems([], 'Search isn’t available right now');
+          }
+        }, 250);
+      });
+    });
+  }
+  function linkPicker(anchor) {
+    remember();
+    const hadText = saved && !saved.collapsed;
+    const input = h('input', { class: 'input', type: 'url', placeholder: 'https://', 'aria-label': 'Web address', autocomplete: 'off', spellcheck: 'false', inputmode: 'url' });
+    const apply = () => {
+      let url = input.value.trim();
+      if (!url) return;
+      if (!/^(https?:|mailto:)/i.test(url)) url = `https://${url}`;
+      Popover.close(false);
+      if (hadText) { exec('createLink', url); return; }
+      insertHTML(`<a href="${RichText.esc(url)}">${RichText.esc(url.replace(/^https?:\/\//, ''))}</a>`);
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+    Popover.open({ anchor, key: 'tool:link', label: 'Web link', content: h('div', { class: 'picker' }, input, h('button', { class: 'menu__item', type: 'button', onclick: apply }, icon('link'), hadText ? 'Link the selected text' : 'Insert link')) });
+    input.focus();
+  }
+
+  /* --- Toolbar state --- */
+  function paint() {
+    const sel = window.getSelection();
+    const inside = sel.rangeCount && inEditor(sel.anchorNode);
+    const state = (cmd) => { try { return inside && document.queryCommandState(cmd); } catch { return false; } };
+    const block = inside ? String(document.queryCommandValue('formatBlock') || '').toLowerCase() : '';
+    const inChecklist = !!(inside && blockOf('ul.checklist'));
+    const pressed = {
+      bold: state('bold'), italic: state('italic'), underline: state('underline'), strike: state('strikeThrough'),
+      heading: block === 'h1' || block === 'h2',
+      ul: state('insertUnorderedList') && !inChecklist, ol: state('insertOrderedList'), check: inChecklist,
+      highlight: !!(inside && blockOf('mark')),
+    };
+    $$('.tool', bar).forEach((b) => { if (b.dataset.tool in pressed) b.setAttribute('aria-pressed', String(!!pressed[b.dataset.tool])); });
+  }
+  function run(id, anchor) {
+    const tool = TOOLS.find((t) => t !== SEP && t.id === id);
+    if (id === 'heading') headingMenu(anchor);
+    else if (id === 'ul' || id === 'ol') list(tool.cmd);
+    else if (tool.cmd) exec(tool.cmd);
+    else if (id === 'check') checklist();
+    else if (id === 'highlight') highlightMenu(anchor);
+    else if (id === 'note') { remember(); notePicker(anchor); }
+    else if (id === 'wiki') { remember(); wikiPicker(anchor); }
+    else if (id === 'link') linkPicker(anchor);
+    else if (id === 'clear') clearFormatting();
+  }
+  const toolBtn = (id) => $(`.tool[data-tool="${id}"]`, bar);
+
+  /* --- Opening links --- */
+  function openLink(a) {
+    if (a.dataset.note) {
+      if (!Items.get(a.dataset.note)) { Toast.show('That note was deleted'); return; }
+      Items.update(a.dataset.note, {}); // touching it moves it to the top of Recent
+      QuickNotes.openNote(a.dataset.note);
+    } else if (a.dataset.wiki) {
+      if (!WikiSearch.isOnline()) { Toast.show('Connect to internet to open Wikipedia links', { type: 'error' }); return; }
+      WikiSearch.open(a.dataset.wiki);
+    } else if (a.getAttribute('href')) {
+      window.open(a.getAttribute('href'), '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  function build() {
+    bar.replaceChildren(...TOOLS.map((t) => (t === SEP ? h('span', { class: 'note-tools__sep', 'aria-hidden': 'true' })
+      : h('button', { class: `tool${t.text ? ' tool--w' : ''}`, type: 'button', 'data-tip': t.tip, 'aria-label': t.tip, 'aria-pressed': t.cmd || ['heading', 'check', 'highlight'].includes(t.id) ? 'false' : null, dataset: { tool: t.id } },
+        t.icon ? icon(t.icon) : t.text))));
+    // Buttons never take focus from the note, so its selection survives.
+    bar.addEventListener('pointerdown', (e) => { if (e.target.closest('.tool')) e.preventDefault(); });
+    bar.addEventListener('click', (e) => { const b = e.target.closest('.tool'); if (b) run(b.dataset.tool, b); });
+    document.addEventListener('selectionchange', () => { if (inEditor(window.getSelection().anchorNode)) paint(); });
+    editor.addEventListener('keydown', (e) => {
+      const mod = IS_MAC ? e.metaKey : e.ctrlKey;
+      if (!mod || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (!e.shiftKey && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); exec({ b: 'bold', i: 'italic', u: 'underline' }[k]); }
+      else if (!e.shiftKey && k === 'k') { e.preventDefault(); e.stopPropagation(); linkPicker(toolBtn('link')); } // in a note, ⌘K adds a link
+    });
+    editor.addEventListener('input', (e) => {
+      // Typing "[[" opens the note picker.
+      if (e.inputType && !e.inputType.startsWith('insert')) return;
+      const sel = window.getSelection();
+      if (!sel.rangeCount || !sel.isCollapsed) return;
+      const node = sel.anchorNode;
+      const off = sel.anchorOffset;
+      if (node.nodeType !== 3 || off < 2 || node.textContent.slice(off - 2, off) !== '[[') return;
+      brackets = document.createRange();
+      brackets.setStart(node, off - 2);
+      brackets.setEnd(node, off);
+      saved = sel.getRangeAt(0).cloneRange();
+      notePicker(toolBtn('note'));
+    });
+    editor.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (a && editor.contains(a)) { e.preventDefault(); openLink(a); return; }
+      const li = e.target.closest('ul.checklist > li');
+      if (li && e.clientX - li.getBoundingClientRect().left < 24) { // the tick box
+        e.preventDefault();
+        li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true';
+        if (li.dataset.checked === 'false') delete li.dataset.checked;
+        changed();
+      }
+    });
+  }
+  return { build, paint };
 })();
 
 /* ---------- Inbox (Notes page) ---------- */
@@ -4360,6 +4885,9 @@ const Navigation = (() => {
   }
   function render() {
     const page = UI.get().page;
+    const nav = $('#nav');
+    const order = Settings.get().navOrder;
+    if ($$('[data-page]', nav).map((b) => b.dataset.page).join() !== order.join()) order.forEach((id) => nav.append($(`[data-page="${id}"]`, nav)));
     $$('#nav [data-page]').forEach((b) => (b.getAttribute('data-page') === page ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
     $$('main > .page').forEach((p) => { p.hidden = p.dataset.page !== page; });
     $('.app').dataset.page = page;
@@ -4498,6 +5026,7 @@ function init() {
   TaskPanel.build();
   TimeCard.build();
   WikiSearch.build();
+  NoteTools.build();
   Timer.build();
   buildPlaceholderPages();
   bindActions();
