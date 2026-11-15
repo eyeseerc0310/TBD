@@ -621,7 +621,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 }
 .clock__auto-inner {
   height: 100%; display: flex; align-items: center; justify-content: center; gap: 0.12em;
-  font: 300 min(24cqi, 82cqb)/1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text);
+  font: 300 min(24cqi, 100cqb)/1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text);
 }
 .clock__auto-side { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.25em; letter-spacing: normal; }
 .clock__auto-sec { font-size: 0.3em; font-weight: 400; color: var(--text-3); }
@@ -1251,7 +1251,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .app[data-page="home"] .tasks-empty { margin-bottom: calc(var(--s3) * -1); }
   /* The left column's two cards share its height. */
   /* Floors of 220px (less on short windows, never above the defaults), as for the columns. */
-  .app[data-page="home"] .panel--time { height: auto; flex: var(--split-time, 2.2) 1 0; min-height: min(220px, 30%); }
+  .app[data-page="home"] .panel--time { height: auto; flex: var(--split-time, 2.2) 1 0; min-height: min(var(--time-min, 220px), 60%); }
   .app[data-page="home"] .panel--connections { flex: var(--split-conn, 1) 1 0; min-height: min(220px, 30%); }
 }
 /* Two-row tablet layout, fitted. */
@@ -2708,13 +2708,13 @@ const ClockFace = (() => {
 /* ---------- Clock ----------
    One Date per frame drives both the hands and the digits, so they can
    never disagree. Runs only while Home is visible. When the card is
-   squashed vertically, so the face would be under 190px tall, it crossfades
-   to a digital clock in the same box, and back at 210px; the gap
+   squashed vertically, so the face would be under 170px tall, it crossfades
+   to a digital clock in the same box, and back at 185px; the gap
    between the two stops it flickering at the edge. A narrow card never
    switches it: the face just uses the card's full width. "Digital only"
    in Settings never switches. */
-const AUTO_DIGITAL_BELOW = 190;
-const AUTO_ANALOG_ABOVE = 210;
+const AUTO_DIGITAL_BELOW = 170;
+const AUTO_ANALOG_ABOVE = 185;
 const Clock = (() => {
   const root = $('#clock');
   const face = $('#clock-svg');
@@ -2754,11 +2754,24 @@ const Clock = (() => {
     lastAuto = '';
     if (raf) paint(new Date());
   }
+  /** The card's shortest height: where the digital time (sized by the width, 24% of it) just
+      clears the timer's line below. Everything else in the card keeps its size, so this is that
+      fixed part plus the digits' line. Null for "Digital only", which keeps the usual minimum. */
+  function minCardHeight() {
+    if (Settings.get().clockFace === 'digital' || !faceBox.offsetParent) return null;
+    const card = root.closest('.panel').getBoundingClientRect();
+    const top = faceBox.getBoundingClientRect().top - card.top;
+    const bottom = card.bottom - root.getBoundingClientRect().bottom;
+    return Math.ceil(top + 0.24 * faceBox.clientWidth + bottom);
+  }
   new ResizeObserver(() => {
     diameter = faceBox.clientHeight;
     if (!diameter) { decided = false; return; } // Home hidden: the next sight of it is placed without a fade
     // The digital clock also takes the time line under the face, and the gap above it.
     root.style.setProperty('--readout-h', `${readout.offsetHeight + (parseFloat(getComputedStyle(root).rowGap) || 0)}px`);
+    const min = minCardHeight();
+    const dash = root.closest('.dashboard');
+    if (min) dash.style.setProperty('--time-min', `${min}px`); else dash.style.removeProperty('--time-min');
     decide();
   }).observe(faceBox);
 
@@ -2826,7 +2839,7 @@ const Clock = (() => {
     decide(); // "Digital only" switched on or off
     if (raf) paint(new Date());
   }
-  return { start, stop, render, autoCity };
+  return { start, stop, render, autoCity, minCardHeight };
 })();
 
 /* ---------- Rich text ----------
@@ -4186,7 +4199,7 @@ const CardSizes = (() => {
     const k = connEl().getBoundingClientRect().height;
     const ft = fixed(timeEl());
     const fk = fixed(connEl());
-    return { t, k, total: t + k, ft, free: t + k - ft - fk, minT: Math.min(MIN_CARD, t), minK: Math.min(MIN_CARD, k) };
+    return { t, k, total: t + k, ft, free: t + k - ft - fk, minT: Math.min(Clock.minCardHeight() ?? MIN_CARD, t), minK: Math.min(MIN_CARD, k) };
   }
   /** The split (flex-grow share) that gives the Clock/Calendar card height `t`. */
   const splitFor = (m, t) => (t - m.ft) / m.free;
