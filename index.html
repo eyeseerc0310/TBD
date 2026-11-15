@@ -573,18 +573,23 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 
 /* Timer */
 /* Timer: centred rows pinned to the bottom of the clock view */
-.timer { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-top: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--border); text-align: center; }
+/* Sizes follow the card's width (cqi), so the group fills it without ever overflowing:
+   the time takes what the buttons and gap leave (it reads about 4.3em wide), and the row
+   may use the arrows' 10px gutters, which sit beside the clock face, not down here.
+   Padding above matches the card's own padding below, so the row sits evenly between
+   the divider and the card's bottom edge. */
+.timer { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-top: var(--s2); padding-top: var(--pad); border-top: 1px solid var(--border); text-align: center; container-type: inline-size; }
 /* Time on the left, Start over Reset on the right, centred as one group. */
-.timer__row { display: flex; align-items: center; justify-content: center; gap: var(--s4); }
-.timer__time { font: 300 32px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); padding: 3px 6px; border-radius: var(--r-sm); transition: color var(--t) var(--ease), background var(--t-fast) var(--ease); }
+.timer__row { display: flex; align-items: center; justify-content: center; gap: clamp(var(--s2), 5cqi, var(--s5)); max-width: calc(100% + 20px); }
+.timer__time { font: 300 clamp(24px, min(15cqi, 22.3cqi - 16px), 45px)/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text); padding: 3px 6px; border-radius: var(--r-sm); transition: color var(--t) var(--ease), background var(--t-fast) var(--ease); }
 .timer__time:not(:disabled):hover { background: var(--hover); }
 .timer__time:disabled { cursor: default; }
 .timer.is-running .timer__time { color: var(--accent); }
-.timer__edit { display: flex; align-items: center; justify-content: center; gap: 4px; font: 300 24px/1 var(--font); color: var(--text-2); }
-.timer__edit .input { width: 58px; height: 34px; padding: 0 6px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.timer__edit { display: flex; align-items: center; justify-content: center; gap: 4px; font: 300 clamp(22px, 9cqi, 32px)/1 var(--font); color: var(--text-2); }
+.timer__edit .input { width: clamp(52px, 19cqi, 72px); height: clamp(32px, 11cqi, 42px); padding: 0 6px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
 .timer__edit .input::-webkit-inner-spin-button, .timer__edit .input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.timer__btns { display: flex; flex-direction: column; gap: 6px; }
-.timer__btns .btn { width: 72px; height: 26px; padding: 0; }
+.timer__btns { display: flex; flex-direction: column; gap: clamp(6px, 2.2cqi, 8px); }
+.timer__btns .btn { width: clamp(76px, 28cqi, 104px); height: clamp(28px, 10cqi, 38px); padding: 0; font-size: clamp(13px, 4cqi, 15px); }
 .timer__presets { display: flex; justify-content: center; gap: 4px; }
 .timer__presets .chip { height: 22px; padding: 0 var(--s2); font-size: var(--fs-xs); }
 .timer-pill {
@@ -658,7 +663,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 /* Formatting toolbar, just above Recent: one row of small nav-style
    buttons that scrolls sideways when the card is narrow. */
 .note-tools {
-  flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; margin-top: var(--s2);
+  flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; margin-top: var(--s4);
   overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
 }
 .note-tools::-webkit-scrollbar { display: none; }
@@ -677,7 +682,10 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .tool[aria-disabled="true"] { opacity: 0.38; cursor: default; }
 .tool[aria-disabled="true"]:hover { color: var(--text-2); background: transparent; }
 .tool--w { font: 700 calc(var(--icon) * 0.72)/1 Georgia, "Times New Roman", serif; }
-.note-tools__sep { width: 1px; height: calc(var(--icon) * 0.8); flex: none; margin: 0 4px; background: var(--border-strong); }
+/* Centred with auto margins (not justify-content), so a row too wide for the card still scrolls from its first button. */
+.note-tools > :first-child { margin-left: auto; }
+.note-tools > :last-child { margin-right: auto; }
+.note-tools__gap { width: 6px; flex: none; } /* between groups */
 /* Tooltips that float above the page (the toolbar's scrolling would clip ::after tips). */
 .float-tip {
   position: fixed; z-index: 80; padding: 5px 8px; border-radius: var(--r-sm);
@@ -724,7 +732,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .navchip:hover { border-color: var(--accent-line); color: var(--text); }
 .navchip.is-dragging { z-index: 2; transition: none; cursor: grabbing; border-color: var(--accent-line); color: var(--accent); background: var(--surface-raised); box-shadow: var(--shadow-pop); }
 /* Recent: always sized to its rows (at most three), never scrolls. */
-.notes__saved { flex: none; }
+.notes__saved { flex: none; margin-top: var(--s2); }
 #saved-notes.list { flex: none; height: calc(3 * 46px + 2 * 6px); overflow: hidden; max-height: none; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
 .mini-row.mini-row--note { height: 46px; min-height: 46px; }
 .mini-slot { flex: none; height: 46px; display: flex; align-items: center; padding: 0 var(--s3); border: 1px dashed var(--border); border-radius: var(--r-ctl); color: var(--text-3); font-size: var(--fs-sm); opacity: 0.7; }
@@ -5342,7 +5350,7 @@ const NoteTools = (() => {
   }
 
   function build() {
-    bar.replaceChildren(...TOOLS.map((t) => (t === SEP ? h('span', { class: 'note-tools__sep', 'aria-hidden': 'true' })
+    bar.replaceChildren(...TOOLS.map((t) => (t === SEP ? h('span', { class: 'note-tools__gap', 'aria-hidden': 'true' })
       : h('button', { class: `tool${t.text ? ' tool--w' : ''}`, type: 'button', 'aria-label': t.tip, 'aria-pressed': 'false', 'aria-disabled': LINK_TOOLS.includes(t.id) ? 'true' : null, 'aria-description': LINK_TOOLS.includes(t.id) ? NEEDS_TEXT : null, dataset: { tool: t.id, hint: t.tip } },
         t.icon ? icon(t.icon) : t.text))));
     // Buttons never take focus from the note, so its selection survives.
