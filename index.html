@@ -824,25 +824,35 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 
 
 /* ---------- Connections (graph, list, Home rows) ---------- */
-.graph { position: relative; height: clamp(340px, calc(100dvh - 290px), 1100px); border-radius: var(--r-panel); overflow: hidden; touch-action: none; cursor: grab; }
-.graph.is-panning { cursor: grabbing; }
-.graph__svg { display: block; width: 100%; height: 100%; }
-.gedge { stroke: var(--border-strong); stroke-width: 1.25; vector-effect: non-scaling-stroke; transition: stroke var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
-.gnode { cursor: pointer; outline: none; transition: opacity var(--t-fast) var(--ease); }
-.gnode__dot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: stroke-width var(--t-fast) var(--ease); }
-.gnode--pin .gnode__dot { fill: var(--surface-raised); }
-.gnode__icon { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.gnode__label { fill: var(--text-2); font: 500 11px/1 var(--font); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; transition: opacity var(--t-fast) var(--ease); }
-.gnode.is-alone .gnode__dot { fill: var(--hover); stroke: var(--text-3); }
-.gnode.is-alone .gnode__label { fill: var(--text-3); }
-.gnode:hover .gnode__dot, .gnode:focus-visible .gnode__dot { stroke-width: 2.5; }
-.gnode:hover .gnode__label, .gnode:focus-visible .gnode__label { fill: var(--text); }
-.graph.is-focus .gnode:not(.is-near) { opacity: 0.3; }
-.graph.is-focus .gedge:not(.is-near) { opacity: 0.15; }
-.gedge.is-near { stroke: var(--accent); }
-.graph.is-far .gnode__label { opacity: 0; }
-.graph__tools { position: absolute; right: var(--s3); bottom: var(--s3); display: flex; gap: 2px; padding: 3px; border-radius: var(--r-ctl); background: var(--surface-raised); border: 1px solid var(--border); cursor: default; }
-.graph__hint { position: absolute; left: var(--s4); top: var(--s4); right: var(--s4); max-width: 360px; font-size: var(--fs-sm); color: var(--text-3); pointer-events: none; }
+/* The graph fills the page under the nav, on the theme's background; the view switch and zoom buttons float over it. */
+.app[data-page="connections"][data-conn="graph"] .main { max-width: none; padding: 0; overflow: hidden; }
+.page.is-graph { position: relative; }
+.page.is-graph > .page-head { position: absolute; z-index: 2; top: var(--s4); right: var(--gutter); margin: 0; pointer-events: none; }
+.page.is-graph > .page-head > div:first-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.page.is-graph > .page-head .seg { pointer-events: auto; background: var(--surface-raised); }
+.page.is-graph #conn-page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.page.is-graph .conn-notice { position: absolute; z-index: 2; top: var(--s4); left: var(--gutter); max-width: min(560px, calc(100% - 2 * var(--gutter) - 180px)); background: var(--surface-raised); }
+.graph { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; outline: none; }
+.graph__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; -webkit-tap-highlight-color: transparent; }
+.graph.is-panning .graph__canvas, .graph.is-dragging .graph__canvas { cursor: grabbing; }
+.graph:focus-visible { box-shadow: inset 0 0 0 2px var(--accent-line); }
+.graph__tools { position: absolute; right: var(--gutter); bottom: var(--s5); display: flex; gap: 2px; padding: 3px; border-radius: var(--r-ctl); background: var(--surface-raised); border: 1px solid var(--border); cursor: default; }
+.graph__hint { position: absolute; left: 50%; bottom: var(--s6); transform: translateX(-50%); width: max-content; max-width: calc(100% - 2 * var(--gutter)); text-align: center; font-size: var(--fs-sm); color: var(--text-3); pointer-events: none; }
+.graph.is-empty .graph__hint { bottom: auto; top: 50%; transform: translate(-50%, -50%); font-size: var(--fs-base); }
+@media (max-width: 719px) {
+  .page.is-graph > .page-head { top: var(--s3); }
+  .graph__tools { bottom: calc(62px + var(--s3) * 2 + env(safe-area-inset-bottom)); }
+  .graph__hint { bottom: calc(62px + var(--s3) * 2 + var(--s6) + env(safe-area-inset-bottom)); }
+}
+/* Connection tags: a colour dot in menus and in Settings. */
+.tag-dot { flex: none; width: 10px; height: 10px; margin: 0 3px; border-radius: 50%; background: var(--c); }
+.menu__item .menu__text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu__item .menu__check { margin-left: auto; color: var(--accent-ink); }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 10px; border-radius: 999px; background: var(--hover); font-size: var(--fs-sm); color: var(--text-2); }
+.tag-chip .tag-dot { margin: 0; }
+.tag-chip .icon-btn { width: 22px; height: 22px; }
+.tag-list__none { font-size: var(--fs-sm); color: var(--text-3); }
 .conn-listview .inbox { align-items: start; }
 .conn-card { min-height: 0; gap: var(--s3); }
 .conn-card .card__open .icon { width: 13px; height: 13px; margin-right: 5px; vertical-align: -1px; color: var(--accent); }
@@ -1291,7 +1301,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     position: fixed; z-index: 30; left: var(--s3); right: var(--s3);
     bottom: calc(var(--s3) + env(safe-area-inset-bottom));
     height: 62px; padding: 0 var(--s1);
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-template-columns: repeat(4, 1fr);
     border-radius: var(--r-panel);
     background: var(--surface-raised); border: 1px solid var(--border-strong); box-shadow: var(--shadow-pop);
     -webkit-backdrop-filter: blur(var(--blur)) saturate(140%); backdrop-filter: blur(var(--blur)) saturate(140%);
@@ -1591,7 +1601,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     <nav class="nav" id="nav" aria-label="Sections">
       <button class="icon-btn nav__btn" type="button" data-page="home" data-tip="Home" aria-label="Home"><svg class="icon"><use href="#i-home"/></svg><span class="nav__label" aria-hidden="true">Home</span></button>
       <button class="icon-btn nav__btn" type="button" data-page="notes" data-tip="Notes" aria-label="Notes"><svg class="icon"><use href="#i-notes"/></svg><span class="nav__label" aria-hidden="true">Notes</span></button>
-      <button class="icon-btn nav__btn" type="button" data-page="files" data-tip="Files" aria-label="Files"><svg class="icon"><use href="#i-files"/></svg><span class="nav__label" aria-hidden="true">Files</span></button>
       <button class="icon-btn nav__btn" type="button" data-page="connections" data-tip="Connections" aria-label="Connections"><svg class="icon"><use href="#i-connections"/></svg><span class="nav__label" aria-hidden="true">Connections</span></button>
       <button class="icon-btn nav__btn" type="button" data-page="pins" data-tip="Pin Board" aria-label="Pin Board"><svg class="icon"><use href="#i-pin"/></svg><span class="nav__label" aria-hidden="true">Pins</span></button>
     </nav>
@@ -1764,7 +1773,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     </section>
 
     <!-- Placeholder workspaces: content comes from PAGES in the script. -->
-    <section class="page" data-page="files" aria-labelledby="files-title" hidden></section>
     <section class="page" data-page="connections" aria-labelledby="connections-title" hidden>
       <header class="page-head">
         <div>
@@ -1938,12 +1946,12 @@ const Fmt = (() => {
    items so anything can reference anything. One shape means one search,
    one backup format and one place to add relationships later. */
 const SCHEMA_VERSION = 1;
-const PAGE_IDS = ['home', 'notes', 'files', 'connections', 'pins'];
+const PAGE_IDS = ['home', 'notes', 'connections', 'pins'];
 const CLOCK_FACES = ['minimal', 'classic', 'modern', 'digital'];
 const CLOCK_SHAPES = ['circle', 'rounded', 'squircle', 'hexagon'];
 const THEME_IDS = [...Object.keys(THEMES), 'custom'];
 const FONT_IDS = Object.keys(FONTS);
-const SETTINGS_SECTIONS = ['clock', 'calendar', 'appearance', 'shortcuts', 'data'];
+const SETTINGS_SECTIONS = ['clock', 'calendar', 'appearance', 'graph', 'shortcuts', 'data'];
 
 function detect24h() {
   try { const hc = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hourCycle; return hc === 'h23' || hc === 'h24'; }
@@ -1960,6 +1968,9 @@ const DEFAULT_SETTINGS = Object.freeze({
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
   cardSizes: null, // Home card sizes from the grabbers: { cols: [a, b, c] fractions, split: Clock/Calendar share } or null for the defaults
   notesSizes: null, // the Notes page's two columns, the same way ({ cols: [sidebar, editor] })
+  // Connections graph
+  graphLinkDistance: 110, graphRepulsion: 50, graphCentre: 30, graphCluster: 40, graphFriction: 30, graphNodeSize: 7, graphLabelFade: 80,
+  graphTags: [], // connection tags: [{ id, name, color }]; a note's meta.tag names one
 });
 
 function defaultUi() {
@@ -1988,7 +1999,7 @@ function normaliseTimer(raw) {
   };
 }
 function defaultState() {
-  return seedFolders({ items: [], settings: clone(DEFAULT_SETTINGS), ui: defaultUi(), timer: defaultTimer() });
+  return seedFolders({ items: [], settings: clone(DEFAULT_SETTINGS), ui: defaultUi(), timer: defaultTimer(), graph: normaliseGraph(null) });
 }
 function makeItem(type, fields = {}) {
   const t = nowISO();
@@ -2147,6 +2158,16 @@ function normaliseSettings(raw) {
       const f = Math.min(0.75, Math.max(0.12, c[0] / (c[0] + c[1])));
       return { cols: [Math.round(f * 10000) / 10000, Math.round((1 - f) * 10000) / 10000] };
     })(),
+    graphLinkDistance: Math.round(clampNum(s.graphLinkDistance, 30, 300, d.graphLinkDistance)),
+    graphRepulsion: Math.round(clampNum(s.graphRepulsion, 0, 100, d.graphRepulsion)),
+    graphCentre: Math.round(clampNum(s.graphCentre, 0, 100, d.graphCentre)),
+    graphCluster: Math.round(clampNum(s.graphCluster, 0, 100, d.graphCluster)),
+    graphFriction: Math.round(clampNum(s.graphFriction, 0, 100, d.graphFriction)),
+    graphNodeSize: Math.round(clampNum(s.graphNodeSize, 3, 16, d.graphNodeSize)),
+    graphLabelFade: Math.round(clampNum(s.graphLabelFade, 30, 200, d.graphLabelFade)),
+    graphTags: (Array.isArray(s.graphTags) ? s.graphTags : [])
+      .filter((t, i, a) => isObj(t) && typeof t.id === 'string' && t.id && typeof t.name === 'string' && t.name.trim() && isHex(t.color) && a.findIndex((x) => isObj(x) && x.id === t.id) === i)
+      .slice(0, 200).map((t) => ({ id: t.id, name: t.name.trim().slice(0, 40), color: t.color.toLowerCase() })),
   };
 }
 /** Card sizes are fractions: three column shares (summing to 1) and the Clock/Calendar card's share of the left column. */
@@ -2179,6 +2200,20 @@ function normaliseUi(raw) {
     foldersSeeded: u.foldersSeeded === true,
     notesOpen: isObj(u.notesOpen) ? Object.fromEntries(Object.entries(u.notesOpen).filter(([k, v]) => typeof v === 'boolean' && k.length < 200)) : { ...d.notesOpen },
   };
+}
+/** The Connections graph as it was left: each dot's position ([x, y], plus 1 when pinned) and the
+    view (the point at its centre and the zoom). Only the simulation places dots that have none. */
+function normaliseGraph(raw) {
+  const g = isObj(raw) ? raw : {};
+  const ok = (v) => Number.isFinite(v) && Math.abs(v) < 1e7;
+  const pos = {};
+  if (isObj(g.pos)) {
+    for (const [id, v] of Object.entries(g.pos)) {
+      if (Array.isArray(v) && ok(v[0]) && ok(v[1])) pos[id] = v[2] === 1 ? [v[0], v[1], 1] : [v[0], v[1]];
+    }
+  }
+  const v = isObj(g.view) && ok(g.view.cx) && ok(g.view.cy) && Number.isFinite(g.view.k) ? { cx: g.view.cx, cy: g.view.cy, k: Math.min(4, Math.max(0.2, g.view.k)) } : null;
+  return { pos, view: v };
 }
 /** Gives every task a position within its day, and every connection a
     position in its list (older data has none). */
@@ -2215,7 +2250,7 @@ function normaliseState(raw) {
     if (it && !seen.has(it.id)) { seen.add(it.id); items.push(it); }
   }
   assignTaskOrder(items);
-  return seedFolders({ ...src, items, settings: normaliseSettings(src.settings), ui: normaliseUi(src.ui), timer: normaliseTimer(src.timer) });
+  return seedFolders({ ...src, items, settings: normaliseSettings(src.settings), ui: normaliseUi(src.ui), timer: normaliseTimer(src.timer), graph: normaliseGraph(src.graph) });
 }
 /** Last line of defence before anything is written to storage. */
 function isValidState(s) {
@@ -3987,7 +4022,7 @@ const SettingsPanel = (() => {
     return h('label', { class: 'color-field' }, dot, text, input);
   }
   /** Nav icon chips: drag (mouse, pen or touch) or ←/→ to reorder; the top bar follows live. */
-  const NAV_ICONS = { home: 'home', notes: 'notes', files: 'files', connections: 'connections', pins: 'pin' };
+  const NAV_ICONS = { home: 'home', notes: 'notes', connections: 'connections', pins: 'pin' };
   function navChips(s, refresh) {
     const list = h('div', { class: 'navchips', role: 'list', 'aria-label': 'Nav icon order' },
       s.navOrder.map((id) => h('button', {
@@ -4127,6 +4162,28 @@ const SettingsPanel = (() => {
           stackRow('Nav icons', navChips(s, refresh), { keywords: 'reorder rearrange order navigation icons top bar' }),
           row('Card sizes', h('button', { class: 'btn btn--sm', type: 'button', disabled: !s.cardSizes && !s.notesSizes, onclick: () => { CardSizes.reset(); NotesSizes.reset(); refresh(); } }, 'Reset card sizes'),
             { keywords: 'resize grabber handle columns width height layout home notes cards', hint: 'Drag the handles between the cards on Home and Notes to resize them' }),
+        ];
+      },
+    },
+    {
+      id: 'graph', icon: 'connections', title: 'Graph', desc: 'Forces, sizes, labels and tags on the Connections graph',
+      keys: ['graphLinkDistance', 'graphRepulsion', 'graphCentre', 'graphCluster', 'graphFriction', 'graphNodeSize', 'graphLabelFade'],
+      rows(s, refresh) {
+        const pct = (v) => `${v}%`;
+        const tags = s.graphTags.length
+          ? h('div', { class: 'tag-list' }, s.graphTags.map((t) => h('span', { class: 'tag-chip' },
+            h('span', { class: 'tag-dot', style: `--c:${t.color}`, 'aria-hidden': 'true' }), t.name,
+            h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': `Delete tag ${t.name}`, title: 'Delete tag', dataset: { key: `tag:${t.id}` }, onclick: () => { GraphTags.remove(t.id); refresh(); } }, icon('x')))))
+          : h('p', { class: 'tag-list__none', text: 'None yet. Add one from a note’s ⋯ menu on the Notes page.' });
+        return [
+          row('Link distance', range('graphLinkDistance', s.graphLinkDistance, 30, 300, 'Link distance', (v) => `${v}px`), { keywords: 'graph connections length spacing lines' }),
+          row('Repulsion strength', range('graphRepulsion', s.graphRepulsion, 0, 100, 'Repulsion strength', pct), { keywords: 'graph push apart spread charge' }),
+          row('Centre pull', range('graphCentre', s.graphCentre, 0, 100, 'Centre pull', pct), { keywords: 'graph gravity center centre compact' }),
+          row('Cluster strength', range('graphCluster', s.graphCluster, 0, 100, 'Cluster strength', pct), { keywords: 'graph tags groups clusters colour', hint: 'How strongly notes with the same tag gather' }),
+          row('Friction', range('graphFriction', s.graphFriction, 0, 100, 'Friction', pct), { keywords: 'graph momentum throw slide damping', hint: 'Lower lets a thrown dot slide further' }),
+          row('Node size', range('graphNodeSize', s.graphNodeSize, 3, 16, 'Node size', (v) => `${v}px`), { keywords: 'graph dots circles radius' }),
+          row('Label fade zoom', range('graphLabelFade', s.graphLabelFade, 30, 200, 'Label fade zoom', (v) => `${(v / 100).toFixed(2)}×`), { keywords: 'graph names titles text zoom', hint: 'Labels fade out as you zoom out past this' }),
+          stackRow('Connection tags', tags, { keywords: 'graph tags groups colour clusters delete' }),
         ];
       },
     },
@@ -4962,237 +5019,688 @@ function openExternal(url) {
   a.remove();
 }
 
-/* The graph: notes and pins as nodes, links as lines. Positions come from
-   a small force layout run once whenever the nodes or links change (seeded
-   from the last positions, so the picture stays put), then the view is
-   panned and zoomed with one transform. Drag to pan; pinch, scroll or the
-   buttons zoom; tap a node to open it. */
-const ConnGraph = (() => {
-  const L = 110;            // preferred link length
-  const REACH2 = (L * 3) ** 2;
-  const pos = new Map();    // id → { x, y }
-  let sig = '';
-  let view = { x: 0, y: 0, k: 1 };
-  let needsFit = true;
-  let touched = false;      // panned or zoomed since the last fit
-  let world = null;
-  let frame = 0;
-  const host = h('div', { class: 'graph glass' });
-  const hash = (str) => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619); return (x >>> 0) / 4294967296; };
-  const clampK = (k) => Math.min(3, Math.max(0.2, k));
-
-  function layout(nodes, edges) {
-    const ids = new Set(nodes.map((n) => n.id));
-    for (const id of [...pos.keys()]) if (!ids.has(id)) pos.delete(id);
-    let fresh = 0;
-    nodes.forEach((n, i) => {
-      if (pos.has(n.id)) return;
-      fresh++;
-      const a = hash(n.id) * Math.PI * 2;
-      const e = edges.find((x) => (x.from === n.id && pos.has(x.to)) || (x.to === n.id && pos.has(x.from)));
-      if (e) { const p = pos.get(e.from === n.id ? e.to : e.from); pos.set(n.id, { x: p.x + Math.cos(a) * L, y: p.y + Math.sin(a) * L }); }
-      else { const r = L * 0.9 * Math.sqrt(i + 1); pos.set(n.id, { x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+/* Connection tags: named colour groups (settings.graphTags) a note can
+   belong to (meta.tag). A tagged note is drawn in its tag's colour on the
+   graph, and notes with the same tag drift together. */
+const GraphTags = {
+  list: () => Settings.get().graphTags,
+  get: (id) => (id && Settings.get().graphTags.find((t) => t.id === id)) || null,
+  of: (it) => (it && it.type === 'capture' ? GraphTags.get(it.meta.tag) : null),
+  create(name, color) {
+    const tag = { id: uid(), name: name.trim().slice(0, 40), color: color.toLowerCase() };
+    Settings.set({ graphTags: [...GraphTags.list(), tag] });
+    return tag;
+  },
+  remove(id) {
+    const list = GraphTags.list();
+    const i = list.findIndex((t) => t.id === id);
+    if (i < 0) return;
+    const tag = list[i];
+    Settings.set({ graphTags: list.filter((t) => t.id !== id) });
+    Toast.show(`Tag “${tag.name}” deleted`, {
+      action: { label: 'Undo', run: () => { const now = GraphTags.list(); if (!now.some((t) => t.id === id)) Settings.set({ graphTags: [...now.slice(0, i), tag, ...now.slice(i)] }); } },
     });
-    if (!fresh && !edges.length) return;
-    const P = nodes.map((n) => pos.get(n.id));
-    const index = new Map(nodes.map((n, i) => [n.id, i]));
-    const E = edges.map((e) => [index.get(e.from), index.get(e.to)]);
-    const N = P.length;
-    const dx = new Float64Array(N);
-    const dy = new Float64Array(N);
-    let t = L * (fresh > N / 2 ? 0.6 : 0.2); // settle gently when most nodes already have a place
-    const rounds = N > 160 ? 90 : 220;
-    for (let r = 0; r < rounds; r++) {
-      dx.fill(0); dy.fill(0);
+  },
+};
+
+/* The graph: every note and pin is a dot, every connection a line, drawn
+   on a canvas and laid out by a small force simulation (in the spirit of
+   d3-force): links pull, dots push apart, a gentle pull keeps the graph
+   centred, notes with the same connection tag drift together, and dots
+   don't overlap. The simulation runs only while something moves (new
+   notes or links, a drag, a throw, a slider) and stops when it settles,
+   when another page is shown or when the app is in the background.
+   Drag empty space to pan; pinch, scroll or the buttons zoom; tap a dot to
+   open its note; drag a dot to move it (its links follow, and a throw keeps
+   going); hold one to pin it in place. Positions, pins and the view are
+   kept in state.graph, so the graph reopens exactly as it was left. */
+const ConnGraph = (() => {
+  const TICK = 1000 / 60;   // the simulation steps at 60 Hz, whatever the display's rate
+  const MOVE = 6;           // px a press may move and still be a tap
+  const HOLD = 500;         // ms to hold a dot to pin it
+  const ALPHA_MIN = 0.001;
+  const ALPHA_DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 300);
+  const K_MIN = 0.2;
+  const K_MAX = 4;
+  const APPEAR = 420;       // ms for a new dot to grow in
+  const clampK = (k) => Math.min(K_MAX, Math.max(K_MIN, k));
+  const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // slow-fast-slow
+  const hash = (str) => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619); return (x >>> 0) / 4294967296; };
+  const round1 = (v) => Math.round(v * 10) / 10;
+
+  const canvas = h('canvas', { class: 'graph__canvas', 'aria-hidden': 'true' });
+  const hint = h('p', { class: 'graph__hint', text: 'Link text in a note to another note to create connections', hidden: true });
+  const tool = (name, label, run) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': label, 'data-tip': label, 'data-tip-align': 'end', onclick: run }, icon(name));
+  const tools = h('div', { class: 'graph__tools' },
+    tool('minus', 'Zoom out', () => zoomCentre(1 / 1.25)),
+    tool('plus', 'Zoom in', () => zoomCentre(1.25)),
+    tool('fit', 'Fit to view', () => fit(true)));
+  const said = h('span', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const host = h('div', { class: 'graph', tabindex: '0', role: 'application', 'aria-roledescription': 'graph' }, canvas, hint, tools, said);
+  const ctx = canvas.getContext('2d');
+
+  let nodes = [];           // { id, x, y, vx, vy, fx, fy, pinned, r, deg, color, label, born }
+  let byId = new Map();
+  let links = [];           // { s, t, strength, bias } with s and t nodes
+  let sig = '';
+  let alpha = 0;
+  let alphaTarget = 0;
+  let params = null;
+  let colours = null;
+  let view = { x: 0, y: 0, k: 1 };
+  let W = 0;
+  let H = 0;
+  let dpr = 1;
+  let placed = false;       // the view has been set for this graph
+  let graphRef = null;      // the state.graph this layout came from (a restore or reset replaces it)
+  let raf = 0;
+  let last = 0;
+  let acc = 0;
+  let hover = null;         // the dot under the mouse or pencil
+  let hoverT = 0;           // 0..1, its highlight fading in or out
+  let lit = null;           // Set of ids lit by the hover (the dot and its neighbours)
+  let pulse = null;         // { node, t0 } the ring shown when a hold pins or unpins
+  let saveTimer = 0;
+  let kbd = null;           // the dot chosen with the arrow keys
+  let layoutDirty = false;
+
+  /* --- Settings and theme --- */
+  function readParams() {
+    const s = Settings.get();
+    const n = Math.max(1, nodes.length);
+    const dense = Math.min(1, Math.max(0.42, Math.pow(40 / n, 0.3))); // big graphs pack tighter instead of spreading off-screen
+    params = {
+      dist: s.graphLinkDistance * dense,
+      charge: -s.graphRepulsion * 9 * dense,
+      reach2: (s.graphLinkDistance * 5) ** 2,
+      centre: (s.graphCentre / 100) * 0.15,
+      cluster: (s.graphCluster / 100) * 0.2,
+      decay: 0.02 + (s.graphFriction / 100) * 0.4,
+      r: s.graphNodeSize,
+      fade: s.graphLabelFade / 100,
+    };
+  }
+  const probe = h('span', { hidden: true });
+  host.append(probe);
+  function readColours() {
+    const cs = getComputedStyle(probe);
+    const resolve = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
+    colours = {
+      edge: resolve('--text-3'), node: resolve('--text-3'), label: resolve('--text-2'), strong: resolve('--text'),
+      halo: resolve('--bg'), accent: resolve('--accent'), ring: resolve('--text-2'),
+      font: cs.fontFamily || 'system-ui, sans-serif',
+    };
+  }
+
+  /* --- Data: nodes and links, kept in place between updates --- */
+  function radius(deg) { return params.r * (1 + Math.min(Math.sqrt(deg), 3.5) * 0.18); }
+  /** Takes the current notes and links; new dots appear near a linked dot, or near the centre. */
+  function setData(items, edges) {
+    const g = Store.get().graph;
+    if (g !== graphRef) { graphRef = g; byId = new Map(); nodes = []; placed = false; alpha = 0; } // restored or reset: start from what was saved
+    const saved = g.pos;
+    const ids = new Set(items.map((n) => n.id));
+    const deg = new Map();
+    edges.forEach((e) => { deg.set(e.from, (deg.get(e.from) || 0) + 1); deg.set(e.to, (deg.get(e.to) || 0) + 1); });
+    const nextSig = `${[...ids].sort().join()}/${edges.map((e) => e.key).sort().join()}/${items.map((n) => `${n.id}:${n.type === 'capture' ? n.meta.tag || '' : ''}`).sort().join()}`;
+    const changed = nextSig !== sig;
+    sig = nextSig;
+    readParams();
+
+    const old = byId;
+    byId = new Map();
+    const fresh = [];
+    const now = performance.now();
+    for (const it of items) {
+      let n = old.get(it.id);
+      if (!n) {
+        const p = saved[it.id];
+        n = { id: it.id, x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null, pinned: false, born: p ? 0 : now };
+        if (p) { n.x = p[0]; n.y = p[1]; if (p[2] === 1) { n.pinned = true; n.fx = n.x; n.fy = n.y; } } else fresh.push(n);
+      }
+      const tag = GraphTags.of(it);
+      n.deg = deg.get(it.id) || 0;
+      n.r = radius(n.deg);
+      n.tag = tag ? tag.id : null;
+      n.color = tag ? tag.color : null;
+      n.pin = it.type === 'pin';
+      const name = Links.title(it);
+      n.label = name.length > 28 ? `${name.slice(0, 27)}…` : name;
+      byId.set(it.id, n);
+    }
+    nodes = [...byId.values()];
+    readParams(); // spacing depends on how many dots there are
+    for (const n of nodes) n.r = radius(n.deg);
+    if (hover && !byId.has(hover.id)) { hover = null; lit = null; hoverT = 0; }
+    if (kbd && !byId.has(kbd.id)) kbd = null;
+    links = edges.map((e) => ({ s: byId.get(e.from), t: byId.get(e.to) })).filter((l) => l.s && l.t);
+    for (const l of links) {
+      const a = l.s.deg || 1;
+      const b = l.t.deg || 1;
+      l.strength = 1 / Math.min(a, b);
+      l.bias = a / (a + b);
+    }
+
+    // New dots: next to a dot they link with, otherwise close to the centre (a sunflower spiral, so many at once don't stack).
+    const many = fresh.length > 3 && fresh.length > nodes.length / 2;
+    const isNew = new Set(fresh);
+    const c = centroid(isNew);
+    fresh.forEach((n, i) => {
+      const a = hash(n.id) * Math.PI * 2;
+      const l = links.find((x) => (x.s === n && !isNew.has(x.t)) || (x.t === n && !isNew.has(x.s)));
+      if (l) { const o = l.s === n ? l.t : l.s; n.x = o.x + Math.cos(a) * params.dist * 0.5; n.y = o.y + Math.sin(a) * params.dist * 0.5; return; }
+      const rr = (many ? params.dist * 0.35 : 12) * Math.sqrt(i + 0.5);
+      const ang = many ? i * Math.PI * (3 - Math.sqrt(5)) : a;
+      n.x = c.x + Math.cos(ang) * rr; n.y = c.y + Math.sin(ang) * rr;
+    });
+    if (many) {
+      // A first layout (or a restore without one) settles before it is shown.
+      alpha = 1;
+      for (let i = 0; i < 500 && alpha > 0.004; i++) tick();
+      nodes.forEach((n) => { n.vx = 0; n.vy = 0; });
+      alpha = 0;
+      placed = false;
+      layoutDirty = true;
+    } else if (changed && (fresh.length || old.size)) {
+      alpha = Math.max(alpha, fresh.length ? 0.2 : 0.3); // a new dot finds its place without shaking the rest
+    }
+    hint.hidden = links.length > 0;
+    host.setAttribute('aria-label', `Graph of ${pluralise(nodes.length, 'note')} and ${pluralise(links.length, 'connection')}. Arrow keys move between notes, Enter opens one, P pins it; plus and minus zoom.`);
+    if (changed) layoutDirty = true;
+  }
+  function centroid(skip) {
+    const settled = nodes.filter((n) => !skip.has(n));
+    if (!settled.length) return { x: 0, y: 0 };
+    let x = 0; let y = 0;
+    settled.forEach((n) => { x += n.x; y += n.y; });
+    return { x: x / settled.length, y: y / settled.length };
+  }
+
+  /* --- The simulation (one step) --- */
+  function tick() {
+    alpha += (alphaTarget - alpha) * ALPHA_DECAY;
+    const N = nodes.length;
+    const p = params;
+    if (alpha > 1e-4) {
+      // Links pull toward their length (d3's link force: stronger for dots with fewer links).
+      for (const l of links) {
+        const s = l.s; const t = l.t;
+        let x = t.x + t.vx - s.x - s.vx;
+        let y = t.y + t.vy - s.y - s.vy;
+        let d = Math.sqrt(x * x + y * y) || 1e-6;
+        d = ((d - p.dist) / d) * alpha * l.strength;
+        x *= d; y *= d;
+        t.vx -= x * l.bias; t.vy -= y * l.bias;
+        s.vx += x * (1 - l.bias); s.vy += y * (1 - l.bias);
+      }
+      // Every dot pushes the others away (nearby ones most).
+      const ch = p.charge * alpha;
       for (let i = 0; i < N; i++) {
+        const a = nodes[i];
         for (let j = i + 1; j < N; j++) {
-          let x = P[i].x - P[j].x;
-          let y = P[i].y - P[j].y;
+          const b = nodes[j];
+          let x = b.x - a.x;
+          let y = b.y - a.y;
           let d2 = x * x + y * y;
-          if (d2 > REACH2) continue; // only near neighbours push, so loose notes stay close
-          if (d2 < 0.01) { x = hash(`${i}:${j}`) - 0.5; y = hash(`${j}:${i}`) - 0.5; d2 = x * x + y * y; }
-          const f = (L * L) / d2; // repulsion, L²/d along the line between them
-          dx[i] += x * f; dy[i] += y * f; dx[j] -= x * f; dy[j] -= y * f;
+          if (d2 > p.reach2) continue;
+          if (d2 < 1e-6) { x = (hash(a.id + b.id) - 0.5) * 1e-3; y = (hash(b.id + a.id) - 0.5) * 1e-3; d2 = x * x + y * y; }
+          if (d2 < 1) d2 = Math.sqrt(d2);
+          const w = ch / d2;
+          a.vx += x * w; a.vy += y * w;
+          b.vx -= x * w; b.vy -= y * w;
         }
       }
-      for (const [a, b] of E) {
-        const x = P[a].x - P[b].x;
-        const y = P[a].y - P[b].y;
-        const f = Math.sqrt(x * x + y * y) / L; // attraction, d²/L
-        dx[a] -= x * f; dy[a] -= y * f; dx[b] += x * f; dy[b] += y * f;
+      // A gentle pull to the centre, and tagged notes toward the middle of their tag.
+      const groups = new Map();
+      if (p.cluster) {
+        for (const n of nodes) {
+          if (!n.tag) continue;
+          const g = groups.get(n.tag) || { x: 0, y: 0, n: 0 };
+          g.x += n.x; g.y += n.y; g.n++;
+          groups.set(n.tag, g);
+        }
       }
-      for (let i = 0; i < N; i++) {
-        dx[i] -= P[i].x * 0.04; dy[i] -= P[i].y * 0.04; // a little gravity keeps loose notes near
-        const m = Math.hypot(dx[i], dy[i]) || 1;
-        const step = Math.min(m, t) / m;
-        P[i].x += dx[i] * step; P[i].y += dy[i] * step;
+      const cs = p.centre * alpha;
+      const ks = p.cluster * alpha;
+      for (const n of nodes) {
+        n.vx -= n.x * cs; n.vy -= n.y * cs;
+        const g = n.tag && groups.get(n.tag);
+        if (g && g.n > 1) { n.vx += (g.x / g.n - n.x) * ks; n.vy += (g.y / g.n - n.y) * ks; }
       }
-      t = Math.max(0.5, t * 0.975);
+    }
+    collide();
+    const keep = 1 - p.decay;
+    for (const n of nodes) {
+      if (n.fx !== null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }
+      n.vx *= keep; n.vy *= keep;
+      n.x += n.vx; n.y += n.vy;
+    }
+  }
+  /** Dots (and a little room for their labels) don't overlap: a grid finds the near pairs. */
+  function collide() {
+    const pad = 9;
+    let maxR = 0;
+    for (const n of nodes) maxR = Math.max(maxR, n.r);
+    const cell = (maxR + pad) * 2;
+    const grid = new Map();
+    for (const n of nodes) {
+      const k = `${Math.floor((n.x + n.vx) / cell)},${Math.floor((n.y + n.vy) / cell)}`;
+      const list = grid.get(k);
+      if (list) list.push(n); else grid.set(k, [n]);
+    }
+    for (const n of nodes) {
+      const cx = Math.floor((n.x + n.vx) / cell);
+      const cy = Math.floor((n.y + n.vy) / cell);
+      for (let gx = cx - 1; gx <= cx + 1; gx++) {
+        for (let gy = cy - 1; gy <= cy + 1; gy++) {
+          const list = grid.get(`${gx},${gy}`);
+          if (!list) continue;
+          for (const m of list) {
+            if (m.id <= n.id) continue;
+            const R = n.r + m.r + pad;
+            let x = n.x + n.vx - m.x - m.vx;
+            let y = n.y + n.vy - m.y - m.vy;
+            let d2 = x * x + y * y;
+            if (d2 >= R * R) continue;
+            if (d2 < 1e-6) { x = hash(n.id) - 0.5; y = hash(m.id) - 0.5; d2 = x * x + y * y; }
+            const d = Math.sqrt(d2);
+            const f = ((R - d) / d) * 0.5;
+            x *= f; y *= f;
+            const share = (m.r * m.r) / (n.r * n.r + m.r * m.r);
+            n.vx += x * share; n.vy += y * share;
+            m.vx -= x * (1 - share); m.vy -= y * (1 - share);
+          }
+        }
+      }
     }
   }
 
-  function apply() {
-    frame = 0;
-    if (!world) return;
-    world.setAttribute('transform', `translate(${view.x.toFixed(1)} ${view.y.toFixed(1)}) scale(${view.k.toFixed(4)})`);
-    host.classList.toggle('is-far', view.k < 0.55);
+  /* --- Running: only while something moves, only while it can be seen --- */
+  const visible = () => host.isConnected && UI.get().page === 'connections' && UI.get().connView === 'graph' && document.visibilityState === 'visible' && W > 0;
+  function kick() { if (!raf && visible()) { last = performance.now(); acc = 0; raf = requestAnimationFrame(frame); } }
+  function moving() {
+    if (alpha >= ALPHA_MIN || alphaTarget > 0) return true;
+    for (const n of nodes) if (n.fx === null && (Math.abs(n.vx) > 0.01 || Math.abs(n.vy) > 0.01)) return true;
+    return false;
   }
-  const schedule = () => { if (!frame) frame = requestAnimationFrame(apply); };
-  function fit() {
-    const w = host.clientWidth;
-    const hh = host.clientHeight;
-    if (!w || !hh) return;
-    needsFit = false;
-    touched = false;
-    if (!pos.size) { view = { x: w / 2, y: hh / 2, k: 1 }; apply(); return; }
+  function animating(now) {
+    if (pulse && now - pulse.t0 < 600) return true;
+    if (press && press.node && press.mode === 'pending') return true;
+    if ((hover && hoverT < 1) || (!hover && hoverT > 0)) return true;
+    return nodes.some((n) => n.born && now - n.born < APPEAR);
+  }
+  function frame(now) {
+    raf = 0;
+    if (!visible()) return; // picked up again by the next render or when the app comes back
+    acc += Math.min(100, now - last);
+    last = now;
+    let steps = 0;
+    const sim = moving();
+    if (sim) { while (acc >= TICK && steps < 3) { tick(); acc -= TICK; steps++; } } else acc = 0;
+    if (steps) layoutDirty = true; // saved once it comes to rest (an earlier save may have caught it mid-flight)
+    const dt = Math.min(100, steps * TICK || 16);
+    hoverT = hover ? Math.min(1, hoverT + dt / 160) : Math.max(0, hoverT - dt / 160);
+    if (!hover && hoverT === 0) lit = null;
+    draw(now);
+    if (sim || animating(now)) raf = requestAnimationFrame(frame);
+    else { nodes.forEach((n) => { n.born = 0; }); if (layoutDirty) saveSoon(); }
+  }
+
+  /* --- Drawing --- */
+  function draw(now) {
+    if (!W || !colours) return;
+    const k = view.k;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const x0 = -view.x / k; const y0 = -view.y / k;
+    const x1 = (W - view.x) / k; const y1 = (H - view.y) / k;
+    const m = 40 / k;
+    const onScreen = (n) => n.x > x0 - m && n.x < x1 + m && n.y > y0 - m && n.y < y1 + m;
+    const dim = lit ? hoverT : 0;
+    const grow = (n) => (n.born ? ease((now - n.born) / APPEAR) : 1);
+
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * view.x, dpr * view.y);
+    // Lines: thin, muted, low opacity; a hovered dot's own lines light up.
+    ctx.lineWidth = 1 / k;
+    ctx.strokeStyle = colours.edge;
+    ctx.globalAlpha = 0.6 * (1 - dim * 0.7);
+    ctx.beginPath();
+    for (const l of links) {
+      if (lit && dim && (l.s === lit.hub || l.t === lit.hub)) continue; // drawn lit below
+      ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y);
+    }
+    ctx.stroke();
+    if (lit && dim) {
+      ctx.globalAlpha = dim;
+      ctx.strokeStyle = colours.accent;
+      ctx.lineWidth = 1.5 / k;
+      ctx.beginPath();
+      const hv = lit.hub;
+      for (const l of links) if (l.s === hv || l.t === hv) { ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y); }
+      ctx.stroke();
+    }
+    // Dots in their tag's colour (neutral grey without one); pinned ones carry a ring.
+    for (const n of nodes) {
+      if (!onScreen(n)) continue;
+      const g = grow(n);
+      ctx.globalAlpha = g * (lit && !lit.has(n.id) ? 1 - dim * 0.75 : 1);
+      ctx.fillStyle = n.color || colours.node;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * (0.4 + 0.6 * g) * (n === lit?.hub ? 1 + 0.15 * dim : 1), 0, Math.PI * 2);
+      ctx.fill();
+      if (n.pin) { ctx.fillStyle = colours.halo; ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 0.38, 0, Math.PI * 2); ctx.fill(); }
+      if (n.pinned) {
+        ctx.strokeStyle = colours.ring;
+        ctx.lineWidth = 1.5 / k;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3.5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    // Holding a dot: a ring fills in until it pins; then a short pulse.
+    if (press && press.node && press.mode === 'pending') {
+      const t = (now - press.t0 - 120) / (HOLD - 120);
+      if (t > 0) {
+        const n = press.node;
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = colours.accent;
+        ctx.lineWidth = 2 / k;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6 / Math.max(k, 0.5), -Math.PI / 2, -Math.PI / 2 + Math.min(1, t) * Math.PI * 2); ctx.stroke();
+      }
+    }
+    if (pulse) {
+      const t = (now - pulse.t0) / 600;
+      if (t < 1) {
+        const n = pulse.node;
+        ctx.globalAlpha = 1 - t;
+        ctx.strokeStyle = colours.accent;
+        ctx.lineWidth = 2 / k;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (6 + t * 10) / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+      } else pulse = null;
+    }
+
+    // The dot chosen from the keyboard.
+    if (kbd && host.matches(':focus-visible')) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = colours.accent;
+      ctx.lineWidth = 2 / k;
+      ctx.beginPath(); ctx.arc(kbd.x, kbd.y, kbd.r + 5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Labels, at screen size: they fade out as you zoom out (the hovered dot's stay).
+    const f = params.fade;
+    const show = Math.min(1, Math.max(0, (k - f * 0.75) / (f * 0.5)));
+    if (show > 0 || lit) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const size = 12;
+      ctx.font = `500 ${size}px ${colours.font}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = colours.halo;
+      for (const n of nodes) {
+        const near = lit && lit.has(n.id);
+        let a = n === kbd ? 1 : show;
+        if (lit) a = near ? Math.max(show, n === lit.hub ? dim : show) : show * (1 - dim * 0.75);
+        a *= grow(n);
+        if (a < 0.02 || !onScreen(n)) continue;
+        const sx = view.x + n.x * k;
+        const sy = view.y + (n.y + n.r) * k + 5;
+        ctx.globalAlpha = a;
+        ctx.fillStyle = near && dim ? colours.strong : colours.label;
+        ctx.strokeText(n.label, sx, sy);
+        ctx.fillText(n.label, sx, sy);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* --- View: fit, zoom, saving --- */
+  function bounds() {
     let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
-    for (const p of pos.values()) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
-    const pad = 64;
-    const k = Math.min(1.4, Math.max(0.25, Math.min((w - pad * 2) / Math.max(x1 - x0, 1), (hh - pad * 2) / Math.max(y1 - y0, 1))));
-    view = { k, x: w / 2 - ((x0 + x1) / 2) * k, y: hh / 2 - ((y0 + y1) / 2) * k };
-    apply();
+    for (const n of nodes) { x0 = Math.min(x0, n.x - n.r); y0 = Math.min(y0, n.y - n.r); x1 = Math.max(x1, n.x + n.r); y1 = Math.max(y1, n.y + n.r); }
+    return { x0, y0, x1, y1 };
+  }
+  let viewAnim = 0;
+  function fit(animate = false) {
+    if (!W || !H) return;
+    let target;
+    if (!nodes.length) target = { k: 1, x: W / 2, y: H / 2 };
+    else {
+      // Room for the labels (screen-sized) and for the controls floating over the graph.
+      const hr = host.getBoundingClientRect();
+      const seg = $('#conn-view');
+      const top = Math.max(24, seg && seg.offsetParent ? seg.getBoundingClientRect().bottom - hr.top + 12 : 24);
+      const bottom = Math.max(24, hr.bottom - tools.getBoundingClientRect().top + 12);
+      if (colours) ctx.font = `500 12px ${colours.font}`;
+      let label = 0;
+      for (const n of nodes) label = Math.max(label, ctx.measureText(n.label).width / 2);
+      const side = Math.min(label + 12, W * 0.3);
+      const b = bounds();
+      const k = clampK(Math.min(1.6, (W - side * 2) / Math.max(b.x1 - b.x0, 1), (H - top - bottom - 20) / Math.max(b.y1 - b.y0, 1)));
+      target = { k, x: W / 2 - ((b.x0 + b.x1) / 2) * k, y: top + (H - top - bottom - 20) / 2 - ((b.y0 + b.y1) / 2) * k };
+    }
+    cancelAnimationFrame(viewAnim);
+    if (!animate || prefersReducedMotion()) { view = target; changedView(); return; }
+    const from = { ...view };
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = ease(Math.min(1, (now - t0) / 360));
+      // Zoom in log space so it doesn't lurch.
+      const k = Math.exp(Math.log(from.k) + (Math.log(target.k) - Math.log(from.k)) * t);
+      const cx = (W / 2 - from.x) / from.k + (((W / 2 - target.x) / target.k) - ((W / 2 - from.x) / from.k)) * t;
+      const cy = (H / 2 - from.y) / from.k + (((H / 2 - target.y) / target.k) - ((H / 2 - from.y) / from.k)) * t;
+      view = { k, x: W / 2 - cx * k, y: H / 2 - cy * k };
+      changedView();
+      if (t < 1) viewAnim = requestAnimationFrame(step);
+    };
+    viewAnim = requestAnimationFrame(step);
   }
   function zoomAt(px, py, factor) {
-    touched = true;
+    cancelAnimationFrame(viewAnim);
     const k = clampK(view.k * factor);
     const wx = (px - view.x) / view.k;
     const wy = (py - view.y) / view.k;
     view = { k, x: px - wx * k, y: py - wy * k };
-    schedule();
+    changedView();
   }
-  const zoomCentre = (factor) => zoomAt(host.clientWidth / 2, host.clientHeight / 2, factor);
-
-  /** Draws the graph; the caller puts `host` in the page, then calls settle(). */
-  function render(nodes, edges) {
-    const s = `${nodes.map((n) => n.id).sort().join()}/${edges.map((e) => e.key).sort().join()}`;
-    if (s !== sig) { layout(nodes, edges); sig = s; needsFit = true; }
-    const degree = new Map();
-    edges.forEach((e) => { degree.set(e.from, (degree.get(e.from) || 0) + 1); degree.set(e.to, (degree.get(e.to) || 0) + 1); });
-    world = svg('g', { class: 'graph__world' });
-    const lines = svg('g', { class: 'graph__edges' });
-    for (const e of edges) {
-      const a = pos.get(e.from);
-      const b = pos.get(e.to);
-      lines.append(svg('line', { class: 'gedge', x1: a.x.toFixed(1), y1: a.y.toFixed(1), x2: b.x.toFixed(1), y2: b.y.toFixed(1), 'data-a': e.from, 'data-b': e.to }));
-    }
-    const dots = svg('g', { class: 'graph__nodes' });
-    for (const n of nodes) {
-      const p = pos.get(n.id);
-      const d = degree.get(n.id) || 0;
-      const pin = n.type === 'pin';
-      const name = Links.title(n);
-      const r = pin ? 11 : 5 + Math.min(d, 6) * 1.1;
-      const g = svg('g', {
-        class: `gnode gnode--${pin ? 'pin' : 'note'}${d ? '' : ' is-alone'}`, transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`,
-        tabindex: '0', role: 'button', 'data-id': n.id, 'aria-label': `${pin ? 'Pin' : 'Note'}: ${name}${d ? `, ${pluralise(d, 'link')}` : ''}`,
-      });
-      g.append(svg('circle', { class: 'gnode__dot', r: r.toFixed(1) }));
-      if (pin) g.append(svg('use', { class: 'gnode__icon', href: '#i-pin', x: '-6.5', y: '-6.5', width: '13', height: '13' }));
-      const label = svg('text', { class: 'gnode__label', y: (r + 15).toFixed(1), 'text-anchor': 'middle' });
-      label.textContent = name.length > 26 ? `${name.slice(0, 25)}…` : name;
-      g.append(label);
-      dots.append(g);
-    }
-    world.append(lines, dots);
-    const canvas = svg('svg', { class: 'graph__svg', role: 'group', 'aria-label': `Graph of ${pluralise(nodes.length, 'note or pin', 'notes and pins')}, ${pluralise(edges.length, 'link')}` });
-    canvas.append(world);
-    const tool = (name, label, run) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': label, 'data-tip': label, 'data-tip-align': 'end', onclick: run }, icon(name));
-    host.replaceChildren();
-    appendChildren(host, [canvas,
-      edges.length ? null : h('p', { class: 'graph__hint', text: 'No links yet. Highlight words in a note and use the note link button (or type [[) to connect it to another note.' }),
-      h('div', { class: 'graph__tools' },
-        tool('minus', 'Zoom out', () => zoomCentre(1 / 1.25)),
-        tool('plus', 'Zoom in', () => zoomCentre(1.25)),
-        tool('fit', 'Fit to view', fit))]);
-    return host;
+  const zoomCentre = (factor) => zoomAt(W / 2, H / 2, factor);
+  function changedView() { layoutDirty = true; saveSoon(); kick(); }
+  /** Puts the view back where it was left (its centre and zoom), or fits the graph. */
+  function placeView() {
+    const v = Store.get().graph.view;
+    if (v) view = { k: v.k, x: W / 2 - v.cx * v.k, y: H / 2 - v.cy * v.k };
+    else fit();
+    placed = true;
   }
-  function settle() { if (needsFit) fit(); else apply(); }
-  // A new window size refits the graph, unless you've moved it yourself.
-  new ResizeObserver(() => { if (host.isConnected && !touched) fit(); }).observe(host);
-
-  /* --- Hover / focus: a node lights up its own links --- */
-  function focusNode(g) {
-    $$('.is-near', host).forEach((x) => x.classList.remove('is-near'));
-    host.classList.toggle('is-focus', !!g);
-    if (!g) return;
-    const id = g.dataset.id;
-    g.classList.add('is-near');
-    $$('.gedge', host).forEach((l) => {
-      if (l.dataset.a !== id && l.dataset.b !== id) return;
-      l.classList.add('is-near');
-      const other = host.querySelector(`.gnode[data-id="${CSS.escape(l.dataset.a === id ? l.dataset.b : l.dataset.a)}"]`);
-      if (other) other.classList.add('is-near');
-    });
+  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(saveLayout, 400); }
+  /** Writes positions, pins and the view to state.graph (saved with everything else, and in backups). */
+  function saveLayout() {
+    clearTimeout(saveTimer);
+    if (!layoutDirty || !graphRef || Store.get().graph !== graphRef) return; // nothing new, or the data was replaced (restore, reset)
+    layoutDirty = false;
+    const pos = {};
+    for (const n of nodes) pos[n.id] = n.pinned ? [round1(n.x), round1(n.y), 1] : [round1(n.x), round1(n.y)];
+    const v = W && placed ? { cx: round1((W / 2 - view.x) / view.k), cy: round1((H / 2 - view.y) / view.k), k: Math.round(view.k * 1000) / 1000 } : graphRef.view;
+    const next = { pos, view: v };
+    graphRef = next;
+    Store.update((s) => { s.graph = next; }, 'graph');
   }
-  host.addEventListener('pointerover', (e) => { if (e.pointerType === 'mouse' && !host.classList.contains('is-panning')) focusNode(e.target.closest('.gnode')); });
-  host.addEventListener('pointerleave', () => focusNode(null));
-  host.addEventListener('focusin', (e) => focusNode(e.target.closest('.gnode')));
-  host.addEventListener('focusout', () => focusNode(null));
-  host.addEventListener('keydown', (e) => {
-    const g = e.target.closest('.gnode');
-    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); Links.open(g.dataset.id); }
-    else if (e.key === '+' || e.key === '=') zoomCentre(1.25);
-    else if (e.key === '-') zoomCentre(1 / 1.25);
-  });
+  Persistence.onFlush(saveLayout);
 
-  /* --- Pan (drag), pinch and wheel zoom, tap to open --- */
+  /* --- Size: sharp on high-density screens --- */
+  new ResizeObserver(() => {
+    const r = host.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const nextDpr = Math.min(window.devicePixelRatio || 1, 3);
+    if (r.width === W && r.height === H && nextDpr === dpr) return;
+    if (placed && W && H) { view.x += (r.width - W) / 2; view.y += (r.height - H) / 2; } // keep the middle in the middle
+    W = r.width; H = r.height; dpr = nextDpr;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    if (!placed) placeView();
+    if (colours) draw(performance.now());
+    kick();
+  }).observe(host);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveLayout(); });
+
+  /* --- Pointers: tap, drag and throw, hold to pin, pan, pinch --- */
   const pointers = new Map();
-  let gesture = null;
-  let moved = false;
-  let downNode = null;
-  const local = (p) => { const r = host.getBoundingClientRect(); return { x: p.x - r.left, y: p.y - r.top }; };
-  function startPan() {
-    const [p] = [...pointers.values()];
-    gesture = { kind: 'pan', x: p.x, y: p.y, vx: view.x, vy: view.y };
+  let press = null;   // { node, sx, sy, vx, vy, ox, oy, t0, mode: pending|drag|pan|held, timer, samples }
+  let pinch = null;
+  const local = (e) => { const r = host.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const toWorld = (p) => ({ x: (p.x - view.x) / view.k, y: (p.y - view.y) / view.k });
+  function hit(p, slop) {
+    const w = toWorld(p);
+    let best = null;
+    let bestD = Infinity;
+    for (const n of nodes) {
+      const reach = n.r + slop / view.k;
+      const d = (n.x - w.x) ** 2 + (n.y - w.y) ** 2;
+      if (d <= reach * reach && d < bestD) { best = n; bestD = d; }
+    }
+    return best;
+  }
+  function setHover(n) {
+    if (n === hover) return;
+    hover = n;
+    canvas.style.cursor = n ? 'pointer' : '';
+    if (n) {
+      lit = new Set([n.id]);
+      lit.hub = n;
+      for (const l of links) { if (l.s === n) lit.add(l.t.id); else if (l.t === n) lit.add(l.s.id); }
+    }
+    kick();
+  }
+  function release(pr, throwIt) {
+    const n = pr.node;
+    alphaTarget = 0;
+    if (n.pinned) { n.fx = n.x; n.fy = n.y; layoutDirty = true; return; }
+    n.fx = null; n.fy = null;
+    if (!throwIt) return;
+    // The throw: the finger's speed over its last ~80 ms, if it was still moving when it let go.
+    const now = performance.now();
+    const recent = pr.samples.filter((s) => now - s.t < 100);
+    if (recent.length < 2 || now - recent[recent.length - 1].t > 50) return;
+    const a = recent[0]; const b = recent[recent.length - 1];
+    const dt = Math.max(8, b.t - a.t);
+    let vx = ((b.x - a.x) / dt) * TICK;
+    let vy = ((b.y - a.y) / dt) * TICK;
+    const max = 70 / view.k;
+    const sp = Math.hypot(vx, vy);
+    if (sp > max) { vx *= max / sp; vy *= max / sp; }
+    n.vx = vx; n.vy = vy;
+    alpha = Math.min(alpha, 0.05); // cool down, so the throw plays out before the graph gently settles around it
   }
   function startPinch() {
     const [a, b] = [...pointers.values()];
-    gesture = { kind: 'pinch', d: Math.hypot(a.x - b.x, a.y - b.y) || 1, m: local({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }), view: { ...view } };
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, m: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, view: { ...view } };
   }
-  host.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('.graph__tools') || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    try { host.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.size === 1) { moved = false; downNode = e.target.closest('.gnode'); startPan(); }
-    else if (pointers.size === 2) { moved = true; startPinch(); }
-  });
-  host.addEventListener('pointermove', (e) => {
-    if (!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (!gesture) return;
-    if (gesture.kind === 'pan') {
-      const ddx = e.clientX - gesture.x;
-      const ddy = e.clientY - gesture.y;
-      if (!moved && Math.hypot(ddx, ddy) < 5) return;
-      if (!moved) { moved = true; touched = true; host.classList.add('is-panning'); focusNode(null); }
-      view = { ...view, x: gesture.vx + ddx, y: gesture.vy + ddy };
-    } else {
-      const [a, b] = [...pointers.values()];
-      const m = local({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-      const v = gesture.view;
-      const k = clampK(v.k * (Math.hypot(a.x - b.x, a.y - b.y) / gesture.d));
-      const wx = (gesture.m.x - v.x) / v.k;
-      const wy = (gesture.m.y - v.y) / v.k;
-      view = { k, x: m.x - wx * k, y: m.y - wy * k };
-      touched = true;
+  function startPan(p) { press = { node: null, sx: p.x, sy: p.y, vx: view.x, vy: view.y, t0: performance.now(), mode: 'pan', samples: [] }; }
+  function hold() {
+    if (!press || press.mode !== 'pending' || !press.node) return;
+    const n = press.node;
+    press.mode = 'held';
+    n.pinned = !n.pinned;
+    if (n.pinned) { n.fx = n.x; n.fy = n.y; n.vx = 0; n.vy = 0; } else { n.fx = null; n.fy = null; alpha = Math.max(alpha, 0.08); }
+    pulse = prefersReducedMotion() ? null : { node: n, t0: performance.now() };
+    layoutDirty = true;
+    saveSoon();
+    kick();
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    cancelAnimationFrame(viewAnim);
+    try { canvas.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+    const p = local(e);
+    pointers.set(e.pointerId, p);
+    if (pointers.size === 1) {
+      const n = hit(p, e.pointerType === 'mouse' ? 4 : 12);
+      press = { node: n, sx: p.x, sy: p.y, vx: view.x, vy: view.y, t0: performance.now(), mode: n ? 'pending' : 'pan-pending', samples: [] };
+      if (n) { press.timer = setTimeout(hold, HOLD); const w = toWorld(p); press.ox = n.x - w.x; press.oy = n.y - w.y; }
+      kick();
+    } else if (pointers.size === 2) {
+      // A second finger turns whatever the first was doing into a pinch.
+      if (press) { clearTimeout(press.timer); if (press.mode === 'drag') release(press, false); press = null; }
+      host.classList.remove('is-panning', 'is-dragging');
+      startPinch();
     }
-    schedule();
   });
-  const end = (e) => {
+  canvas.addEventListener('pointermove', (e) => {
+    const p = local(e);
+    if (!pointers.has(e.pointerId)) {
+      // Hovering with a mouse or a pencil lights up a dot and its links.
+      if ((e.pointerType === 'mouse' || e.pointerType === 'pen') && !pointers.size) setHover(hit(p, 4));
+      return;
+    }
+    pointers.set(e.pointerId, p);
+    if (pinch) {
+      if (pointers.size < 2) return;
+      const [a, b] = [...pointers.values()];
+      const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const v = pinch.view;
+      const k = clampK(v.k * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+      const wx = (pinch.m.x - v.x) / v.k;
+      const wy = (pinch.m.y - v.y) / v.k;
+      view = { k, x: m.x - wx * k, y: m.y - wy * k };
+      changedView();
+      return;
+    }
+    if (!press) return;
+    const dist = Math.hypot(p.x - press.sx, p.y - press.sy);
+    if (press.mode === 'pending' || press.mode === 'pan-pending') {
+      if (dist < MOVE) return;
+      clearTimeout(press.timer);
+      if (press.node) {
+        press.mode = 'drag';
+        host.classList.add('is-dragging');
+        setHover(null);
+        press.node.fx = press.node.x; press.node.fy = press.node.y;
+        alphaTarget = 0.3;
+        alpha = Math.max(alpha, 0.3);
+      } else {
+        press.mode = 'pan';
+        host.classList.add('is-panning');
+        setHover(null);
+      }
+    }
+    if (press.mode === 'drag') {
+      const w = toWorld(p);
+      const n = press.node;
+      n.fx = w.x + press.ox; n.fy = w.y + press.oy;
+      n.x = n.fx; n.y = n.fy;
+      press.samples.push({ t: performance.now(), x: n.fx, y: n.fy });
+      if (press.samples.length > 12) press.samples.shift();
+      layoutDirty = true;
+      kick();
+    } else if (press.mode === 'pan') {
+      view = { ...view, x: press.vx + (p.x - press.sx), y: press.vy + (p.y - press.sy) };
+      changedView();
+    }
+  });
+  function end(e) {
     if (!pointers.has(e.pointerId)) return;
     pointers.delete(e.pointerId);
-    if (pointers.size === 1) { startPan(); return; }
-    if (pointers.size) return;
-    host.classList.remove('is-panning');
-    if (e.type === 'pointerup' && !moved && downNode) Links.open(downNode.dataset.id);
-    gesture = null;
-    downNode = null;
-  };
-  host.addEventListener('pointerup', end);
-  host.addEventListener('pointercancel', end);
+    if (pinch) {
+      if (pointers.size === 1) { pinch = null; startPan([...pointers.values()][0]); }
+      else if (!pointers.size) pinch = null;
+      return;
+    }
+    if (pointers.size || !press) return;
+    clearTimeout(press.timer);
+    host.classList.remove('is-panning', 'is-dragging');
+    const pr = press;
+    press = null;
+    if (pr.mode === 'drag') { release(pr, e.type === 'pointerup'); kick(); }
+    else if (pr.mode === 'pending' && e.type === 'pointerup') { setHover(null); Links.open(pr.node.id); }
+    if (e.pointerType === 'mouse' && e.type === 'pointerup') setHover(hit(local(e), 4));
+    kick();
+  }
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('pointerleave', (e) => { if (!pointers.has(e.pointerId)) setHover(null); });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault()); // a long press pins; no callout
   host.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const p = local({ x: e.clientX, y: e.clientY });
+    const p = local(e);
     const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     zoomAt(p.x, p.y, Math.exp(-delta * (e.ctrlKey ? 0.01 : 0.0015))); // ctrl+wheel is a trackpad pinch
   }, { passive: false });
@@ -5202,9 +5710,60 @@ const ConnGraph = (() => {
   host.addEventListener('gesturechange', (e) => {
     e.preventDefault();
     if (pointers.size > 1) return;
-    const p = local({ x: e.clientX, y: e.clientY });
+    const p = local(e);
     zoomAt(p.x, p.y, clampK(gestureK * e.scale) / view.k);
   });
+  /* --- Keyboard: arrows step through the dots in reading order (row by row), Enter opens, P pins --- */
+  const DIRS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  function choose(n) {
+    kbd = n;
+    if (!n) return;
+    const sx = view.x + n.x * view.k;
+    const sy = view.y + n.y * view.k;
+    if (sx < 40 || sx > W - 40 || sy < 40 || sy > H - 40) { view = { ...view, x: W / 2 - n.x * view.k, y: H / 2 - n.y * view.k }; changedView(); }
+    said.textContent = `${n.label}${n.deg ? `, ${pluralise(n.deg, 'connection')}` : ''}${n.pinned ? ', pinned' : ''}`;
+    kick();
+  }
+  function step(dir) {
+    if (!nodes.length) return;
+    const row = params.dist * 0.6;
+    const order = nodes.slice().sort((a, b2) => (Math.round(a.y / row) - Math.round(b2.y / row)) || (a.x - b2.x));
+    const i = kbd ? order.indexOf(kbd) : -1;
+    choose(order[i < 0 ? (dir > 0 ? 0 : order.length - 1) : (i + dir + order.length) % order.length]);
+  }
+  host.addEventListener('keydown', (e) => {
+    if (e.target !== host || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === '+' || e.key === '=') zoomCentre(1.25);
+    else if (e.key === '-') zoomCentre(1 / 1.25);
+    else if (e.key === '0') fit(true);
+    else if (DIRS[e.key]) step(DIRS[e.key]);
+    else if ((e.key === 'Enter' || e.key === ' ') && kbd) Links.open(kbd.id);
+    else if ((e.key === 'p' || e.key === 'P') && kbd) {
+      kbd.pinned = !kbd.pinned;
+      if (kbd.pinned) { kbd.fx = kbd.x; kbd.fy = kbd.y; } else { kbd.fx = null; kbd.fy = null; alpha = Math.max(alpha, 0.08); }
+      layoutDirty = true;
+      saveSoon();
+      choose(kbd);
+    } else return;
+    e.preventDefault();
+  });
+  host.addEventListener('focus', () => kick());
+  host.addEventListener('blur', () => kick());
+
+  /** Brings the graph up to date with the notes and settings; the caller puts `host` in the page. */
+  function render(items, edges) {
+    const before = params;
+    setData(items, edges);
+    if (before && (before.dist !== params.dist || before.charge !== params.charge || before.centre !== params.centre || before.cluster !== params.cluster)) alpha = Math.max(alpha, 0.3);
+    return host;
+  }
+  /** Called once `host` is in the page. */
+  function settle() {
+    readColours(); // the theme may have changed
+    if (W && !placed) placeView();
+    draw(performance.now());
+    kick();
+  }
   return { render, settle, fit };
 })();
 
@@ -5284,14 +5843,28 @@ const Connections = (() => {
     const nodes = Links.nodes();
     const edges = Links.edges();
     const legacy = Items.all('connection').length;
-    const showGraph = nodes.length && view === 'graph';
+    const showGraph = view === 'graph';
+    page.closest('.page').classList.toggle('is-graph', showGraph);
+    $('.app').dataset.conn = view;
+    if (showGraph) {
+      // The graph stays in the page between updates; only the notice (rare) comes and goes.
+      const host = ConnGraph.render(nodes, edges);
+      host.classList.toggle('is-empty', !nodes.length);
+      const notice = legacy ? legacyNotice(legacy) : null;
+      if (host.parentNode !== page) page.replaceChildren(...[notice, host].filter(Boolean));
+      else {
+        const cur = $('.conn-notice', page);
+        if (notice) { if (cur) cur.replaceWith(notice); else page.prepend(notice); } else if (cur) cur.remove();
+      }
+      ConnGraph.settle();
+      return;
+    }
     page.replaceChildren();
     appendChildren(page, [
       legacy ? legacyNotice(legacy) : null,
       !nodes.length
         ? emptyState({ icon: 'connections', title: 'No connections yet', text: 'Link one note to another — highlight words and use the note link button, or type [[ — and they’ll appear here.', action: { label: 'Go to Notes', id: 'go-notes', icon: 'notes' } })
-        : showGraph ? ConnGraph.render(nodes, edges) : listView(nodes, edges)]);
-    if (showGraph) ConnGraph.settle();
+        : listView(nodes, edges)]);
   }
   return { render, renderPage, migrate };
 })();
@@ -6373,6 +6946,7 @@ const NotesPage = (() => {
       colourGroup(n.meta.color, (c) => Items.update(id, { meta: { color: c } })),
       menuSep(),
       menuItem('files', 'Move to folder…', () => { Popover.close(false); folderPicker(id, getAnchor() || anchor); }),
+      menuItem('connections', 'Connection tag…', () => { Popover.close(false); tagPicker(id, getAnchor() || anchor); }),
       menuItem('inbox', n.meta.archived ? 'Unarchive' : 'Archive', () => { Popover.close(false); archive(id, !n.meta.archived); }),
       menuSep(),
       menuItem('trash', 'Delete', () => { Popover.close(false); trash(id); }, { danger: true }),
@@ -6389,6 +6963,47 @@ const NotesPage = (() => {
         menuItem('notes', 'No folder', () => { Popover.close(false); moveTo(id, null); }, { disabled: !cur }),
         ...folders().map((f) => menuItem('files', f.title, () => { Popover.close(false); moveTo(id, f.id); }, { disabled: cur === f.id })),
       ],
+    });
+  }
+  /** Connection tags: pick one, "None", or make a new one. */
+  function tagPicker(id, anchor) {
+    const n = Items.get(id);
+    if (!n) return;
+    const cur = GraphTags.of(n);
+    const pick = (tagId) => { Popover.close(true); if ((cur ? cur.id : null) !== tagId) Items.update(id, { meta: { tag: tagId } }); };
+    const radio = (checked, lead, label, run) => h('button', { class: 'menu__item', type: 'button', role: 'menuitemradio', 'aria-checked': String(checked), onclick: run },
+      lead, h('span', { class: 'menu__text', text: label }), checked ? icon('check', 'menu__check') : null);
+    Popover.open({
+      anchor, key: `ntag:${id}`, label: 'Connection tag',
+      content: [
+        h('div', { class: 'panel__title menu__label', text: 'Connection tag' }),
+        ...GraphTags.list().map((t) => radio(!!cur && cur.id === t.id, h('span', { class: 'tag-dot', style: `--c:${t.color}`, 'aria-hidden': 'true' }), t.name, () => pick(t.id))),
+        radio(!cur, icon('ban'), 'None', () => pick(null)),
+        menuSep(),
+        menuItem('plus', 'New tag', () => { Popover.close(false); tagDialog(id); }),
+      ],
+    });
+  }
+  function tagDialog(id) {
+    const used = new Set(GraphTags.list().map((t) => t.color));
+    let color = (PALETTE.find((c) => !used.has(c.hex)) || PALETTE[0]).hex;
+    const name = h('input', { class: 'input', type: 'text', placeholder: 'e.g. Goals', 'aria-label': 'Tag name', maxlength: 40, autocomplete: 'off' });
+    const error = h('p', { class: 'form-error', role: 'alert' });
+    Dialog.open({
+      title: 'New connection tag', initialFocus: name, dismissOnBackdrop: false,
+      body: h('div', { class: 'form' },
+        h('label', { class: 'field' }, h('span', { class: 'field__label', text: 'Name' }), name),
+        h('div', { class: 'field' }, h('span', { class: 'field__label', text: 'Colour' }), swatchPicker({ value: color, label: 'Tag colour', onPick: (c) => { if (c) color = c; } })),
+        error),
+      actions: ['spacer', { label: 'Cancel' }, { label: 'Create', variant: 'primary', submit: true }],
+      onSubmit: (close) => {
+        const title = name.value.trim();
+        if (!title) { error.textContent = 'Give the tag a name.'; name.focus(); return; }
+        if (GraphTags.list().some((t) => t.name.toLowerCase() === title.toLowerCase())) { error.textContent = `There’s already a tag called “${title}”.`; name.focus(); return; }
+        const tag = GraphTags.create(title, color);
+        Items.update(id, { meta: { tag: tag.id } });
+        close();
+      },
     });
   }
   function filterMenu() {
@@ -6713,10 +7328,6 @@ const NotesSizes = (() => {
 const PAGES = {
   home: { title: 'Home' },
   notes: { title: 'Notes' },
-  files: {
-    title: 'Files', sub: 'Documents, images and references, kept on this device.', icon: 'files',
-    empty: { title: 'Your workspace is ready', text: 'File storage is on its way. Until then, capture links and references and they’ll wait in your Inbox.' },
-  },
   connections: { title: 'Connections' },
   pins: {
     title: 'Pin Board', sub: 'Visual collections and inspiration.', icon: 'pin',
@@ -6910,7 +7521,7 @@ function init() {
   Store.replace(state, 'init');
   Store.subscribe((_, reason) => {
     Persistence.schedule();
-    scheduleRender();
+    if (reason !== 'graph') scheduleRender(); // the graph saving its own layout needs no redraw
     if (reason === 'restore' || reason === 'reset') { Popover.close(false); QuickNotes.sync(true); }
   });
   Calendar.build();

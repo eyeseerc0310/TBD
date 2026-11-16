@@ -17,8 +17,8 @@ universal Quick Capture, themeable settings, and a versioned backup system. The 
 page has a sidebar and the same editor as Home (it moves there while the page is open). The
 sidebar has a search field (with a filter menu) above two collapsible groups, Notes (All
 Notes, Today, This Week, Archive, Trash) and Files (folders); each opens to list its notes. The Connections page shows how notes and
-pins link together, as a graph or a list. Files and Pin Board are in place as workspaces
-ready to grow.
+pins link together, as a graph or a list. Pin Board is in place as a workspace ready to
+grow.
 
 ## Running it
 
@@ -77,7 +77,7 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared), `folder` (a folder id or `null`), `archived`, `trashedAt` (when it went to Trash; notes are deleted 30 days later). Captures are the saved notes shown on the Notes page and the Home notes card |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared), `folder` (a folder id or `null`), `archived`, `trashedAt` (when it went to Trash; notes are deleted 30 days later), `tag` (a connection tag id or `null`). Captures are the saved notes shown on the Notes page and the Home notes card |
 | `folder` | `color`, `order`. Notes folders; Projects, Ideas, Reference and Personal are created once (older backups get them too) |
 | `pin` | `attached` (ids the pin is attached to), `html` (optional body), `linkedAt`. The Pin Board UI is still to come; pins already take part in Connections |
 | `connection` | Legacy saved links/contacts from the first Connections page: `target`, `kind`, `color`, `order`. Kept as they are; the Connections page offers to move them into Notes |
@@ -101,7 +101,14 @@ Application state is `{ items, settings, ui, timer }`:
     `cardSizes` (`null` for the defaults, or `{ cols: [a, b, c], split }`: the Home columns'
     shares of the width and the Clock/Calendar card's share of the left column, as fractions
     so they suit any screen), `notesSizes` (the Notes page's two columns, the same way)
+  - Graph: `graphLinkDistance` (30–300), `graphRepulsion`, `graphCentre`, `graphCluster`,
+    `graphFriction` (0–100 each), `graphNodeSize` (3–16 px), `graphLabelFade` (30–200, the
+    zoom ×100 below which labels fade out), `graphTags` (connection tags:
+    `[{ id, name, color }]`)
 - `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `notesOpen` (which Notes sidebar groups and sections are open), `foldersSeeded`
+- `graph` — the Connections graph as it was left: `pos` (`{ id: [x, y] }`, with a third
+  value `1` when the dot is pinned) and `view` (`{ cx, cy, k }`: the point at the centre and
+  the zoom, 0.2–4). Only dots without a saved position are placed by the simulation
 
 Older data without the newer fields loads with defaults; tasks without an `order`
 are numbered by creation time.
@@ -128,7 +135,7 @@ Mustard `#D7C62C`, Clay `#D77A61`.
   "version": 1,
   "app": "STILL",
   "createdAt": "2026-11-14T08:00:00.000Z",
-  "data": { "items": [], "settings": {}, "ui": {} }
+  "data": { "items": [], "settings": {}, "ui": {}, "graph": {} }
 }
 ```
 
@@ -215,5 +222,22 @@ both ways, and a pin connects with what it's attached to. Web and Wikipedia link
 never connections. Nothing is stored apart from the items: a note's `links` are read
 from the `data-note` links in its text whenever it is saved or loaded (backups
 included), so removing the last link to a note removes the connection. The Connections
-page draws them as a graph (drag to pan, pinch or scroll to zoom, tap a node to open
-it) or a list with "Links to" and "Linked from". Each open note shows its Backlinks.
+page draws them as a graph or a list with "Links to" and "Linked from". Each open note
+shows its Backlinks.
+
+The graph fills the page and is drawn on a canvas (sharp at any pixel density), laid out
+by a small force simulation: links pull, dots push apart, a gentle pull keeps it
+centred, notes with the same connection tag drift together, and dots don't overlap.
+Spacing tightens as the graph grows, so large graphs get denser instead of spreading
+off-screen. It only runs while something moves and stops when it settles, when another
+page is shown or when the app is in the background.
+
+- Drag empty space to pan; pinch, scroll or use the buttons to zoom (0.2×–4×, toward the
+  pointer). Labels fade out as you zoom out.
+- Tap a dot to open its note. Drag a dot to move it (its links pull their notes along); a
+  throw keeps it sliding until friction stops it. Hold a dot (500 ms) to pin it in place
+  (a ring marks it); hold again to unpin.
+- Keyboard: arrows step through the dots, Enter opens one, P pins it, + / − zoom.
+- Connection tags (a note's ⋯ menu on the Notes page → Connection tag) colour a note's
+  dot and group it with others of the same tag; untagged dots are grey.
+- Settings → Graph has the forces, sizes and label fade, and lists the tags.
