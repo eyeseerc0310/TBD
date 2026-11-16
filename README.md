@@ -17,8 +17,10 @@ resize them (double-tap one to reset it; Settings → Appearance → Reset card 
 resets all). Around it:
 universal Quick Capture, themeable settings, and a versioned backup system. The Notes
 page has a sidebar and the same editor as Home (it moves there while the page is open). The
-sidebar has a search field (with a filter menu) above two collapsible groups, Notes (All
-Notes, Today, This Week, Archive, Trash) and Files (folders); each opens to list its notes. The Connections page shows how notes and
+sidebar is folders: a search field (with a filter menu) with Archive and Trash buttons beside
+it, then each folder as a rounded row that opens to list its notes ("Unsorted" first, for
+notes in no folder), and "New folder" at the end. Drag folders, or the notes in them, into a
+new order (a note into another folder too); folders take a colour from their ⋯ menu. The Connections page shows how notes and
 pins link together, as a graph or a list. Pin Board is in place as a workspace ready to
 grow.
 
@@ -79,8 +81,8 @@ Type-specific `meta`:
 | --- | --- |
 | `task` | `date` (`YYYY-MM-DD`), `done` (boolean), `order` (position within its day), `color` (`#rrggbb` or `null`) |
 | `event` | `start`, `end` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM` or `null`), `allDay` |
-| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared), `folder` (a folder id or `null`), `archived`, `trashedAt` (when it went to Trash; notes are deleted 30 days later), `tag` (a connection tag id or `null`). Captures are the saved notes shown on the Notes page and the Home notes card |
-| `folder` | `color`, `order`. Notes folders; Projects, Ideas, Reference and Personal are created once (older backups get them too) |
+| `capture` | `kind` (`"text"` today), `category`, `inbox`, `color`, `pinned`, `html` (formatted body; `content` keeps the plain text), `linkedAt` (when each note link first appeared), `folder` (a folder id or `null`: Unsorted), `order` (its place in its folder once you've arranged it, or `null`: newest first), `archived`, `trashedAt` (when it went to Trash; notes are deleted 30 days later), `tag` (a connection tag id or `null`). Captures are the saved notes shown on the Notes page and the Home notes card |
+| `folder` | `color` (or `null`), `order` (its place in the sidebar). Notes folders; Projects, Ideas, Reference and Personal are created once (older backups get them too) |
 | `pin` | `attached` (ids the pin is attached to), `html` (optional body), `linkedAt`. The Pin Board UI is still to come; pins already take part in Connections |
 | `connection` | Legacy saved links/contacts from the first Connections page: `target`, `kind`, `color`, `order`. Kept as they are; the Connections page offers to move them into Notes |
 | `note` | `quick: true` marks the Quick Notes pad on Home (its text is `content`). "Add to Notes" moves the text into a `capture` (category `Note`, `source: "quick-notes"`) on the Notes page |
@@ -107,7 +109,7 @@ Application state is `{ items, settings, ui, timer }`:
     `graphFriction` (0–100 each), `graphNodeSize` (3–16 px), `graphLabelFade` (30–200, the
     zoom ×100 below which labels fade out), `graphTags` (connection tags:
     `[{ id, name, color }]`)
-- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `notesOpen` (which Notes sidebar groups and sections are open), `foldersSeeded`
+- `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`unsorted` · `folder:<id>`: the folder you're in, where a new note goes; `archive` · `trash`: those lists), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `notesOpen` (which Notes folders are open), `foldersSeeded`
 - `graph` — the Connections graph as it was left: `pos` (`{ id: [x, y] }`, with a third
   value `1` when the dot is pinned), and a camera for each place it's shown, `view` (the
   Connections page) and `card` (the Home card): `{ cx, cy, k }`, the point at the centre and
@@ -226,7 +228,7 @@ never connections. Nothing is stored apart from the items: a note's `links` are 
 from the `data-note` links in its text whenever it is saved or loaded (backups
 included), so removing the last link to a note removes the connection. The Connections
 page draws them as a graph or a list with "Links to" and "Linked from"; the Home
-Connections card shows the same graph. Each open note shows its Backlinks.
+Connections card shows the same graph.
 
 One model and one simulation serve both graphs (moving a dot in one moves it in the
 other); each view is a canvas with its own camera. The Home card fits the graph when it
