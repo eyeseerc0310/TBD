@@ -3,9 +3,9 @@
 A calm, local-first personal workspace — a place to capture, organise and revisit
 thoughts, tasks, events and ideas.
 
-Home has three columns: a clock / calendar card (swipe, or use the ‹ › at the ends of its
-divider line, to switch views; the calendar scrolls up and down through the months and
-snaps to each one) above a Connections card (the graph of your notes, the same one as on
+Home has three columns: a clock / calendar card (swipe, or use the ‹ › at its edges, which sit
+on the divider line both views share, to switch views; the calendar's ‹ › and Today change
+the month, and its content scrolls down to the Scheduled list) above a Connections card (the graph of your notes, the same one as on
 the Connections page, with its own zoom), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a

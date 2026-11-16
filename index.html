@@ -553,7 +553,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 /* Each view sits on top of the other; transforms slide them in and out. */
 .view {
   position: absolute; inset: 0; min-width: 0; min-height: 0;
-  padding: 0 calc(var(--pad) + 10px); /* room for the arrows at the ends of the divider */
+  padding: 0 calc(var(--pad) + 10px); /* room for the edge arrows */
   display: flex; flex-direction: column;
   transition: transform var(--t-slow) var(--ease);
 }
@@ -562,21 +562,28 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .view--calendar .empty { flex-direction: row; padding: var(--s3) 0; }
 #agenda-list { display: flex; flex-direction: column; gap: 6px; }
 .view--calendar .empty .icon { width: 16px; height: 16px; }
-/* The divider in each view carries the view arrows: ‹ at its left end, › at its right, the
-   line between them. The row is as tall as the arrows' 32px tap area and overlaps its
-   neighbours by half of that, so the line sits exactly where a plain divider would. */
-.views__line { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 2px; height: 32px; margin: calc(var(--s2) - 16px) -10px -16px; pointer-events: none; }
-.views__rule { flex: 1; height: 1px; background: var(--border); }
+/* The view arrows sit at the card's edges, fixed to the card: at the height of the divider
+   (--line-y, set by TimeCard), which both views line up with, so nothing moves on a switch.
+   32px tap areas; the icons stay small and quiet. */
 .views__arrow {
-  flex: none; width: 32px; height: 32px; display: grid; place-items: center; pointer-events: auto;
+  position: absolute; z-index: 2; top: var(--line-y, 50%); transform: translateY(-50%);
+  width: 32px; height: 32px; display: grid; place-items: center;
   border-radius: var(--r-sm); color: var(--text-3); opacity: 0.6;
   transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .views__arrow:hover, .views__arrow:focus-visible { opacity: 1; color: var(--text); background: var(--hover); }
+.views__arrow--prev { left: 0; }
+.views__arrow--next { right: 0; }
 .views__arrow .icon { width: 16px; height: 16px; }
-.view--calendar .views__line { margin-top: calc(var(--s4) - 16px); }
-.view--calendar .panel__section { margin-top: 0; border-top: 0; }
-.view--clock .timer { margin-top: 0; border-top: 0; }
+/* Calendar view: under its header, the weekdays, the month and Scheduled scroll together while
+   Scheduled is collapsed (its whole list is below the month); expanded, it's as before. The
+   space above Scheduled (--cal-gap) puts its divider on the arrows' line. */
+.cal__body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: none; margin: 0 calc((var(--pad) + 10px) * -1); padding: 0 calc(var(--pad) + 10px); }
+.cal__body::-webkit-scrollbar { display: none; }
+.view--calendar .panel__section { margin-top: var(--cal-gap, var(--s4)); }
+.panel--time:not(.is-expanded) .view--calendar .panel__section { flex: none; }
+.panel--time:not(.is-expanded) #agenda-list { flex: none; max-height: none; overflow: visible; -webkit-mask-image: none; mask-image: none; padding-bottom: var(--s2); }
+.panel--time.is-expanded .cal__body { overflow: hidden; }
 
 /* Scheduled events: a collapsible list under the calendar */
 .agenda__toggle { display: flex; align-items: center; gap: var(--s2); min-width: 0; height: var(--ctl-h-sm); padding: 0 var(--s1); margin-left: calc(var(--s1) * -1); border-radius: var(--r-sm); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
@@ -1031,13 +1038,9 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .cal__month { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; min-width: 0; white-space: nowrap; overflow: hidden; }
 .view--calendar .btn.is-away { color: var(--accent); }
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; flex: none; }
-/* Months scroll vertically, six weeks in view, snapping to each month's first week. */
-.cal__scroll { position: relative; flex: none; height: calc(6 * var(--cal-day) + 5 * 2px); overflow: hidden auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scrollbar-width: none; touch-action: pan-y; }
-.cal__scroll::-webkit-scrollbar { display: none; }
-.cal__day.is-snap { scroll-snap-align: start; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
 .cal__day {
-  position: relative; height: var(--cal-day); border-radius: var(--r-sm);
+  position: relative; height: var(--cal-row, var(--cal-day)); border-radius: var(--r-sm);
   display: grid; place-items: center;
   font-size: var(--fs-sm); font-variant-numeric: tabular-nums; color: var(--text);
   transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
@@ -1673,7 +1676,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                 <div class="clock__digital"><time id="clock-time">--:--</time><span class="clock__side"><span class="clock__zone" id="clock-zone"></span><span class="clock__ampm" id="clock-ampm"></span></span></div>
               </div>
             </div>
-            <div class="views__line"><button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button><span class="views__rule" aria-hidden="true"></span><button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button></div>
             <section class="timer" id="timer" aria-label="Timer">
               <div class="timer__row">
                 <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
@@ -1700,9 +1702,9 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                       <button class="icon-btn icon-btn--sm" type="button" data-action="cal-next" aria-label="Next month"><svg class="icon"><use href="#i-right"/></svg></button>
                     </div>
                   </div>
+                  <div class="cal__body" id="cal-body">
                   <div class="cal__grid" id="cal-dow" aria-hidden="true"></div>
-                  <div class="cal__scroll" id="cal-scroll"><div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div></div>
-                  <div class="views__line"><button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button><span class="views__rule" aria-hidden="true"></span><button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button></div>
+                  <div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div>
                   <section class="panel__section" aria-labelledby="agenda-title">
                     <div class="section-head">
                       <h3 class="subhead"><button class="agenda__toggle" id="agenda-toggle" type="button" data-action="agenda-toggle" aria-expanded="false" aria-controls="agenda-list"><span id="agenda-title">Scheduled</span><span class="agenda__day" id="agenda-day"></span><svg class="icon agenda__chev" aria-hidden="true"><use href="#i-down"/></svg></button></h3>
@@ -1710,9 +1712,12 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                     </div>
                     <ul class="list" id="agenda-list"></ul>
                   </section>
+                  </div>
                 </section>
               </div>
             </div>
+            <button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button>
+            <button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button>
           </article>
 
           <article class="panel glass panel--connections" aria-labelledby="conn-label">
@@ -3376,69 +3381,15 @@ const QuickNotes = (() => {
 /* ---------- Calendar ---------- */
 const Calendar = (() => {
   const grid = $('#cal-grid');
-  const scroller = $('#cal-scroll');
   const dowRow = $('#cal-dow');
   const panel = $('.view--calendar');
-  const title = $('#cal-month');
-  const SPAN = 6;          // months laid out on each side of the one in view
-  let cells = [];          // { btn, num, dots, day, snap }
-  let win = null;          // { start, end, ws, first, last, rows: Map(month → its first week's row) }
-  let shown = null;        // the month whose first week is at the top
-  let target = null;       // a month we're scrolling to (buttons, keys); null while the user scrolls
-  let userScroll = false;  // a swipe, wheel or trackpad scroll is under way
-  let painted = '';
-  let settleTimer = 0;
+  const cells = [];
   let focusDay = null;
-  const dayNum = (key) => Math.round(Dates.parse(key).getTime() / 86400000);
 
-  /* The month grid is one long run of weeks that scrolls vertically and snaps to the
-     first week of each month (a peek of the next month below is fine). Only SPAN months
-     either side are laid out; settling near either end lays out a new run around it. */
-  function layout(centre) {
-    const ws = Settings.get().weekStart;
-    const first = Dates.addMonths(centre, -SPAN);
-    const last = Dates.addMonths(centre, SPAN);
-    const start = Dates.startOfWeek(`${first}-01`, ws);
-    const end = Dates.addDays(Dates.startOfWeek(`${last}-01`, ws), 6 * 7 - 1);
-    const rows = new Map();
-    for (let m = first; m <= last; m = Dates.addMonths(m, 1)) rows.set(m, (dayNum(Dates.startOfWeek(`${m}-01`, ws)) - dayNum(start)) / 7);
-    const snapAt = new Set([...rows.values()].map((r) => r * 7));
-    cells = [];
-    const frag = document.createDocumentFragment();
-    let i = 0;
-    for (let d = start; d <= end; d = Dates.addDays(d, 1), i++) {
-      const dots = h('span', { class: 'cal__dots', 'aria-hidden': 'true' });
-      const num = h('span', { text: String(+d.slice(8)) });
-      const btn = h('button', { class: 'cal__day', type: 'button', dataset: { day: d } }, num, dots);
-      cells.push({ btn, num, dots, day: d, snap: snapAt.has(i) });
-      frag.append(btn);
-    }
-    grid.replaceChildren(frag);
-    win = { start, end, ws, first, last, rows };
-    painted = '';
-  }
-  const pitch = () => (cells.length > 7 ? cells[7].btn.getBoundingClientRect().top - cells[0].btn.getBoundingClientRect().top : 0);
-  /** The laid-out month nearest the top of the scroller. */
-  function monthAtTop() {
-    const p = pitch();
-    if (!p) return shown;
-    const row = scroller.scrollTop / p;
-    let best = null; let bestD = Infinity;
-    for (const [m, r] of win.rows) { const d = Math.abs(r - row); if (d < bestD) { best = m; bestD = d; } }
-    return best;
-  }
-  function scrollToMonth(m, smooth) {
-    const p = pitch();
-    if (!p || !win.rows.has(m)) return;
-    target = m;
-    scroller.scrollTo({ top: win.rows.get(m) * p, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' });
-    if (!smooth) { shown = m; paintMonth(); }
-  }
-
-  /* --- The title: "November 2026" when it fits, else "Nov 2026"; in a very narrow card that
-     steps down in size (to 70%) rather than ever being cut off --- */
-  function fitTitle() {
-    const m = shown || UI.get().calMonth;
+  /* The title: "November 2026" when it fits, else "Nov 2026"; in a very narrow card that
+     steps down in size (to 70%) rather than ever being cut off. */
+  const title = $('#cal-month');
+  function fitTitle(m = UI.get().calMonth) {
     const over = () => title.scrollWidth > title.clientWidth + 0.5;
     title.style.fontSize = '';
     title.textContent = Fmt.monthYear(m);
@@ -3447,45 +3398,22 @@ const Calendar = (() => {
     const base = parseFloat(getComputedStyle(title).fontSize);
     for (let px = Math.floor(base) - 1; over() && px >= Math.round(base * 0.7); px--) title.style.fontSize = `${px}px`;
   }
-  /** Days outside the month in view are dimmed; the title follows the month. */
-  function paintMonth() {
-    for (const c of cells) c.btn.classList.toggle('is-outside', Dates.month(c.day) !== shown);
-    fitTitle();
-  }
-
-  function onScroll() {
-    if (!target) userScroll = true;
-    const m = monthAtTop();
-    if (m && m !== shown) { shown = m; paintMonth(); }
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(settle, 160);
-  }
-  /** At rest: the month in view becomes the calendar's month; near either end, more months are laid out. */
-  function settle() {
-    clearTimeout(settleTimer);
-    const m = monthAtTop();
-    userScroll = false;
-    target = null;
-    if (!m) return;
-    if (m <= Dates.addMonths(win.first, 1) || m >= Dates.addMonths(win.last, -1)) {
-      layout(m);
-      paint(UI.get().calDay);
-      scrollToMonth(m, false);
-      target = null;
-    }
-    if (UI.get().calMonth !== m) UI.set({ calMonth: m });
-  }
 
   function build() {
+    new ResizeObserver(() => fitTitle()).observe($('.cal__bar', panel));
     for (let i = 0; i < 7; i++) dowRow.append(h('div', { class: 'cal__dow' }));
+    for (let i = 0; i < 42; i++) {
+      const dots = h('span', { class: 'cal__dots', 'aria-hidden': 'true' });
+      const num = h('span');
+      const btn = h('button', { class: 'cal__day', type: 'button' }, num, dots);
+      cells.push({ btn, num, dots });
+      grid.append(btn);
+    }
     grid.addEventListener('click', (e) => {
       const btn = e.target.closest('.cal__day');
       if (btn) select(btn.dataset.day);
     });
     grid.addEventListener('keydown', onKey);
-    scroller.addEventListener('scroll', onScroll, { passive: true });
-    scroller.addEventListener('scrollend', settle);
-    new ResizeObserver(fitTitle).observe($('.cal__bar', panel));
   }
   function select(day, { focus = false } = {}) {
     if (!Dates.isKey(day)) return;
@@ -3507,33 +3435,10 @@ const Calendar = (() => {
     e.preventDefault();
     if (!Dates.isKey(next)) { // e.g. 31 → a 30-day month: clamp to the month's last day
       const m = next.slice(0, 7);
-      const lastDay = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
-      next = `${m}-${pad2(lastDay)}`;
+      const last = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+      next = `${m}-${pad2(last)}`;
     }
     select(next, { focus: true });
-  }
-
-  /** Today, the selected day, weekends and event dots, for every laid-out day (only when something changed). */
-  function paint(calDay) {
-    const today = Dates.today();
-    const counts = Events.countRange(win.start, win.end);
-    const sig = `${win.start}|${calDay}|${today}|${[...counts].join()}`;
-    if (sig === painted) return;
-    painted = sig;
-    const tabbable = calDay >= win.start && calDay <= win.end ? calDay : `${shown || UI.get().calMonth}-01`;
-    for (const c of cells) {
-      const day = c.day;
-      const n = counts.get(day) || 0;
-      const wd = Dates.weekday(day);
-      c.btn.className = `cal__day${shown && Dates.month(day) !== shown ? ' is-outside' : ''}${day === today ? ' is-today' : ''}${wd === 0 || wd === 6 ? ' is-weekend' : ''}${c.snap ? ' is-snap' : ''}`;
-      c.btn.setAttribute('aria-pressed', String(day === calDay));
-      c.btn.tabIndex = day === tabbable ? 0 : -1;
-      c.btn.setAttribute('aria-label', `${Fmt.dayMonth(day)}${day === today ? ', today' : ''}${n ? `, ${pluralise(n, 'event')}` : ''}`);
-      if (day === today) c.btn.setAttribute('aria-current', 'date'); else c.btn.removeAttribute('aria-current');
-      if (c.dots.childElementCount !== Math.min(n, 3)) {
-        c.dots.replaceChildren(...Array.from({ length: Math.min(n, 3) }, () => h('span', { class: 'cal__dot' })));
-      }
-    }
   }
 
   function render() {
@@ -3544,6 +3449,7 @@ const Calendar = (() => {
     panel.classList.toggle('cal--weekends', highlightWeekends);
     // "Today" lights up whenever you've moved away from today.
     $('[data-action="cal-today"]').classList.toggle('is-away', calDay !== today || calMonth !== Dates.month(today));
+    fitTitle(calMonth);
     dowRow.childNodes.forEach((el, i) => {
       const d = (weekStart + i) % 7;
       el.textContent = Fmt.dowShort(d).slice(0, 2);
@@ -3551,24 +3457,30 @@ const Calendar = (() => {
       el.classList.toggle('is-weekend', d === 0 || d === 6);
     });
 
-    let fresh = false;
-    if (!win || win.ws !== weekStart || calMonth < Dates.addMonths(win.first, 2) || calMonth > Dates.addMonths(win.last, -2)) {
-      layout(calMonth);
-      shown = calMonth;
-      fresh = true;
-    }
-    paint(calDay);
-    const p = pitch();
-    if (p && !userScroll) {
-      const want = win.rows.get(calMonth) * p;
-      if (calMonth !== shown && !fresh) {
-        if (target !== calMonth) scrollToMonth(calMonth, true); // a button or key moved the month: glide there
-      } else if (!target && Math.abs(scroller.scrollTop - want) > 1) scrollToMonth(calMonth, false); // first draw, or shown again
-    }
-    if (fresh || !title.textContent) paintMonth();
+    const first = `${calMonth}-01`;
+    const start = Dates.startOfWeek(first, weekStart);
+    const end = Dates.addDays(start, 41);
+    const counts = Events.countRange(start, end);
+    const tabbable = calDay >= start && calDay <= end && Dates.month(calDay) === calMonth ? calDay : first;
+
+    cells.forEach((c, i) => {
+      const day = Dates.addDays(start, i);
+      const n = counts.get(day) || 0;
+      const wd = Dates.weekday(day);
+      c.btn.dataset.day = day;
+      c.btn.className = `cal__day${Dates.month(day) !== calMonth ? ' is-outside' : ''}${day === today ? ' is-today' : ''}${wd === 0 || wd === 6 ? ' is-weekend' : ''}`;
+      c.btn.setAttribute('aria-pressed', String(day === calDay));
+      c.btn.tabIndex = day === tabbable ? 0 : -1;
+      c.btn.setAttribute('aria-label', `${Fmt.dayMonth(day)}${day === today ? ', today' : ''}${n ? `, ${pluralise(n, 'event')}` : ''}`);
+      if (day === today) c.btn.setAttribute('aria-current', 'date'); else c.btn.removeAttribute('aria-current');
+      c.num.textContent = String(+day.slice(8));
+      if (c.dots.childElementCount !== Math.min(n, 3)) {
+        c.dots.replaceChildren(...Array.from({ length: Math.min(n, 3) }, () => h('span', { class: 'cal__dot' })));
+      }
+    });
     if (focusDay) {
-      const c = cells.find((x) => x.day === focusDay);
-      if (c) c.btn.focus({ preventScroll: true });
+      const target = cells.find((c) => c.btn.dataset.day === focusDay);
+      if (target) target.btn.focus();
       focusDay = null;
     }
     renderAgenda(calDay, today);
@@ -3600,19 +3512,13 @@ const Calendar = (() => {
     const list = $('#agenda-list');
     const expanded = TimeCard.isExpanded();
     $('#agenda-day').textContent = expanded ? '' : `· ${dayLabel(day, today)}`;
-    if (!expanded) {
-      const events = Events.on(day);
-      list.replaceChildren(...(events.length ? events.map((ev) => eventRow(ev, day))
-        : [h('li', { class: 'empty' }, icon('calendar'), day === today ? 'Nothing scheduled today.' : 'Nothing scheduled.')]));
-      return;
-    }
     const gs = groups(day, today);
     if (gs.every((g) => !g.events.length) && gs.length === 1) {
-      list.replaceChildren(h('li', { class: 'empty' }, icon('calendar'), 'Nothing scheduled'));
+      list.replaceChildren(h('li', { class: 'empty' }, icon('calendar'), expanded ? 'Nothing scheduled' : day === today ? 'Nothing scheduled today.' : 'Nothing scheduled.'));
       return;
     }
-    list.replaceChildren(...gs.flatMap((g) => [
-      h('li', { class: 'agenda-group', text: g.label }),
+    list.replaceChildren(...gs.flatMap((g, i) => [
+      ...(i === 0 && !expanded ? [] : [h('li', { class: 'agenda-group', text: g.label })]), // collapsed, the header already names the first day
       ...(g.events.length ? g.events.map((ev) => eventRow(ev, g.day)) : [h('li', { class: 'agenda-note', text: 'Nothing scheduled' })]),
     ]));
   }
@@ -3638,7 +3544,7 @@ const Calendar = (() => {
     if (el.dataset.action === 'agenda-open') EventEditor.open(row.dataset.id);
     if (el.dataset.action === 'agenda-menu') eventMenu(row.dataset.id, el);
   });
-  function shiftMonth(n) { UI.set({ calMonth: Dates.addMonths(target ? UI.get().calMonth : shown || UI.get().calMonth, n) }); }
+  function shiftMonth(n) { UI.set({ calMonth: Dates.addMonths(UI.get().calMonth, n) }); }
   function goToday() { const t = Dates.today(); UI.set({ calDay: t, calMonth: Dates.month(t) }); }
   return { build, render, shiftMonth, goToday };
 })();
@@ -4505,7 +4411,32 @@ const TimeCard = (() => {
     place(from, `${-dir * 100}%`, true);
     place(to, '0px', true);
     shown = target;
+    $('#cal-body').scrollTop = 0; // the calendar always comes back to its month
     UI.set({ homeView: target });
+  }
+  /** The divider line both views share (and the arrows' height): the top of the timer in the
+      clock view. The calendar's rows shrink only if they must, and the space above Scheduled
+      puts its divider on the same line. Not while Scheduled is expanded (the card grows then). */
+  function alignLine() {
+    if (expanded || !card.offsetParent) return;
+    const c = card.getBoundingClientRect();
+    const timer = $('#timer');
+    const v = viewport.getBoundingClientRect();
+    const line = Math.round(!timer.hidden && timer.offsetHeight ? timer.getBoundingClientRect().top - c.top : v.bottom - c.top - 64);
+    card.style.setProperty('--line-y', `${line}px`);
+    const body = $('#cal-body');
+    const grid = $('#cal-grid');
+    card.style.removeProperty('--cal-row');
+    const top = grid.getBoundingClientRect().top - c.top + body.scrollTop;
+    const minGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s4')) || 16;
+    let gh = grid.offsetHeight;
+    const gap = parseFloat(getComputedStyle(grid).rowGap) || 2;
+    if (top + gh + minGap > line) {
+      const row = Math.max(22, Math.floor((line - minGap - top - gap * 5) / 6));
+      card.style.setProperty('--cal-row', `${row}px`);
+      gh = grid.offsetHeight;
+    }
+    card.style.setProperty('--cal-gap', `${Math.max(minGap, line - top - gh)}px`);
   }
   function step(dir) {
     const go = () => slideTo(neighbour(shown, dir), dir);
@@ -4545,6 +4476,7 @@ const TimeCard = (() => {
   function clearExpanded() {
     card.classList.remove('is-expanded');
     ['transition', 'flex', 'height', 'marginBottom'].forEach((k) => { card.style[k] = ''; });
+    alignLine();
   }
   function collapseNow() {
     if (!expanded) return;
@@ -4556,6 +4488,8 @@ const TimeCard = (() => {
 
   function build() {
     layout();
+    const ro = new ResizeObserver(() => alignLine());
+    [card, $('#timer'), $('.cal__bar', card)].forEach((el) => ro.observe(el));
     card.addEventListener('keydown', (e) => {
       if (e.target !== card) return; // arrows inside the calendar grid move between days
       if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
@@ -4625,7 +4559,7 @@ const TimeCard = (() => {
     }, { passive: false });
   }
   const show = (view) => { if (view !== shown) step(1); };
-  return { build, render, step, show, toggleExpanded: () => setExpanded(!expanded), collapseNow, isExpanded: () => expanded };
+  return { build, render, step, show, toggleExpanded: () => setExpanded(!expanded), collapseNow, isExpanded: () => expanded, alignLine };
 })();
 
 /* ---------- Card sizes ----------
