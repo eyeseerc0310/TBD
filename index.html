@@ -894,7 +894,8 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .nside__top { flex: none; display: flex; align-items: center; gap: 2px; }
 .nsearch { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; margin-right: var(--s1); }
 .nsearch__icon { position: absolute; left: 11px; color: var(--text-3); pointer-events: none; }
-.nsearch__input { padding-left: 34px; padding-right: 64px; }
+.nsearch__input { padding-left: 32px; padding-right: 64px; }
+.nsearch__input:placeholder-shown { padding-right: 32px; } /* empty: only the filter button sits inside, so a narrow sidebar still shows "Search" */
 .nsearch__input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .nsearch .icon-btn { position: absolute; width: 26px; height: 26px; }
 .nsearch__filter { right: 4px; }
@@ -1776,7 +1777,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
           <div class="nside__top">
             <div class="nsearch">
               <svg class="icon icon--sm nsearch__icon" aria-hidden="true"><use href="#i-search"/></svg>
-              <input class="input nsearch__input" id="notes-search" type="search" placeholder="Search notes…" aria-label="Search notes" autocomplete="off" spellcheck="false">
+              <input class="input nsearch__input" id="notes-search" type="search" placeholder="Search" aria-label="Search notes" autocomplete="off" spellcheck="false">
               <button class="icon-btn icon-btn--sm nsearch__clear" type="button" id="notes-search-clear" aria-label="Clear search" hidden><svg class="icon"><use href="#i-x"/></svg></button>
               <button class="icon-btn icon-btn--sm nsearch__filter" type="button" id="notes-filter" aria-label="Filter notes" aria-haspopup="menu" data-tip="Filter" data-tip-align="end"><svg class="icon"><use href="#i-filter"/></svg></button>
             </div>
