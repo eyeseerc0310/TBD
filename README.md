@@ -3,8 +3,10 @@
 A calm, local-first personal workspace — a place to capture, organise and revisit
 thoughts, tasks, events and ideas.
 
-Home has three columns: a clock / calendar card (swipe or use the arrows to switch
-views) above a Connections card (your most recent note-to-note links), a task manager with weekly progress, colours and
+Home has three columns: a clock / calendar card (swipe, or use the ‹ › at the ends of its
+divider line, to switch views; the calendar scrolls up and down through the months and
+snaps to each one) above a Connections card (the graph of your notes, the same one as on
+the Connections page, with its own zoom), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a
 stopwatch / countdown timer; when the card is squashed vertically (the face under
@@ -107,8 +109,9 @@ Application state is `{ items, settings, ui, timer }`:
     `[{ id, name, color }]`)
 - `ui` — `page`, `calMonth`, `calDay`, `taskDay`, `settingsSection` (last open Settings category), `homeView` (`clock` · `calendar`, the Home clock/calendar card), `notesView` (`all` · `today` · `week` · `archive` · `trash` · `folder:<id>`), `notesFilter` (`all` · `text` · `links` · `media` · `pinned` · `coloured` · `tasks`), `notesOpen` (which Notes sidebar groups and sections are open), `foldersSeeded`
 - `graph` — the Connections graph as it was left: `pos` (`{ id: [x, y] }`, with a third
-  value `1` when the dot is pinned) and `view` (`{ cx, cy, k }`: the point at the centre and
-  the zoom, 0.2–4). Only dots without a saved position are placed by the simulation
+  value `1` when the dot is pinned), and a camera for each place it's shown, `view` (the
+  Connections page) and `card` (the Home card): `{ cx, cy, k }`, the point at the centre and
+  the zoom, 0.2–4. Only dots without a saved position are placed by the simulation
 
 Older data without the newer fields loads with defaults; tasks without an `order`
 are numbered by creation time.
@@ -222,10 +225,15 @@ both ways, and a pin connects with what it's attached to. Web and Wikipedia link
 never connections. Nothing is stored apart from the items: a note's `links` are read
 from the `data-note` links in its text whenever it is saved or loaded (backups
 included), so removing the last link to a note removes the connection. The Connections
-page draws them as a graph or a list with "Links to" and "Linked from". Each open note
-shows its Backlinks.
+page draws them as a graph or a list with "Links to" and "Linked from"; the Home
+Connections card shows the same graph. Each open note shows its Backlinks.
 
-The graph fills the page and is drawn on a canvas (sharp at any pixel density), laid out
+One model and one simulation serve both graphs (moving a dot in one moves it in the
+other); each view is a canvas with its own camera. The Home card fits the graph when it
+first shows and whenever the card is resized, names its notes when there's room and leaves
+out labels that would collide, and has the Connections page's icon in its corner.
+
+On the Connections page the graph fills the page and is drawn on a canvas (sharp at any pixel density), laid out
 by a small force simulation: links pull, dots push apart, a gentle pull keeps it
 centred, notes with the same connection tag drift together, and dots don't overlap.
 Spacing tightens as the graph grows, so large graphs get denser instead of spreading
