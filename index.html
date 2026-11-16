@@ -552,7 +552,7 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 /* Each view sits on top of the other; transforms slide them in and out. */
 .view {
   position: absolute; inset: 0; min-width: 0; min-height: 0;
-  padding: 0 calc(var(--pad) + 10px); /* room for the edge arrows */
+  padding: 0 calc(var(--pad) + 10px); /* room for the arrows at the ends of the divider */
   display: flex; flex-direction: column;
   transition: transform var(--t-slow) var(--ease);
 }
@@ -561,16 +561,21 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .view--calendar .empty { flex-direction: row; padding: var(--s3) 0; }
 #agenda-list { display: flex; flex-direction: column; gap: 6px; }
 .view--calendar .empty .icon { width: 16px; height: 16px; }
+/* The divider in each view carries the view arrows: ‹ at its left end, › at its right, the
+   line between them. The row is as tall as the arrows' 32px tap area and overlaps its
+   neighbours by half of that, so the line sits exactly where a plain divider would. */
+.views__line { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 2px; height: 32px; margin: calc(var(--s2) - 16px) -10px -16px; pointer-events: none; }
+.views__rule { flex: 1; height: 1px; background: var(--border); }
 .views__arrow {
-  position: absolute; top: 50%; z-index: 2; transform: translateY(-50%);
-  width: 20px; height: 44px; display: grid; place-items: center;
+  flex: none; width: 32px; height: 32px; display: grid; place-items: center; pointer-events: auto;
   border-radius: var(--r-sm); color: var(--text-3); opacity: 0.6;
   transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .views__arrow:hover, .views__arrow:focus-visible { opacity: 1; color: var(--text); background: var(--hover); }
-.views__arrow--prev { left: 4px; }
-.views__arrow--next { right: 4px; }
 .views__arrow .icon { width: 16px; height: 16px; }
+.view--calendar .views__line { margin-top: calc(var(--s4) - 16px); }
+.view--calendar .panel__section { margin-top: 0; border-top: 0; }
+.view--clock .timer { margin-top: 0; border-top: 0; }
 
 /* Scheduled events: a collapsible list under the calendar */
 .agenda__toggle { display: flex; align-items: center; gap: var(--s2); min-width: 0; height: var(--ctl-h-sm); padding: 0 var(--s1); margin-left: calc(var(--s1) * -1); border-radius: var(--r-sm); font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
@@ -866,18 +871,15 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .conn-notice { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); margin-bottom: var(--s4); border-radius: var(--r-panel); font-size: var(--fs-sm); color: var(--text-2); }
 .conn-notice p { flex: 1; min-width: 0; }
 .conn-notice > .icon { color: var(--accent); }
-.mini-row.mini-row--conn { height: 46px; min-height: 46px; }
-/* A narrow Connections card (resized with the grabbers) keeps just the icon of "Open Connections". */
-.panel--connections { container-type: inline-size; }
-@container (min-width: 300px) { .conn-open[data-tip]::after { display: none; } }
-@container (max-width: 299px) {
-  .conn-open { width: var(--ctl-h-sm); padding: 0; }
-  .conn-open__label { display: none; }
-}
-.conn-pair { display: flex; align-items: center; gap: 6px; }
-.conn-pair .conn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.conn-pair .icon { flex: none; margin-right: -2px; }
-.conn-pair__sep { flex: none; font-weight: 400; color: var(--text-3); }
+/* The Home Connections card is all graph, with "Open Connections" in its top-right corner. */
+.panel--connections { position: relative; }
+.conn-open { position: absolute; z-index: 2; top: var(--s3); right: var(--s3); }
+/* Home: the graph fills the card to its edges (its rounded corners clip it). */
+.conn-mini { position: relative; flex: 1; min-height: 160px; display: flex; margin: calc(var(--pad) * -1); border-radius: inherit; overflow: hidden; }
+.conn-mini .graph { flex: 1; }
+.graph--card .graph__hint { font-size: var(--fs-sm); }
+.graph--card .graph__hint, .graph--card.is-empty .graph__hint { bottom: auto; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 719px) { .conn-mini { min-height: 300px; } }
 
 /* ---------- Notes page ---------- */
 /* The note editor pane adds no box of its own, wherever it is. */
@@ -1005,9 +1007,13 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 /* Calendar */
 .cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s3); flex: none; }
 .cal__nav { display: flex; align-items: center; gap: 2px; }
-.cal__month { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal__month { font: 600 var(--fs-lg)/1.3 var(--font-head); letter-spacing: -0.01em; min-width: 0; white-space: nowrap; overflow: hidden; }
 .view--calendar .btn.is-away { color: var(--accent); }
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; flex: none; }
+/* Months scroll vertically, six weeks in view, snapping to each month's first week. */
+.cal__scroll { position: relative; flex: none; height: calc(6 * var(--cal-day) + 5 * 2px); overflow: hidden auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scrollbar-width: none; touch-action: pan-y; }
+.cal__scroll::-webkit-scrollbar { display: none; }
+.cal__day.is-snap { scroll-snap-align: start; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
 .cal__day {
   position: relative; height: var(--cal-day); border-radius: var(--r-sm);
@@ -1347,6 +1353,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .app[data-page="notes"] .notes__area { min-height: 80px; flex: 1 1 0; }
   .app[data-page="home"] .main { min-height: 0; padding-top: var(--s5); padding-bottom: var(--s5); }
   .app[data-page="home"] .dashboard { flex: 1; min-height: 0; }
+  .app[data-page="home"] .view--clock { touch-action: none; }
   .app[data-page="home"] .list {
     max-height: none; padding-bottom: var(--s3);
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--s4)), transparent);
@@ -1645,6 +1652,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                 <div class="clock__digital"><time id="clock-time">--:--</time><span class="clock__side"><span class="clock__zone" id="clock-zone"></span><span class="clock__ampm" id="clock-ampm"></span></span></div>
               </div>
             </div>
+            <div class="views__line"><button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button><span class="views__rule" aria-hidden="true"></span><button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button></div>
             <section class="timer" id="timer" aria-label="Timer">
               <div class="timer__row">
                 <button class="timer__time" id="timer-time" type="button" aria-label="Timer">00:00:00</button>
@@ -1672,7 +1680,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                     </div>
                   </div>
                   <div class="cal__grid" id="cal-dow" aria-hidden="true"></div>
-                  <div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div>
+                  <div class="cal__scroll" id="cal-scroll"><div class="cal__grid" id="cal-grid" role="group" aria-label="Days of the month"></div></div>
+                  <div class="views__line"><button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button><span class="views__rule" aria-hidden="true"></span><button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button></div>
                   <section class="panel__section" aria-labelledby="agenda-title">
                     <div class="section-head">
                       <h3 class="subhead"><button class="agenda__toggle" id="agenda-toggle" type="button" data-action="agenda-toggle" aria-expanded="false" aria-controls="agenda-list"><span id="agenda-title">Scheduled</span><span class="agenda__day" id="agenda-day"></span><svg class="icon agenda__chev" aria-hidden="true"><use href="#i-down"/></svg></button></h3>
@@ -1683,18 +1692,12 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                 </section>
               </div>
             </div>
-            <button class="views__arrow views__arrow--prev" type="button" data-action="view-prev" aria-label="Previous view"><svg class="icon"><use href="#i-left"/></svg></button>
-            <button class="views__arrow views__arrow--next" type="button" data-action="view-next" aria-label="Next view"><svg class="icon"><use href="#i-right"/></svg></button>
           </article>
 
           <article class="panel glass panel--connections" aria-labelledby="conn-label">
-            <header class="panel__head">
-              <h2 class="panel__title" id="conn-label">Connections</h2>
-              <div class="panel__actions">
-                <button class="btn btn--ghost btn--sm conn-open" type="button" data-action="go-connections" aria-label="Open Connections" data-tip="Open Connections" data-tip-align="end"><svg class="icon icon--sm"><use href="#i-connections"/></svg><span class="conn-open__label">Open Connections</span></button>
-              </div>
-            </header>
-            <ul class="list mini-list" id="conn-list"></ul>
+            <h2 class="sr-only" id="conn-label">Connections</h2>
+            <div class="conn-mini" id="conn-mini"></div>
+            <button class="icon-btn icon-btn--sm conn-open" type="button" data-action="go-connections" aria-label="Open Connections" data-tip="Open Connections" data-tip-align="end"><svg class="icon"><use href="#i-connections"/></svg></button>
           </article>
         </div>
 
@@ -1913,6 +1916,7 @@ const Fmt = (() => {
   const dayMonth = f({ weekday: 'long', day: 'numeric', month: 'long' });
   const shortDay = f({ weekday: 'short', day: 'numeric', month: 'short' });
   const monthYear = f({ month: 'long', year: 'numeric' });
+  const monthYearShort = f({ month: 'short', year: 'numeric' });
   const dateTime = f({ day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
   const shortDate = f({ day: 'numeric', month: 'short' });
   // 2023-01-01 was a Sunday: index 0..6 → Sunday..Saturday.
@@ -1922,6 +1926,7 @@ const Fmt = (() => {
     shortDay: (k) => shortDay.format(Dates.parse(k)),
     shortDate: (k) => shortDate.format(Dates.parse(k)),
     monthYear: (m) => monthYear.format(Dates.parse(`${m}-01`)),
+    monthYearShort: (m) => monthYearShort.format(Dates.parse(`${m}-01`)),
     dowShort: (i) => dow(weekdayShort, i),
     dowNarrow: (i) => dow(weekdayNarrow, i),
     dateTime: (iso) => dateTime.format(new Date(iso)),
@@ -2201,8 +2206,9 @@ function normaliseUi(raw) {
     notesOpen: isObj(u.notesOpen) ? Object.fromEntries(Object.entries(u.notesOpen).filter(([k, v]) => typeof v === 'boolean' && k.length < 200)) : { ...d.notesOpen },
   };
 }
-/** The Connections graph as it was left: each dot's position ([x, y], plus 1 when pinned) and the
-    view (the point at its centre and the zoom). Only the simulation places dots that have none. */
+/** The Connections graph as it was left: each dot's position ([x, y], plus 1 when pinned) and a
+    camera for each place it's shown (the point at its centre and the zoom): `view` on the
+    Connections page, `card` on Home. Only the simulation places dots that have none. */
 function normaliseGraph(raw) {
   const g = isObj(raw) ? raw : {};
   const ok = (v) => Number.isFinite(v) && Math.abs(v) < 1e7;
@@ -2212,8 +2218,8 @@ function normaliseGraph(raw) {
       if (Array.isArray(v) && ok(v[0]) && ok(v[1])) pos[id] = v[2] === 1 ? [v[0], v[1], 1] : [v[0], v[1]];
     }
   }
-  const v = isObj(g.view) && ok(g.view.cx) && ok(g.view.cy) && Number.isFinite(g.view.k) ? { cx: g.view.cx, cy: g.view.cy, k: Math.min(4, Math.max(0.2, g.view.k)) } : null;
-  return { pos, view: v };
+  const cam = (c) => (isObj(c) && ok(c.cx) && ok(c.cy) && Number.isFinite(c.k) ? { cx: c.cx, cy: c.cy, k: Math.min(4, Math.max(0.2, c.k)) } : null);
+  return { pos, view: cam(g.view), card: cam(g.card) };
 }
 /** Gives every task a position within its day, and every connection a
     position in its list (older data has none). */
@@ -3357,25 +3363,116 @@ const QuickNotes = (() => {
 /* ---------- Calendar ---------- */
 const Calendar = (() => {
   const grid = $('#cal-grid');
+  const scroller = $('#cal-scroll');
   const dowRow = $('#cal-dow');
   const panel = $('.view--calendar');
-  const cells = [];
+  const title = $('#cal-month');
+  const SPAN = 6;          // months laid out on each side of the one in view
+  let cells = [];          // { btn, num, dots, day, snap }
+  let win = null;          // { start, end, ws, first, last, rows: Map(month → its first week's row) }
+  let shown = null;        // the month whose first week is at the top
+  let target = null;       // a month we're scrolling to (buttons, keys); null while the user scrolls
+  let userScroll = false;  // a swipe, wheel or trackpad scroll is under way
+  let painted = '';
+  let settleTimer = 0;
   let focusDay = null;
+  const dayNum = (key) => Math.round(Dates.parse(key).getTime() / 86400000);
+
+  /* The month grid is one long run of weeks that scrolls vertically and snaps to the
+     first week of each month (a peek of the next month below is fine). Only SPAN months
+     either side are laid out; settling near either end lays out a new run around it. */
+  function layout(centre) {
+    const ws = Settings.get().weekStart;
+    const first = Dates.addMonths(centre, -SPAN);
+    const last = Dates.addMonths(centre, SPAN);
+    const start = Dates.startOfWeek(`${first}-01`, ws);
+    const end = Dates.addDays(Dates.startOfWeek(`${last}-01`, ws), 6 * 7 - 1);
+    const rows = new Map();
+    for (let m = first; m <= last; m = Dates.addMonths(m, 1)) rows.set(m, (dayNum(Dates.startOfWeek(`${m}-01`, ws)) - dayNum(start)) / 7);
+    const snapAt = new Set([...rows.values()].map((r) => r * 7));
+    cells = [];
+    const frag = document.createDocumentFragment();
+    let i = 0;
+    for (let d = start; d <= end; d = Dates.addDays(d, 1), i++) {
+      const dots = h('span', { class: 'cal__dots', 'aria-hidden': 'true' });
+      const num = h('span', { text: String(+d.slice(8)) });
+      const btn = h('button', { class: 'cal__day', type: 'button', dataset: { day: d } }, num, dots);
+      cells.push({ btn, num, dots, day: d, snap: snapAt.has(i) });
+      frag.append(btn);
+    }
+    grid.replaceChildren(frag);
+    win = { start, end, ws, first, last, rows };
+    painted = '';
+  }
+  const pitch = () => (cells.length > 7 ? cells[7].btn.getBoundingClientRect().top - cells[0].btn.getBoundingClientRect().top : 0);
+  /** The laid-out month nearest the top of the scroller. */
+  function monthAtTop() {
+    const p = pitch();
+    if (!p) return shown;
+    const row = scroller.scrollTop / p;
+    let best = null; let bestD = Infinity;
+    for (const [m, r] of win.rows) { const d = Math.abs(r - row); if (d < bestD) { best = m; bestD = d; } }
+    return best;
+  }
+  function scrollToMonth(m, smooth) {
+    const p = pitch();
+    if (!p || !win.rows.has(m)) return;
+    target = m;
+    scroller.scrollTo({ top: win.rows.get(m) * p, behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' });
+    if (!smooth) { shown = m; paintMonth(); }
+  }
+
+  /* --- The title: "November 2026" when it fits, else "Nov 2026"; in a very narrow card that
+     steps down in size (to 70%) rather than ever being cut off --- */
+  function fitTitle() {
+    const m = shown || UI.get().calMonth;
+    const over = () => title.scrollWidth > title.clientWidth + 0.5;
+    title.style.fontSize = '';
+    title.textContent = Fmt.monthYear(m);
+    if (!over()) return;
+    title.textContent = Fmt.monthYearShort(m);
+    const base = parseFloat(getComputedStyle(title).fontSize);
+    for (let px = Math.floor(base) - 1; over() && px >= Math.round(base * 0.7); px--) title.style.fontSize = `${px}px`;
+  }
+  /** Days outside the month in view are dimmed; the title follows the month. */
+  function paintMonth() {
+    for (const c of cells) c.btn.classList.toggle('is-outside', Dates.month(c.day) !== shown);
+    fitTitle();
+  }
+
+  function onScroll() {
+    if (!target) userScroll = true;
+    const m = monthAtTop();
+    if (m && m !== shown) { shown = m; paintMonth(); }
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 160);
+  }
+  /** At rest: the month in view becomes the calendar's month; near either end, more months are laid out. */
+  function settle() {
+    clearTimeout(settleTimer);
+    const m = monthAtTop();
+    userScroll = false;
+    target = null;
+    if (!m) return;
+    if (m <= Dates.addMonths(win.first, 1) || m >= Dates.addMonths(win.last, -1)) {
+      layout(m);
+      paint(UI.get().calDay);
+      scrollToMonth(m, false);
+      target = null;
+    }
+    if (UI.get().calMonth !== m) UI.set({ calMonth: m });
+  }
 
   function build() {
     for (let i = 0; i < 7; i++) dowRow.append(h('div', { class: 'cal__dow' }));
-    for (let i = 0; i < 42; i++) {
-      const dots = h('span', { class: 'cal__dots', 'aria-hidden': 'true' });
-      const num = h('span');
-      const btn = h('button', { class: 'cal__day', type: 'button' }, num, dots);
-      cells.push({ btn, num, dots });
-      grid.append(btn);
-    }
     grid.addEventListener('click', (e) => {
       const btn = e.target.closest('.cal__day');
       if (btn) select(btn.dataset.day);
     });
     grid.addEventListener('keydown', onKey);
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    scroller.addEventListener('scrollend', settle);
+    new ResizeObserver(fitTitle).observe($('.cal__bar', panel));
   }
   function select(day, { focus = false } = {}) {
     if (!Dates.isKey(day)) return;
@@ -3397,10 +3494,33 @@ const Calendar = (() => {
     e.preventDefault();
     if (!Dates.isKey(next)) { // e.g. 31 → a 30-day month: clamp to the month's last day
       const m = next.slice(0, 7);
-      const last = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
-      next = `${m}-${pad2(last)}`;
+      const lastDay = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+      next = `${m}-${pad2(lastDay)}`;
     }
     select(next, { focus: true });
+  }
+
+  /** Today, the selected day, weekends and event dots, for every laid-out day (only when something changed). */
+  function paint(calDay) {
+    const today = Dates.today();
+    const counts = Events.countRange(win.start, win.end);
+    const sig = `${win.start}|${calDay}|${today}|${[...counts].join()}`;
+    if (sig === painted) return;
+    painted = sig;
+    const tabbable = calDay >= win.start && calDay <= win.end ? calDay : `${shown || UI.get().calMonth}-01`;
+    for (const c of cells) {
+      const day = c.day;
+      const n = counts.get(day) || 0;
+      const wd = Dates.weekday(day);
+      c.btn.className = `cal__day${shown && Dates.month(day) !== shown ? ' is-outside' : ''}${day === today ? ' is-today' : ''}${wd === 0 || wd === 6 ? ' is-weekend' : ''}${c.snap ? ' is-snap' : ''}`;
+      c.btn.setAttribute('aria-pressed', String(day === calDay));
+      c.btn.tabIndex = day === tabbable ? 0 : -1;
+      c.btn.setAttribute('aria-label', `${Fmt.dayMonth(day)}${day === today ? ', today' : ''}${n ? `, ${pluralise(n, 'event')}` : ''}`);
+      if (day === today) c.btn.setAttribute('aria-current', 'date'); else c.btn.removeAttribute('aria-current');
+      if (c.dots.childElementCount !== Math.min(n, 3)) {
+        c.dots.replaceChildren(...Array.from({ length: Math.min(n, 3) }, () => h('span', { class: 'cal__dot' })));
+      }
+    }
   }
 
   function render() {
@@ -3411,7 +3531,6 @@ const Calendar = (() => {
     panel.classList.toggle('cal--weekends', highlightWeekends);
     // "Today" lights up whenever you've moved away from today.
     $('[data-action="cal-today"]').classList.toggle('is-away', calDay !== today || calMonth !== Dates.month(today));
-    $('#cal-month').textContent = Fmt.monthYear(calMonth);
     dowRow.childNodes.forEach((el, i) => {
       const d = (weekStart + i) % 7;
       el.textContent = Fmt.dowShort(d).slice(0, 2);
@@ -3419,30 +3538,24 @@ const Calendar = (() => {
       el.classList.toggle('is-weekend', d === 0 || d === 6);
     });
 
-    const first = `${calMonth}-01`;
-    const start = Dates.startOfWeek(first, weekStart);
-    const end = Dates.addDays(start, 41);
-    const counts = Events.countRange(start, end);
-    const tabbable = calDay >= start && calDay <= end && Dates.month(calDay) === calMonth ? calDay : first;
-
-    cells.forEach((c, i) => {
-      const day = Dates.addDays(start, i);
-      const n = counts.get(day) || 0;
-      const wd = Dates.weekday(day);
-      c.btn.dataset.day = day;
-      c.btn.className = `cal__day${Dates.month(day) !== calMonth ? ' is-outside' : ''}${day === today ? ' is-today' : ''}${wd === 0 || wd === 6 ? ' is-weekend' : ''}`;
-      c.btn.setAttribute('aria-pressed', String(day === calDay));
-      c.btn.tabIndex = day === tabbable ? 0 : -1;
-      c.btn.setAttribute('aria-label', `${Fmt.dayMonth(day)}${day === today ? ', today' : ''}${n ? `, ${pluralise(n, 'event')}` : ''}`);
-      if (day === today) c.btn.setAttribute('aria-current', 'date'); else c.btn.removeAttribute('aria-current');
-      c.num.textContent = String(+day.slice(8));
-      if (c.dots.childElementCount !== Math.min(n, 3)) {
-        c.dots.replaceChildren(...Array.from({ length: Math.min(n, 3) }, () => h('span', { class: 'cal__dot' })));
-      }
-    });
+    let fresh = false;
+    if (!win || win.ws !== weekStart || calMonth < Dates.addMonths(win.first, 2) || calMonth > Dates.addMonths(win.last, -2)) {
+      layout(calMonth);
+      shown = calMonth;
+      fresh = true;
+    }
+    paint(calDay);
+    const p = pitch();
+    if (p && !userScroll) {
+      const want = win.rows.get(calMonth) * p;
+      if (calMonth !== shown && !fresh) {
+        if (target !== calMonth) scrollToMonth(calMonth, true); // a button or key moved the month: glide there
+      } else if (!target && Math.abs(scroller.scrollTop - want) > 1) scrollToMonth(calMonth, false); // first draw, or shown again
+    }
+    if (fresh || !title.textContent) paintMonth();
     if (focusDay) {
-      const target = cells.find((c) => c.btn.dataset.day === focusDay);
-      if (target) target.btn.focus();
+      const c = cells.find((x) => x.day === focusDay);
+      if (c) c.btn.focus({ preventScroll: true });
       focusDay = null;
     }
     renderAgenda(calDay, today);
@@ -3512,7 +3625,7 @@ const Calendar = (() => {
     if (el.dataset.action === 'agenda-open') EventEditor.open(row.dataset.id);
     if (el.dataset.action === 'agenda-menu') eventMenu(row.dataset.id, el);
   });
-  function shiftMonth(n) { UI.set({ calMonth: Dates.addMonths(UI.get().calMonth, n) }); }
+  function shiftMonth(n) { UI.set({ calMonth: Dates.addMonths(target ? UI.get().calMonth : shown || UI.get().calMonth, n) }); }
   function goToday() { const t = Dates.today(); UI.set({ calDay: t, calMonth: Dates.month(t) }); }
   return { build, render, shiftMonth, goToday };
 })();
@@ -4444,13 +4557,15 @@ const TimeCard = (() => {
     let start = null;
     viewport.addEventListener('pointerdown', (e) => {
       if (e.button !== 0 || e.target.closest('input, textarea, select, .task__handle')) return;
-      start = { x: e.clientX, y: e.clientY, id: e.pointerId, dragging: false, width: viewport.clientWidth };
+      start = { x: e.clientX, y: e.clientY, id: e.pointerId, dragging: false, vertical: false, width: viewport.clientWidth };
     });
     viewport.addEventListener('pointermove', (e) => {
       if (!start || e.pointerId !== start.id) return;
       const dx = e.clientX - start.x;
       const dy = e.clientY - start.y;
+      if (start.vertical) return; // an up/down gesture (months scrolling) never turns into a switch
       if (!start.dragging) {
+        if (Math.abs(dy) >= 10 && Math.abs(dy) > Math.abs(dx)) { start.vertical = true; return; }
         if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
         start.dragging = true;
         try { viewport.setPointerCapture(e.pointerId); } catch { /* ignore */ }
@@ -4478,13 +4593,19 @@ const TimeCard = (() => {
     viewport.addEventListener('pointercancel', end);
     viewport.addEventListener('click', (e) => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
 
-    // Trackpad: a deliberate horizontal scroll switches once.
-    let acc = 0; let locked = false; let idle = 0;
+    // Trackpad and wheel: each gesture keeps to the axis it starts on. Sideways switches the
+    // view once; up and down scrolls the calendar's months, and does nothing on the clock.
+    let acc = 0; let locked = false; let idle = 0; let axis = null;
+    const fitted = window.matchMedia('(min-width: 1100px) and (min-height: 640px), (min-width: 900px) and (orientation: landscape) and (min-height: 640px), (min-width: 720px) and (min-height: 960px)');
     viewport.addEventListener('wheel', (e) => {
-      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
-      e.preventDefault();
       clearTimeout(idle);
-      idle = setTimeout(() => { acc = 0; locked = false; }, 220);
+      idle = setTimeout(() => { acc = 0; locked = false; axis = null; }, 220);
+      if (!axis) axis = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? 'x' : 'y';
+      if (axis === 'y') {
+        if (shown === 'clock' && fitted.matches) e.preventDefault(); // the clock never scrolls (or bounces)
+        return;
+      }
+      e.preventDefault(); // sideways: the months don't scroll
       if (locked) return;
       acc += e.deltaX;
       if (Math.abs(acc) > 60) { locked = true; step(acc > 0 ? 1 : -1); acc = 0; }
@@ -5043,73 +5164,50 @@ const GraphTags = {
   },
 };
 
-/* The graph: every note and pin is a dot, every connection a line, drawn
-   on a canvas and laid out by a small force simulation (in the spirit of
-   d3-force): links pull, dots push apart, a gentle pull keeps the graph
-   centred, notes with the same connection tag drift together, and dots
-   don't overlap. The simulation runs only while something moves (new
-   notes or links, a drag, a throw, a slider) and stops when it settles,
-   when another page is shown or when the app is in the background.
-   Drag empty space to pan; pinch, scroll or the buttons zoom; tap a dot to
-   open its note; drag a dot to move it (its links follow, and a throw keeps
-   going); hold one to pin it in place. Positions, pins and the view are
-   kept in state.graph, so the graph reopens exactly as it was left. */
-const ConnGraph = (() => {
+/* The graph is one model shown in two places: the Connections page and the
+   Home Connections card. GraphSim holds what they share (every note and pin
+   as a dot, the links between them, connection tag colours, positions and
+   pins) and runs one force simulation, in the spirit of d3-force: links
+   pull, dots push apart, a gentle pull keeps the graph centred, notes with
+   the same connection tag drift together, and dots don't overlap. It runs
+   only while something moves (new notes or links, a drag, a throw, a
+   slider) and stops when it settles, or when neither view can be seen.
+   Each GraphView is a canvas with its own camera (pan and zoom) that draws
+   the shared positions and turns gestures into changes to them, so moving a
+   dot in one view moves it in the other. Positions, pins and both cameras
+   are kept in state.graph, so the graph reopens as it was left. */
+const GraphSim = (() => {
   const TICK = 1000 / 60;   // the simulation steps at 60 Hz, whatever the display's rate
-  const MOVE = 6;           // px a press may move and still be a tap
-  const HOLD = 500;         // ms to hold a dot to pin it
   const ALPHA_MIN = 0.001;
   const ALPHA_DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 300);
-  const K_MIN = 0.2;
-  const K_MAX = 4;
   const APPEAR = 420;       // ms for a new dot to grow in
-  const clampK = (k) => Math.min(K_MAX, Math.max(K_MIN, k));
-  const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // slow-fast-slow
   const hash = (str) => { let x = 2166136261; for (let i = 0; i < str.length; i++) x = Math.imul(x ^ str.charCodeAt(i), 16777619); return (x >>> 0) / 4294967296; };
   const round1 = (v) => Math.round(v * 10) / 10;
 
-  const canvas = h('canvas', { class: 'graph__canvas', 'aria-hidden': 'true' });
-  const hint = h('p', { class: 'graph__hint', text: 'Link text in a note to another note to create connections', hidden: true });
-  const tool = (name, label, run) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': label, 'data-tip': label, 'data-tip-align': 'end', onclick: run }, icon(name));
-  const tools = h('div', { class: 'graph__tools' },
-    tool('minus', 'Zoom out', () => zoomCentre(1 / 1.25)),
-    tool('plus', 'Zoom in', () => zoomCentre(1.25)),
-    tool('fit', 'Fit to view', () => fit(true)));
-  const said = h('span', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
-  const host = h('div', { class: 'graph', tabindex: '0', role: 'application', 'aria-roledescription': 'graph' }, canvas, hint, tools, said);
-  const ctx = canvas.getContext('2d');
-
-  let nodes = [];           // { id, x, y, vx, vy, fx, fy, pinned, r, deg, color, label, born }
+  let nodes = [];           // { id, x, y, vx, vy, fx, fy, pinned, r, deg, tag, color, pin, label, born }
   let byId = new Map();
   let links = [];           // { s, t, strength, bias } with s and t nodes
   let sig = '';
   let alpha = 0;
   let alphaTarget = 0;
   let params = null;
-  let colours = null;
-  let view = { x: 0, y: 0, k: 1 };
-  let W = 0;
-  let H = 0;
-  let dpr = 1;
-  let placed = false;       // the view has been set for this graph
   let graphRef = null;      // the state.graph this layout came from (a restore or reset replaces it)
+  let layoutDirty = false;
+  let saveTimer = 0;
   let raf = 0;
   let last = 0;
   let acc = 0;
-  let hover = null;         // the dot under the mouse or pencil
-  let hoverT = 0;           // 0..1, its highlight fading in or out
-  let lit = null;           // Set of ids lit by the hover (the dot and its neighbours)
-  let pulse = null;         // { node, t0 } the ring shown when a hold pins or unpins
-  let saveTimer = 0;
-  let kbd = null;           // the dot chosen with the arrow keys
-  let layoutDirty = false;
+  const views = new Set();
 
-  /* --- Settings and theme --- */
+  /* --- Settings --- */
   function readParams() {
     const s = Settings.get();
     const n = Math.max(1, nodes.length);
     const dense = Math.min(1, Math.max(0.42, Math.pow(40 / n, 0.3))); // big graphs pack tighter instead of spreading off-screen
+    const key = [s.graphLinkDistance, s.graphRepulsion, s.graphCentre, s.graphCluster].join();
+    const moved = params && params.key !== key; // a slider moved (not just the number of dots)
     params = {
+      key,
       dist: s.graphLinkDistance * dense,
       charge: -s.graphRepulsion * 9 * dense,
       reach2: (s.graphLinkDistance * 5) ** 2,
@@ -5119,33 +5217,21 @@ const ConnGraph = (() => {
       r: s.graphNodeSize,
       fade: s.graphLabelFade / 100,
     };
+    return moved;
   }
-  const probe = h('span', { hidden: true });
-  host.append(probe);
-  function readColours() {
-    const cs = getComputedStyle(probe);
-    const resolve = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
-    colours = {
-      edge: resolve('--text-3'), node: resolve('--text-3'), label: resolve('--text-2'), strong: resolve('--text'),
-      halo: resolve('--bg'), accent: resolve('--accent'), ring: resolve('--text-2'),
-      font: cs.fontFamily || 'system-ui, sans-serif',
-    };
-  }
+  const radius = (deg) => params.r * (1 + Math.min(Math.sqrt(deg), 3.5) * 0.18);
 
   /* --- Data: nodes and links, kept in place between updates --- */
-  function radius(deg) { return params.r * (1 + Math.min(Math.sqrt(deg), 3.5) * 0.18); }
   /** Takes the current notes and links; new dots appear near a linked dot, or near the centre. */
-  function setData(items, edges) {
+  function update(items, edges) {
     const g = Store.get().graph;
-    if (g !== graphRef) { graphRef = g; byId = new Map(); nodes = []; placed = false; alpha = 0; } // restored or reset: start from what was saved
+    if (g !== graphRef) { graphRef = g; byId = new Map(); nodes = []; alpha = 0; views.forEach((v) => v.reset()); } // restored or reset: start from what was saved
     const saved = g.pos;
-    const ids = new Set(items.map((n) => n.id));
     const deg = new Map();
     edges.forEach((e) => { deg.set(e.from, (deg.get(e.from) || 0) + 1); deg.set(e.to, (deg.get(e.to) || 0) + 1); });
-    const nextSig = `${[...ids].sort().join()}/${edges.map((e) => e.key).sort().join()}/${items.map((n) => `${n.id}:${n.type === 'capture' ? n.meta.tag || '' : ''}`).sort().join()}`;
+    const nextSig = `${items.map((n) => n.id).sort().join()}/${edges.map((e) => e.key).sort().join()}/${items.map((n) => `${n.id}:${n.type === 'capture' ? n.meta.tag || '' : ''}`).sort().join()}`;
     const changed = nextSig !== sig;
     sig = nextSig;
-    readParams();
 
     const old = byId;
     byId = new Map();
@@ -5160,7 +5246,6 @@ const ConnGraph = (() => {
       }
       const tag = GraphTags.of(it);
       n.deg = deg.get(it.id) || 0;
-      n.r = radius(n.deg);
       n.tag = tag ? tag.id : null;
       n.color = tag ? tag.color : null;
       n.pin = it.type === 'pin';
@@ -5169,10 +5254,8 @@ const ConnGraph = (() => {
       byId.set(it.id, n);
     }
     nodes = [...byId.values()];
-    readParams(); // spacing depends on how many dots there are
+    const forces = readParams(); // spacing depends on how many dots there are
     for (const n of nodes) n.r = radius(n.deg);
-    if (hover && !byId.has(hover.id)) { hover = null; lit = null; hoverT = 0; }
-    if (kbd && !byId.has(kbd.id)) kbd = null;
     links = edges.map((e) => ({ s: byId.get(e.from), t: byId.get(e.to) })).filter((l) => l.s && l.t);
     for (const l of links) {
       const a = l.s.deg || 1;
@@ -5180,6 +5263,7 @@ const ConnGraph = (() => {
       l.strength = 1 / Math.min(a, b);
       l.bias = a / (a + b);
     }
+    views.forEach((v) => v.prune(byId));
 
     // New dots: next to a dot they link with, otherwise close to the centre (a sunflower spiral, so many at once don't stack).
     const many = fresh.length > 3 && fresh.length > nodes.length / 2;
@@ -5199,13 +5283,12 @@ const ConnGraph = (() => {
       for (let i = 0; i < 500 && alpha > 0.004; i++) tick();
       nodes.forEach((n) => { n.vx = 0; n.vy = 0; });
       alpha = 0;
-      placed = false;
       layoutDirty = true;
+      views.forEach((v) => v.unplace());
     } else if (changed && (fresh.length || old.size)) {
       alpha = Math.max(alpha, fresh.length ? 0.2 : 0.3); // a new dot finds its place without shaking the rest
     }
-    hint.hidden = links.length > 0;
-    host.setAttribute('aria-label', `Graph of ${pluralise(nodes.length, 'note')} and ${pluralise(links.length, 'connection')}. Arrow keys move between notes, Enter opens one, P pins it; plus and minus zoom.`);
+    if (forces) alpha = Math.max(alpha, 0.3); // a slider moved: the graph re-settles live
     if (changed) layoutDirty = true;
   }
   function centroid(skip) {
@@ -5315,23 +5398,18 @@ const ConnGraph = (() => {
     }
   }
 
-  /* --- Running: only while something moves, only while it can be seen --- */
-  const visible = () => host.isConnected && UI.get().page === 'connections' && UI.get().connView === 'graph' && document.visibilityState === 'visible' && W > 0;
-  function kick() { if (!raf && visible()) { last = performance.now(); acc = 0; raf = requestAnimationFrame(frame); } }
+  /* --- Running: one loop for both views, only while something moves and a view can be seen --- */
+  const shown = () => [...views].filter((v) => v.visible());
+  function kick() { if (!raf && shown().length) { last = performance.now(); acc = 0; raf = requestAnimationFrame(frame); } }
   function moving() {
     if (alpha >= ALPHA_MIN || alphaTarget > 0) return true;
     for (const n of nodes) if (n.fx === null && (Math.abs(n.vx) > 0.01 || Math.abs(n.vy) > 0.01)) return true;
     return false;
   }
-  function animating(now) {
-    if (pulse && now - pulse.t0 < 600) return true;
-    if (press && press.node && press.mode === 'pending') return true;
-    if ((hover && hoverT < 1) || (!hover && hoverT > 0)) return true;
-    return nodes.some((n) => n.born && now - n.born < APPEAR);
-  }
   function frame(now) {
     raf = 0;
-    if (!visible()) return; // picked up again by the next render or when the app comes back
+    const live = shown();
+    if (!live.length) return; // picked up again by the next render, or when a view comes back into sight
     acc += Math.min(100, now - last);
     last = now;
     let steps = 0;
@@ -5339,16 +5417,171 @@ const ConnGraph = (() => {
     if (sim) { while (acc >= TICK && steps < 3) { tick(); acc -= TICK; steps++; } } else acc = 0;
     if (steps) layoutDirty = true; // saved once it comes to rest (an earlier save may have caught it mid-flight)
     const dt = Math.min(100, steps * TICK || 16);
+    let anim = false;
+    for (const v of live) anim = v.frame(now, dt) || anim;
+    if (!anim) anim = nodes.some((n) => n.born && now - n.born < APPEAR);
+    if (sim || anim) raf = requestAnimationFrame(frame);
+    else { nodes.forEach((n) => { n.born = 0; }); if (layoutDirty) saveSoon(); }
+  }
+
+  /* --- Saving --- */
+  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
+  /** Writes positions, pins and each view's camera to state.graph (saved with everything else, and in backups). */
+  function save() {
+    clearTimeout(saveTimer);
+    if (!layoutDirty || !graphRef || Store.get().graph !== graphRef) return; // nothing new, or the data was replaced (restore, reset)
+    layoutDirty = false;
+    const pos = {};
+    for (const n of nodes) pos[n.id] = n.pinned ? [round1(n.x), round1(n.y), 1] : [round1(n.x), round1(n.y)];
+    const next = { ...graphRef, pos };
+    views.forEach((v) => { const c = v.camera(); if (c) next[v.cam] = c; });
+    graphRef = next;
+    Store.update((s) => { s.graph = next; }, 'graph');
+  }
+  Persistence.onFlush(save);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); else kick(); });
+  const touched = () => { layoutDirty = true; saveSoon(); kick(); };
+
+  return {
+    TICK, APPEAR, update, kick, touched, saveSoon,
+    register: (v) => views.add(v),
+    nodes: () => nodes, links: () => links, params: () => params,
+    saved: () => graphRef,
+    /** Warm the simulation up to at least `a` (it then cools on its own). */
+    heat: (a) => { alpha = Math.max(alpha, a); },
+    /** Cool it to at most `a`, so a throw plays out before the graph settles around it. */
+    cool: (a) => { alpha = Math.min(alpha, a); },
+    /** Keep it warm while a dot is held by a finger (0 lets it cool). */
+    hold: (t) => { alphaTarget = t; if (t) alpha = Math.max(alpha, t); },
+  };
+})();
+
+/** One place the graph is shown: a canvas, a camera, and the gestures. `cam` names
+    the camera's key in state.graph; `page` is the page it lives on. */
+function GraphView({ cam, page, hintText, hintWhen, withTools = false, fitOnResize = false, relativeLabels = false, insets = () => ({ top: 24, bottom: 24 }) }) {
+  const MOVE = 6;           // px a press may move and still be a tap
+  const HOLD = 500;         // ms to hold a dot to pin it
+  const K_MIN = 0.2;
+  const K_MAX = 4;
+  const { TICK, APPEAR } = GraphSim;
+  const clampK = (k) => Math.min(K_MAX, Math.max(K_MIN, k));
+  const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // slow-fast-slow
+  const round1 = (v) => Math.round(v * 10) / 10;
+  const nodes = () => GraphSim.nodes();
+  const MIN_R = 3;          // px: the smallest a dot is drawn, however far out you zoom
+  const rOf = (n) => Math.max(n.r, MIN_R / view.k);
+  const links = () => GraphSim.links();
+
+  const canvas = h('canvas', { class: 'graph__canvas', 'aria-hidden': 'true' });
+  const hint = h('p', { class: 'graph__hint', text: hintText, hidden: true });
+  const tool = (name, label, run) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': label, 'data-tip': label, 'data-tip-align': 'end', onclick: run }, icon(name));
+  const tools = withTools ? h('div', { class: 'graph__tools' },
+    tool('minus', 'Zoom out', () => zoomCentre(1 / 1.25)),
+    tool('plus', 'Zoom in', () => zoomCentre(1.25)),
+    tool('fit', 'Fit to view', () => fit(true))) : null;
+  const said = h('span', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  const probe = h('span', { hidden: true });
+  const host = h('div', { class: `graph graph--${cam}`, tabindex: '0', role: 'application', 'aria-roledescription': 'graph' }, canvas, hint, tools, said, probe);
+  const ctx = canvas.getContext('2d');
+
+  let colours = null;
+  let view = { x: 0, y: 0, k: 1 };
+  let W = 0;
+  let H = 0;
+  let dpr = 1;
+  let placed = false;       // the camera has been set for this graph
+  let inSight = true;       // on screen (the Home card can be scrolled away on a phone)
+  let hover = null;         // the dot under the mouse or pencil
+  let hoverT = 0;           // 0..1, its highlight fading in or out
+  let lit = null;           // Set of ids lit by the hover (the dot and its neighbours)
+  let pulse = null;         // { node, t0 } the ring shown when a hold pins or unpins
+  let kbd = null;           // the dot chosen with the arrow keys
+  let viewAnim = 0;
+  let fitK = 1;             // the zoom of the last fit
+
+  /** How much of the labels show at zoom k (0..1): the zoom against the Settings threshold.
+      A small card counts its fitted zoom as 1x, so its notes are named straight away; there,
+      labels that would collide are left out instead (see draw), so a crowded card names
+      only its best-connected notes, and more appear as you zoom in. */
+  function labelsAt(k) {
+    const f = GraphSim.params().fade;
+    const zk = relativeLabels ? k / Math.min(fitK, 1) : k;
+    return Math.min(1, Math.max(0, (zk - f * 0.75) / (f * 0.5)));
+  }
+  const widths = new Map(); // label → px, for the font in use
+  let widthFont = '';
+  function labelWidth(text) {
+    if (widthFont !== ctx.font) { widths.clear(); widthFont = ctx.font; }
+    let w = widths.get(text);
+    if (w === undefined) { w = ctx.measureText(text).width; widths.set(text, w); }
+    return w;
+  }
+  const labelA = new Map(); // id → shown 0..1, easing toward its target (card only)
+  let labelsMoving = false;
+  /** Labels that fit without overlapping each other or another dot, best-connected first. */
+  function freeLabels(k, onScreen) {
+    const CELL = 64;
+    const grid = new Map();
+    const cells = (r, add) => {
+      const out = [];
+      for (let gx = Math.floor(r.x0 / CELL); gx <= Math.floor(r.x1 / CELL); gx++) {
+        for (let gy = Math.floor(r.y0 / CELL); gy <= Math.floor(r.y1 / CELL); gy++) {
+          const key = `${gx},${gy}`;
+          if (add) { const l = grid.get(key); if (l) l.push(r); else grid.set(key, [r]); } else out.push(grid.get(key));
+        }
+      }
+      return out;
+    };
+    const hits = (r) => cells(r, false).some((list) => list && list.some((o) => o.id !== r.id && o.x0 < r.x1 && o.x1 > r.x0 && o.y0 < r.y1 && o.y1 > r.y0));
+    const vis = nodes().filter(onScreen);
+    for (const n of vis) {
+      const sx = view.x + n.x * k; const sy = view.y + n.y * k; const r = rOf(n) * k;
+      cells({ id: n.id, x0: sx - r, x1: sx + r, y0: sy - r, y1: sy + r }, true);
+    }
+    const order = vis.slice().sort((a, b) => (b === kbd) - (a === kbd) || (b === lit?.hub) - (a === lit?.hub) || b.deg - a.deg || a.label.length - b.label.length);
+    const free = new Set();
+    for (const n of order) {
+      const w = labelWidth(n.label) + 6;
+      const sx = view.x + n.x * k;
+      const top = view.y + (n.y + rOf(n)) * k + 4;
+      const r = { id: n.id, x0: sx - w / 2, x1: sx + w / 2, y0: top, y1: top + 16 };
+      if (hits(r)) continue;
+      cells(r, true);
+      free.add(n.id);
+    }
+    return free;
+  }
+
+  function readColours() {
+    const cs = getComputedStyle(probe);
+    const resolve = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
+    colours = {
+      edge: resolve('--text-3'), node: resolve('--text-3'), label: resolve('--text-2'), strong: resolve('--text'),
+      halo: resolve('--bg'), accent: resolve('--accent'), ring: resolve('--text-2'),
+      font: cs.fontFamily || 'system-ui, sans-serif',
+    };
+  }
+  const visible = () => host.isConnected && inSight && W > 0 && UI.get().page === page && (page !== 'connections' || UI.get().connView === 'graph') && document.visibilityState === 'visible';
+  const kick = () => GraphSim.kick();
+
+  /* --- One frame (called by the shared loop) --- */
+  function animating(now) {
+    if (pulse && now - pulse.t0 < 600) return true;
+    if (press && press.node && press.mode === 'pending') return true;
+    return labelsMoving || (hover && hoverT < 1) || (!hover && hoverT > 0);
+  }
+  function frame(now, dt) {
     hoverT = hover ? Math.min(1, hoverT + dt / 160) : Math.max(0, hoverT - dt / 160);
     if (!hover && hoverT === 0) lit = null;
     draw(now);
-    if (sim || animating(now)) raf = requestAnimationFrame(frame);
-    else { nodes.forEach((n) => { n.born = 0; }); if (layoutDirty) saveSoon(); }
+    return animating(now);
   }
 
   /* --- Drawing --- */
   function draw(now) {
     if (!W || !colours) return;
+    const params = GraphSim.params();
+    if (!params) return;
     const k = view.k;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
@@ -5365,7 +5598,7 @@ const ConnGraph = (() => {
     ctx.strokeStyle = colours.edge;
     ctx.globalAlpha = 0.6 * (1 - dim * 0.7);
     ctx.beginPath();
-    for (const l of links) {
+    for (const l of links()) {
       if (lit && dim && (l.s === lit.hub || l.t === lit.hub)) continue; // drawn lit below
       ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y);
     }
@@ -5376,23 +5609,24 @@ const ConnGraph = (() => {
       ctx.lineWidth = 1.5 / k;
       ctx.beginPath();
       const hv = lit.hub;
-      for (const l of links) if (l.s === hv || l.t === hv) { ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y); }
+      for (const l of links()) if (l.s === hv || l.t === hv) { ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y); }
       ctx.stroke();
     }
     // Dots in their tag's colour (neutral grey without one); pinned ones carry a ring.
-    for (const n of nodes) {
+    for (const n of nodes()) {
       if (!onScreen(n)) continue;
       const g = grow(n);
       ctx.globalAlpha = g * (lit && !lit.has(n.id) ? 1 - dim * 0.75 : 1);
       ctx.fillStyle = n.color || colours.node;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r * (0.4 + 0.6 * g) * (n === lit?.hub ? 1 + 0.15 * dim : 1), 0, Math.PI * 2);
+      const r = rOf(n);
+      ctx.arc(n.x, n.y, r * (0.4 + 0.6 * g) * (n === lit?.hub ? 1 + 0.15 * dim : 1), 0, Math.PI * 2);
       ctx.fill();
-      if (n.pin) { ctx.fillStyle = colours.halo; ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 0.38, 0, Math.PI * 2); ctx.fill(); }
+      if (n.pin) { ctx.fillStyle = colours.halo; ctx.beginPath(); ctx.arc(n.x, n.y, r * 0.38, 0, Math.PI * 2); ctx.fill(); }
       if (n.pinned) {
         ctx.strokeStyle = colours.ring;
         ctx.lineWidth = 1.5 / k;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3.5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 3.5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
       }
     }
     // Holding a dot: a ring fills in until it pins; then a short pulse.
@@ -5403,7 +5637,7 @@ const ConnGraph = (() => {
         ctx.globalAlpha = 0.9;
         ctx.strokeStyle = colours.accent;
         ctx.lineWidth = 2 / k;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6 / Math.max(k, 0.5), -Math.PI / 2, -Math.PI / 2 + Math.min(1, t) * Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(n.x, n.y, rOf(n) + 6 / Math.max(k, 0.5), -Math.PI / 2, -Math.PI / 2 + Math.min(1, t) * Math.PI * 2); ctx.stroke();
       }
     }
     if (pulse) {
@@ -5413,72 +5647,82 @@ const ConnGraph = (() => {
         ctx.globalAlpha = 1 - t;
         ctx.strokeStyle = colours.accent;
         ctx.lineWidth = 2 / k;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (6 + t * 10) / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(n.x, n.y, rOf(n) + (6 + t * 10) / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
       } else pulse = null;
     }
-
     // The dot chosen from the keyboard.
     if (kbd && host.matches(':focus-visible')) {
       ctx.globalAlpha = 1;
       ctx.strokeStyle = colours.accent;
       ctx.lineWidth = 2 / k;
-      ctx.beginPath(); ctx.arc(kbd.x, kbd.y, kbd.r + 5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(kbd.x, kbd.y, rOf(kbd) + 5 / Math.max(k, 0.5), 0, Math.PI * 2); ctx.stroke();
     }
 
     // Labels, at screen size: they fade out as you zoom out (the hovered dot's stay).
-    const f = params.fade;
-    const show = Math.min(1, Math.max(0, (k - f * 0.75) / (f * 0.5)));
-    if (show > 0 || lit) {
+    const show = labelsAt(k);
+    labelsMoving = false;
+    if (show > 0 || lit || kbd || labelA.size) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const size = 12;
-      ctx.font = `500 ${size}px ${colours.font}`;
+      ctx.font = `500 12px ${colours.font}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.lineJoin = 'round';
       ctx.lineWidth = 3;
       ctx.strokeStyle = colours.halo;
-      for (const n of nodes) {
+      const free = relativeLabels && show > 0 ? freeLabels(k, onScreen) : null;
+      const step = Math.min(1, (now - (draw.last || now)) / 160) || 0.1;
+      for (const n of nodes()) {
         const near = lit && lit.has(n.id);
         let a = n === kbd ? 1 : show;
+        if (relativeLabels) {
+          const want = free && free.has(n.id) ? 1 : 0;
+          const cur = labelA.has(n.id) ? labelA.get(n.id) : want;
+          const next = cur < want ? Math.min(want, cur + step) : Math.max(want, cur - step);
+          if (next) labelA.set(n.id, next); else labelA.delete(n.id);
+          if (next !== want) labelsMoving = true;
+          if (n !== kbd && n !== lit?.hub) a = show * next;
+        }
         if (lit) a = near ? Math.max(show, n === lit.hub ? dim : show) : show * (1 - dim * 0.75);
         a *= grow(n);
         if (a < 0.02 || !onScreen(n)) continue;
         const sx = view.x + n.x * k;
-        const sy = view.y + (n.y + n.r) * k + 5;
+        const sy = view.y + (n.y + rOf(n)) * k + 5;
         ctx.globalAlpha = a;
         ctx.fillStyle = near && dim ? colours.strong : colours.label;
         ctx.strokeText(n.label, sx, sy);
         ctx.fillText(n.label, sx, sy);
       }
     }
+    draw.last = now;
     ctx.globalAlpha = 1;
   }
 
-  /* --- View: fit, zoom, saving --- */
-  function bounds() {
-    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
-    for (const n of nodes) { x0 = Math.min(x0, n.x - n.r); y0 = Math.min(y0, n.y - n.r); x1 = Math.max(x1, n.x + n.r); y1 = Math.max(y1, n.y + n.r); }
-    return { x0, y0, x1, y1 };
-  }
-  let viewAnim = 0;
+  /* --- Camera: fit, zoom --- */
   function fit(animate = false) {
     if (!W || !H) return;
+    const ns = nodes();
     let target;
-    if (!nodes.length) target = { k: 1, x: W / 2, y: H / 2 };
+    if (!ns.length) target = { k: 1, x: W / 2, y: H / 2 };
     else {
-      // Room for the labels (screen-sized) and for the controls floating over the graph.
-      const hr = host.getBoundingClientRect();
-      const seg = $('#conn-view');
-      const top = Math.max(24, seg && seg.offsetParent ? seg.getBoundingClientRect().bottom - hr.top + 12 : 24);
-      const bottom = Math.max(24, hr.bottom - tools.getBoundingClientRect().top + 12);
+      // Room for the labels (screen-sized) and for anything floating over the graph.
+      const { top, bottom } = insets(host, tools);
       if (colours) ctx.font = `500 12px ${colours.font}`;
       let label = 0;
-      for (const n of nodes) label = Math.max(label, ctx.measureText(n.label).width / 2);
-      const side = Math.min(label + 12, W * 0.3);
-      const b = bounds();
-      const k = clampK(Math.min(1.6, (W - side * 2) / Math.max(b.x1 - b.x0, 1), (H - top - bottom - 20) / Math.max(b.y1 - b.y0, 1)));
-      target = { k, x: W / 2 - ((b.x0 + b.x1) / 2) * k, y: top + (H - top - bottom - 20) / 2 - ((b.y0 + b.y1) / 2) * k };
+      for (const n of ns) label = Math.max(label, ctx.measureText(n.label).width / 2);
+      let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+      for (const n of ns) { x0 = Math.min(x0, n.x - n.r); y0 = Math.min(y0, n.y - n.r); x1 = Math.max(x1, n.x + n.r); y1 = Math.max(y1, n.y + n.r); }
+      const zoomFor = (side, below) => clampK(Math.min(1.6, (W - side * 2) / Math.max(x1 - x0, 1), Math.max(40, H - top - bottom - below) / Math.max(y1 - y0, 1)));
+      // Room for the labels (half the widest beside the outer dots, a line under the lowest) only if they'll show at that zoom.
+      let side = Math.min(label + 12, W * 0.3);
+      let below = 20;
+      let k = zoomFor(side, below);
+      fitK = k;
+      if (labelsAt(k) <= 0) { side = 12; below = 0; k = zoomFor(side, below); }
+      const room = Math.max(40, H - top - bottom - below);
+      fitK = k;
+      target = { k, x: W / 2 - ((x0 + x1) / 2) * k, y: top + room / 2 - ((y0 + y1) / 2) * k };
     }
+    placed = true;
     cancelAnimationFrame(viewAnim);
     if (!animate || prefersReducedMotion()) { view = target; changedView(); return; }
     const from = { ...view };
@@ -5504,28 +5748,13 @@ const ConnGraph = (() => {
     changedView();
   }
   const zoomCentre = (factor) => zoomAt(W / 2, H / 2, factor);
-  function changedView() { layoutDirty = true; saveSoon(); kick(); }
-  /** Puts the view back where it was left (its centre and zoom), or fits the graph. */
+  const changedView = () => GraphSim.touched();
+  /** The page's camera goes back where it was left; the Home card fits the graph. */
   function placeView() {
-    const v = Store.get().graph.view;
-    if (v) view = { k: v.k, x: W / 2 - v.cx * v.k, y: H / 2 - v.cy * v.k };
-    else fit();
-    placed = true;
+    const v = !fitOnResize && GraphSim.saved() && GraphSim.saved()[cam];
+    if (v) { view = { k: v.k, x: W / 2 - v.cx * v.k, y: H / 2 - v.cy * v.k }; placed = true; } else fit();
   }
-  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(saveLayout, 400); }
-  /** Writes positions, pins and the view to state.graph (saved with everything else, and in backups). */
-  function saveLayout() {
-    clearTimeout(saveTimer);
-    if (!layoutDirty || !graphRef || Store.get().graph !== graphRef) return; // nothing new, or the data was replaced (restore, reset)
-    layoutDirty = false;
-    const pos = {};
-    for (const n of nodes) pos[n.id] = n.pinned ? [round1(n.x), round1(n.y), 1] : [round1(n.x), round1(n.y)];
-    const v = W && placed ? { cx: round1((W / 2 - view.x) / view.k), cy: round1((H / 2 - view.y) / view.k), k: Math.round(view.k * 1000) / 1000 } : graphRef.view;
-    const next = { pos, view: v };
-    graphRef = next;
-    Store.update((s) => { s.graph = next; }, 'graph');
-  }
-  Persistence.onFlush(saveLayout);
+  const camera = () => (W && placed ? { cx: round1((W / 2 - view.x) / view.k), cy: round1((H / 2 - view.y) / view.k), k: Math.round(view.k * 1000) / 1000 } : null);
 
   /* --- Size: sharp on high-density screens --- */
   new ResizeObserver(() => {
@@ -5533,18 +5762,20 @@ const ConnGraph = (() => {
     if (!r.width || !r.height) return;
     const nextDpr = Math.min(window.devicePixelRatio || 1, 3);
     if (r.width === W && r.height === H && nextDpr === dpr) return;
-    if (placed && W && H) { view.x += (r.width - W) / 2; view.y += (r.height - H) / 2; } // keep the middle in the middle
+    const resized = W && H;
+    if (placed && resized) { view.x += (r.width - W) / 2; view.y += (r.height - H) / 2; } // keep the middle in the middle
     W = r.width; H = r.height; dpr = nextDpr;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    if (!placed) placeView();
+    if (!colours && host.isConnected) readColours();
+    if (!placed || (fitOnResize && resized)) placeView();
     if (colours) draw(performance.now());
     kick();
   }).observe(host);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveLayout(); });
+  new IntersectionObserver(([e]) => { inSight = e.isIntersecting; if (inSight) { if (colours) draw(performance.now()); kick(); } }).observe(host);
 
   /* --- Pointers: tap, drag and throw, hold to pin, pan, pinch --- */
   const pointers = new Map();
-  let press = null;   // { node, sx, sy, vx, vy, ox, oy, t0, mode: pending|drag|pan|held, timer, samples }
+  let press = null;   // { node, sx, sy, vx, vy, ox, oy, t0, mode: pending|pan-pending|drag|pan|held, timer, samples }
   let pinch = null;
   const local = (e) => { const r = host.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   const toWorld = (p) => ({ x: (p.x - view.x) / view.k, y: (p.y - view.y) / view.k });
@@ -5552,8 +5783,8 @@ const ConnGraph = (() => {
     const w = toWorld(p);
     let best = null;
     let bestD = Infinity;
-    for (const n of nodes) {
-      const reach = n.r + slop / view.k;
+    for (const n of nodes()) {
+      const reach = rOf(n) + slop / view.k;
       const d = (n.x - w.x) ** 2 + (n.y - w.y) ** 2;
       if (d <= reach * reach && d < bestD) { best = n; bestD = d; }
     }
@@ -5566,14 +5797,14 @@ const ConnGraph = (() => {
     if (n) {
       lit = new Set([n.id]);
       lit.hub = n;
-      for (const l of links) { if (l.s === n) lit.add(l.t.id); else if (l.t === n) lit.add(l.s.id); }
+      for (const l of links()) { if (l.s === n) lit.add(l.t.id); else if (l.t === n) lit.add(l.s.id); }
     }
     kick();
   }
   function release(pr, throwIt) {
     const n = pr.node;
-    alphaTarget = 0;
-    if (n.pinned) { n.fx = n.x; n.fy = n.y; layoutDirty = true; return; }
+    GraphSim.hold(0);
+    if (n.pinned) { n.fx = n.x; n.fy = n.y; GraphSim.touched(); return; }
     n.fx = null; n.fy = null;
     if (!throwIt) return;
     // The throw: the finger's speed over its last ~80 ms, if it was still moving when it let go.
@@ -5588,22 +5819,23 @@ const ConnGraph = (() => {
     const sp = Math.hypot(vx, vy);
     if (sp > max) { vx *= max / sp; vy *= max / sp; }
     n.vx = vx; n.vy = vy;
-    alpha = Math.min(alpha, 0.05); // cool down, so the throw plays out before the graph gently settles around it
+    GraphSim.cool(0.05);
   }
   function startPinch() {
     const [a, b] = [...pointers.values()];
     pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, m: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, view: { ...view } };
   }
   function startPan(p) { press = { node: null, sx: p.x, sy: p.y, vx: view.x, vy: view.y, t0: performance.now(), mode: 'pan', samples: [] }; }
+  function togglePin(n) {
+    n.pinned = !n.pinned;
+    if (n.pinned) { n.fx = n.x; n.fy = n.y; n.vx = 0; n.vy = 0; } else { n.fx = null; n.fy = null; GraphSim.heat(0.08); }
+    GraphSim.touched();
+  }
   function hold() {
     if (!press || press.mode !== 'pending' || !press.node) return;
-    const n = press.node;
     press.mode = 'held';
-    n.pinned = !n.pinned;
-    if (n.pinned) { n.fx = n.x; n.fy = n.y; n.vx = 0; n.vy = 0; } else { n.fx = null; n.fy = null; alpha = Math.max(alpha, 0.08); }
-    pulse = prefersReducedMotion() ? null : { node: n, t0: performance.now() };
-    layoutDirty = true;
-    saveSoon();
+    togglePin(press.node);
+    pulse = prefersReducedMotion() ? null : { node: press.node, t0: performance.now() };
     kick();
   }
   canvas.addEventListener('pointerdown', (e) => {
@@ -5654,8 +5886,7 @@ const ConnGraph = (() => {
         host.classList.add('is-dragging');
         setHover(null);
         press.node.fx = press.node.x; press.node.fy = press.node.y;
-        alphaTarget = 0.3;
-        alpha = Math.max(alpha, 0.3);
+        GraphSim.hold(0.3);
       } else {
         press.mode = 'pan';
         host.classList.add('is-panning');
@@ -5669,8 +5900,7 @@ const ConnGraph = (() => {
       n.x = n.fx; n.y = n.fy;
       press.samples.push({ t: performance.now(), x: n.fx, y: n.fy });
       if (press.samples.length > 12) press.samples.shift();
-      layoutDirty = true;
-      kick();
+      GraphSim.touched();
     } else if (press.mode === 'pan') {
       view = { ...view, x: press.vx + (p.x - press.sx), y: press.vy + (p.y - press.sy) };
       changedView();
@@ -5689,7 +5919,7 @@ const ConnGraph = (() => {
     host.classList.remove('is-panning', 'is-dragging');
     const pr = press;
     press = null;
-    if (pr.mode === 'drag') { release(pr, e.type === 'pointerup'); kick(); }
+    if (pr.mode === 'drag') release(pr, e.type === 'pointerup');
     else if (pr.mode === 'pending' && e.type === 'pointerup') { setHover(null); Links.open(pr.node.id); }
     if (e.pointerType === 'mouse' && e.type === 'pointerup') setHover(hit(local(e), 4));
     kick();
@@ -5713,6 +5943,7 @@ const ConnGraph = (() => {
     const p = local(e);
     zoomAt(p.x, p.y, clampK(gestureK * e.scale) / view.k);
   });
+
   /* --- Keyboard: arrows step through the dots in reading order (row by row), Enter opens, P pins --- */
   const DIRS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
   function choose(n) {
@@ -5725,9 +5956,10 @@ const ConnGraph = (() => {
     kick();
   }
   function step(dir) {
-    if (!nodes.length) return;
-    const row = params.dist * 0.6;
-    const order = nodes.slice().sort((a, b2) => (Math.round(a.y / row) - Math.round(b2.y / row)) || (a.x - b2.x));
+    const ns = nodes();
+    if (!ns.length) return;
+    const row = GraphSim.params().dist * 0.6;
+    const order = ns.slice().sort((a, b2) => (Math.round(a.y / row) - Math.round(b2.y / row)) || (a.x - b2.x));
     const i = kbd ? order.indexOf(kbd) : -1;
     choose(order[i < 0 ? (dir > 0 ? 0 : order.length - 1) : (i + dir + order.length) % order.length]);
   }
@@ -5738,59 +5970,78 @@ const ConnGraph = (() => {
     else if (e.key === '0') fit(true);
     else if (DIRS[e.key]) step(DIRS[e.key]);
     else if ((e.key === 'Enter' || e.key === ' ') && kbd) Links.open(kbd.id);
-    else if ((e.key === 'p' || e.key === 'P') && kbd) {
-      kbd.pinned = !kbd.pinned;
-      if (kbd.pinned) { kbd.fx = kbd.x; kbd.fy = kbd.y; } else { kbd.fx = null; kbd.fy = null; alpha = Math.max(alpha, 0.08); }
-      layoutDirty = true;
-      saveSoon();
-      choose(kbd);
-    } else return;
+    else if ((e.key === 'p' || e.key === 'P') && kbd) { togglePin(kbd); choose(kbd); }
+    else return;
     e.preventDefault();
   });
-  host.addEventListener('focus', () => kick());
-  host.addEventListener('blur', () => kick());
+  host.addEventListener('focus', () => draw(performance.now()));
+  host.addEventListener('blur', () => draw(performance.now()));
 
-  /** Brings the graph up to date with the notes and settings; the caller puts `host` in the page. */
-  function render(items, edges) {
-    const before = params;
-    setData(items, edges);
-    if (before && (before.dist !== params.dist || before.charge !== params.charge || before.centre !== params.centre || before.cluster !== params.cluster)) alpha = Math.max(alpha, 0.3);
-    return host;
-  }
-  /** Called once `host` is in the page. */
-  function settle() {
-    readColours(); // the theme may have changed
-    if (W && !placed) placeView();
-    draw(performance.now());
-    kick();
-  }
-  return { render, settle, fit };
-})();
+  const api = {
+    host, cam, frame, visible, camera, fit,
+    /** The data was replaced (restore, reset): forget the hover and the camera. */
+    reset() { hover = null; lit = null; hoverT = 0; kbd = null; pulse = null; placed = false; },
+    /** A new layout: the camera is placed afresh. */
+    unplace() { placed = false; },
+    /** Drops references to dots that are gone. */
+    prune(byId) {
+      if (hover && !byId.has(hover.id)) { hover = null; lit = null; hoverT = 0; }
+      if (kbd && !byId.has(kbd.id)) kbd = null;
+      if (pulse && !byId.has(pulse.node.id)) pulse = null;
+    },
+    /** Brings the graph up to date with the notes and settings; the caller puts `host` in the page, then calls settle(). */
+    render(items, edges) {
+      GraphSim.update(items, edges);
+      const ns = nodes();
+      hint.hidden = !hintWhen(ns.length, links().length);
+      host.classList.toggle('is-empty', !ns.length);
+      host.setAttribute('aria-label', `Graph of ${pluralise(ns.length, 'note')} and ${pluralise(links().length, 'connection')}. Arrow keys move between notes, Enter opens one, P pins it; plus and minus zoom.`);
+      return host;
+    },
+    /** Called once `host` is in the page. */
+    settle() {
+      readColours(); // the theme may have changed
+      if (W && !placed) placeView();
+      draw(performance.now());
+      kick();
+    },
+  };
+  GraphSim.register(api);
+  return api;
+}
 
-/* The Connections page (graph or list) and the Home card's recent connections. */
+/* The Connections page's graph: it fills the page; the view switch floats above it and the zoom buttons below. */
+const ConnGraph = GraphView({
+  cam: 'view', page: 'connections', withTools: true,
+  hintText: 'Link text in a note to another note to create connections', hintWhen: (nodes, links) => !links,
+  insets: (host, tools) => {
+    const hr = host.getBoundingClientRect();
+    const seg = $('#conn-view');
+    return {
+      top: Math.max(24, seg && seg.offsetParent ? seg.getBoundingClientRect().bottom - hr.top + 12 : 24),
+      bottom: Math.max(24, hr.bottom - tools.getBoundingClientRect().top + 12),
+    };
+  },
+});
+/* The Home card's graph: the same dots, its own camera; it fits itself when it first shows and when the card is resized. */
+const HomeGraph = GraphView({
+  cam: 'card', page: 'home', fitOnResize: true, relativeLabels: true,
+  hintText: 'Create a note to see it here', hintWhen: (nodes) => !nodes,
+  insets: () => ({ top: 44, bottom: 14 }), // clear of the corner button
+});
+
+/* The Connections page (graph or list) and the Home card's graph. */
 const Connections = (() => {
-  const homeList = $('#conn-list');
+  const homeBody = $('#conn-mini');
   const page = $('#conn-page');
   const viewSeg = $('#conn-view');
-  homeList.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
   page.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
   viewSeg.addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (b) UI.set({ connView: b.dataset.view }); });
-  const name = (it) => [it.type === 'pin' ? icon('pin') : null, h('span', { class: 'conn-name', text: Links.title(it) })];
-
-  /** Home card: the most recent connections, "Note A ↔ Note B" (a pin first). Tapping one opens the note that holds the link. */
+  /** Home card: the same graph as the Connections page, with its own camera. */
   function render() {
-    const edges = Links.edges().slice(0, 20);
-    if (!edges.length) { homeList.replaceChildren(h('li', { class: 'empty' }, icon('connections'), 'No connections yet')); return; }
-    homeList.replaceChildren(...edges.map((e) => {
-      let a = Links.node(e.from);
-      let b = Links.node(e.to);
-      if (b.type === 'pin' && a.type !== 'pin') [a, b] = [b, a];
-      return h('li', { class: 'mini-row mini-row--conn' },
-        h('button', { class: 'mini-row__main', type: 'button', dataset: { open: e.from }, 'aria-label': `${Links.title(a)} and ${Links.title(b)}. Open “${Links.title(Links.node(e.from))}”` },
-          h('span', { class: 'mini-row__top' },
-            h('span', { class: 'mini-row__title conn-pair' }, name(a), h('span', { class: 'conn-pair__sep', 'aria-hidden': 'true', text: '↔' }), name(b)),
-            h('span', { class: 'mini-row__date', text: NotesData.label(e.at) }))));
-    }));
+    const host = HomeGraph.render(Links.nodes(), Links.edges());
+    if (host.parentNode !== homeBody) homeBody.replaceChildren(host);
+    HomeGraph.settle();
   }
 
   function chips(list) {
