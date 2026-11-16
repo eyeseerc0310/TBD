@@ -420,15 +420,16 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .wiki-skel-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
 /* Article overlay */
-.dialog--article { width: min(920px, calc(100vw - 32px)); height: calc(100dvh - 48px); max-height: none; }
+/* Nearly the whole window: a margin of about 6% around it (the base .dialog rule comes later, so this needs both classes). */
+.dialog.dialog--article { width: min(1600px, calc(100vw - clamp(32px, 12vw, 240px))); height: calc(100dvh - clamp(32px, 14vh, 200px)); max-height: none; }
 .dialog--article .dialog__body { padding: var(--s5) var(--s6) var(--s8); }
 .wiki-bar { display: flex; align-items: center; gap: var(--s2); }
 .wiki-bar .spacer { flex: 1; }
-.wiki { max-width: 68ch; margin: 0 auto; color: var(--text); font: 400 15px/1.7 var(--font); overflow-wrap: break-word; }
+.wiki { max-width: 80ch; margin: 0 auto; color: var(--text); font: 400 15px/1.7 var(--font); overflow-wrap: break-word; }
 /* The one exception to the app's no-selection rule: article text. */
 .wiki, .wiki * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 .wiki-summary { display: flex; gap: var(--s4); align-items: flex-start; padding: var(--s4); margin-bottom: var(--s6); border-radius: var(--r-panel); border: 1px solid var(--border); background: var(--hover); }
-.wiki-summary img { width: 112px; height: auto; flex: none; border-radius: var(--r-ctl); }
+.wiki-summary img { width: 160px; height: auto; flex: none; border-radius: var(--r-ctl); }
 .wiki-summary__desc { font-size: var(--fs-sm); color: var(--text-3); margin-bottom: var(--s1); }
 .wiki-summary__extract { color: var(--text); }
 .wiki h2, .wiki h3, .wiki h4 { font-family: var(--font-head); font-weight: 600; line-height: 1.3; margin: 1.6em 0 0.5em; color: var(--text); }
@@ -794,14 +795,6 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .link-card__url:hover { text-decoration: underline; text-underline-offset: 2px; }
 .link-card__actions { display: flex; gap: 4px; }
 .link-card__actions .btn { height: 28px; padding: 0 var(--s2); }
-/* "Backlinks" under a note: the notes and pins that link to it. */
-.backlinks { flex: none; display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: var(--s2); overflow-x: auto; scrollbar-width: none; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
-.backlinks::-webkit-scrollbar { display: none; }
-.backlinks__label { flex: none; font-weight: 600; letter-spacing: 0.04em; }
-.backlinks__item { flex: none; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); border-radius: 4px; transition: color var(--t-fast) var(--ease); }
-.backlinks__item:hover { color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; }
-.backlinks__item .icon { width: 11px; height: 11px; margin-right: 3px; vertical-align: -1px; color: var(--accent); }
-.backlinks__none { opacity: 0.8; }
 
 /* Nav icon chips (Settings → Appearance) */
 .navchips-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
@@ -897,7 +890,9 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .notes-layout > .panel { min-width: 0; }
 /* Sidebar: search, then the tree */
 .nside { gap: var(--s3); }
-.nsearch { flex: none; position: relative; display: flex; align-items: center; }
+/* Top row: search, then Archive and Trash */
+.nside__top { flex: none; display: flex; align-items: center; gap: 2px; }
+.nsearch { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; margin-right: var(--s1); }
 .nsearch__icon { position: absolute; left: 11px; color: var(--text-3); pointer-events: none; }
 .nsearch__input { padding-left: 34px; padding-right: 64px; }
 .nsearch__input::-webkit-search-cancel-button { -webkit-appearance: none; }
@@ -905,42 +900,55 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .nsearch__filter { right: 4px; }
 .nsearch__clear { right: 32px; }
 .nsearch__filter[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent-soft); }
-.ntree { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2) var(--s3); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
-.ngroup__head { flex: none; display: flex; align-items: center; width: 100%; height: var(--ctl-h); gap: 2px; border-radius: var(--r-ctl); }
-.ngroup__toggle { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s2) 0 2px; border-radius: inherit; text-align: left; font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
-.ngroup__toggle:hover { color: var(--text-2); }
-.ngroup__toggle > .icon:not(.nchev__icon) { width: 18px; height: 18px; color: var(--text-2); }
-.ngroup + .ngroup { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border); }
-/* Chevrons turn as a section opens; bodies grow and shrink smoothly. */
+.nside__btn { position: relative; flex: none; width: var(--ctl-h); height: var(--ctl-h); }
+.nside__btn .icon { width: var(--icon-sm); height: var(--icon-sm); }
+.nside__btn[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent-soft); }
+.nside__badge { position: absolute; top: 0; right: -1px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--border-strong); color: var(--text-2); font: 600 9.5px/15px var(--font); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+.nside__btn[aria-pressed="true"] .nside__badge { background: var(--accent); box-shadow: none; color: var(--on-accent); }
+.ntree { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2) var(--s3); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+/* Folders: rounded rows like tasks — no colour until one is chosen (then a tinted border and a wash). */
+.nfold {
+  position: relative; flex: none; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--hover);
+  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.nfold:hover { border-color: var(--border-strong); }
+.nfold.has-color { border-color: color-mix(in srgb, var(--task-c) 55%, var(--border)); background: color-mix(in srgb, var(--task-c) 15%, transparent); }
+.nfold.is-dragging { z-index: 3; transition: none; box-shadow: var(--shadow-pop); border-color: var(--border-strong); background: var(--surface-raised); }
+.nfold.is-dragging.has-color { background: color-mix(in srgb, var(--task-c) 18%, var(--surface-raised)); }
+.nfold.is-drop { border-color: var(--accent-line); box-shadow: inset 0 0 0 1px var(--accent-line); }
+.nfold__head { display: flex; align-items: center; gap: 2px; min-height: var(--row); padding: 3px var(--s1) 3px 2px; }
+.nfold__main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s2) 0 2px; border-radius: var(--r-sm); text-align: left; color: var(--text); font-size: var(--fs-base); }
+.nfold__main .icon { flex: none; width: var(--icon-sm); height: var(--icon-sm); color: var(--text-2); }
+.nfold__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nfold__count { flex: none; font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.nfold__head .row-more { flex: none; }
+.nfold__head:hover .row-more, .nfold__head:focus-within .row-more { opacity: 1; }
+/* Drag handles appear on hover (always, faintly, on touch screens), as on tasks. */
+.nhandle { width: 16px; height: 30px; flex: none; display: grid; place-items: center; color: var(--text-3); cursor: grab; touch-action: none; opacity: 0; transition: opacity var(--t-fast) var(--ease); }
+.nhandle .icon { width: 14px; height: 14px; }
+.nfold__head:hover > .nhandle, .nnote:hover > .nhandle, .nfold.is-dragging .nfold__head > .nhandle { opacity: 1; }
+.nhandle--none { visibility: hidden; }
+@media (hover: none) { .nhandle { opacity: 0.55; } }
+/* Chevrons turn as a folder opens; its notes grow and shrink smoothly. */
 .nchev { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--text-3); }
 .nchev:hover { color: var(--text); background: var(--hover-strong); }
 .nchev__icon { width: 14px; height: 14px; transition: transform var(--t) var(--ease); }
-.nitem.is-open > .nside__item .nchev__icon, .ngroup.is-open > .ngroup__head .nchev__icon { transform: rotate(90deg); }
+.nfold.is-open > .nfold__head .nchev__icon { transform: rotate(90deg); }
 .nbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t-slow) var(--ease); }
 .is-open > .nbody { grid-template-rows: 1fr; }
 .nbody > div { min-height: 0; overflow: hidden; }
-.nside__item { position: relative; flex: none; display: flex; align-items: center; min-height: 40px; padding-left: 4px; border-radius: var(--r-ctl); color: var(--text-2); transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
-.nside__item:hover { background: var(--hover); color: var(--text); }
-.nside__main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s3); padding: 0 var(--s3) 0 var(--s1); text-align: left; color: inherit; border-radius: inherit; font-size: var(--fs-base); }
-.nside__main .icon { flex: none; color: var(--text-2); }
-.nside__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nside__count { flex: none; font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
-.nside__item[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); }
-.nside__item[aria-current="true"] .nside__main .icon, .nside__item[aria-current="true"] .nside__count { color: var(--accent-ink); }
-.nside__item[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--accent); }
-.nside__folder .row-more { margin-right: 4px; }
-.nside__folder:hover .row-more, .nside__folder:focus-within .row-more { opacity: 1; }
-.nside__item.is-drop { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent-line); }
-.nitem { flex: none; }
-/* Notes inside a section: indented, smaller. */
-.nnotes { padding: 2px 0 var(--s2) 30px; display: flex; flex-direction: column; gap: 1px; }
-.nnote { position: relative; display: flex; align-items: center; min-height: 32px; padding-left: var(--s2); border-radius: var(--r-sm); -webkit-user-drag: element; touch-action: pan-y; transition: background var(--t-fast) var(--ease); }
+/* Notes inside a folder: indented, smaller. */
+.nnotes { padding: 0 var(--s1) var(--s2) 22px; display: flex; flex-direction: column; gap: 1px; }
+.nnote { position: relative; display: flex; align-items: center; min-height: 32px; padding-left: 2px; border-radius: var(--r-sm); touch-action: pan-y; transition: background var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease); }
 .nnote:hover { background: var(--hover); }
 .nnote.has-color { background: color-mix(in srgb, var(--row-c) 13%, transparent); }
 .nnote.is-selected { background: var(--accent-soft); }
 .nnote.is-selected .nnote__title { color: var(--accent-ink); }
-.nnote.is-dragging { opacity: 0.5; }
-.nnote__main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s2); text-align: left; border-radius: inherit; font-size: var(--fs-sm); }
+.nnote.is-placeholder { opacity: 0.35; }
+.nnote--ghost { position: fixed; z-index: 80; margin: 0; background: var(--surface-raised); border: 1px solid var(--border-strong); box-shadow: var(--shadow-pop); pointer-events: none; }
+.nnote--ghost .nhandle { opacity: 1; }
+.nmark { flex: none; height: 2px; margin: -1px var(--s2); border-radius: 2px; background: var(--accent); }
+.nnote__main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: var(--s2); padding-left: var(--s1); text-align: left; border-radius: inherit; font-size: var(--fs-sm); }
 .nnote__title { flex: 1; min-width: 0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nnote__title .icon { width: 11px; height: 11px; margin-right: 4px; vertical-align: -1px; color: var(--accent-ink); }
 .nnote__time { flex: none; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
@@ -949,6 +957,18 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .nnote .hit { background: var(--accent-soft); color: var(--text); border-radius: 3px; padding: 0 1px; }
 .nnote__none { min-height: 30px; display: flex; align-items: center; padding-left: var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
 .nnote__more { align-self: flex-start; margin: 2px 0 0 var(--s2); }
+/* "New folder": a quiet dashed row at the end. */
+.nnew { flex: none; display: flex; align-items: center; gap: var(--s2); min-height: var(--row); padding: 0 var(--s3); border: 1px dashed var(--border-strong); border-radius: var(--r-ctl); color: var(--text-3); font-size: var(--fs-sm); transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
+.nnew:hover, .nnew:focus-visible { color: var(--text); border-color: var(--accent-line); background: var(--hover); }
+.nnew .icon { width: 14px; height: 14px; }
+/* Archive and Trash: a plain list, with the way back. */
+.nback { flex: none; align-self: flex-start; display: flex; align-items: center; gap: 4px; height: var(--ctl-h-sm); padding: 0 var(--s2) 0 var(--s1); border-radius: var(--r-sm); font-size: var(--fs-sm); color: var(--text-2); }
+.nback:hover, .nback:focus-visible { color: var(--text); background: var(--hover); }
+.nback .icon { width: 14px; height: 14px; }
+.nlist__title { flex: none; padding: var(--s1) var(--s2) 0; font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+.ntree.is-list .nnotes { padding: 0; }
+.nlist__note { flex: none; padding: var(--s2) var(--s2) 0; font-size: var(--fs-xs); color: var(--text-3); }
+.nlist__note .link-btn { font-size: inherit; }
 .ntree .tasks-empty { min-height: 180px; }
 /* Editor card: the note, or "No note open". */
 .nedit { min-width: 0; }
@@ -1301,7 +1321,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .actions { gap: 2px; }
   .actions .divider { display: none; }
   .brand > span { display: none; } /* keep just the mark so the search bar fits */
-  .dialog--article { width: calc(100vw - 16px); height: calc(100dvh - 16px); }
+  .dialog.dialog--article { width: calc(100vw - 16px); height: calc(100dvh - 16px); }
   .dialog--article .dialog__body { padding: var(--s4); }
   .nav {
     position: fixed; z-index: 30; left: var(--s3); right: var(--s3);
@@ -1733,7 +1753,6 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
             </div>
           </header>
           <div class="notes__area notes__editor is-empty" id="quick-notes" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start writing…" spellcheck="true"></div>
-          <div class="backlinks" id="note-backlinks" aria-label="Backlinks" hidden></div>
           <div class="note-tools" id="note-tools" role="toolbar" aria-label="Formatting"></div>
           <p class="note-footer" id="note-footer" aria-live="polite"></p>
           </div>
@@ -1754,11 +1773,15 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
       <!-- The sidebar (search, then views and folders that open to show their notes) and the editor (the Home card's, moved here). -->
       <div class="notes-layout" id="notes-layout">
         <aside class="panel glass nside" id="notes-side" aria-label="Notes">
-          <div class="nsearch">
-            <svg class="icon icon--sm nsearch__icon" aria-hidden="true"><use href="#i-search"/></svg>
-            <input class="input nsearch__input" id="notes-search" type="search" placeholder="Search notes…" aria-label="Search notes" autocomplete="off" spellcheck="false">
-            <button class="icon-btn icon-btn--sm nsearch__clear" type="button" id="notes-search-clear" aria-label="Clear search" hidden><svg class="icon"><use href="#i-x"/></svg></button>
-            <button class="icon-btn icon-btn--sm nsearch__filter" type="button" id="notes-filter" aria-label="Filter notes" aria-haspopup="menu" data-tip="Filter" data-tip-align="end"><svg class="icon"><use href="#i-filter"/></svg></button>
+          <div class="nside__top">
+            <div class="nsearch">
+              <svg class="icon icon--sm nsearch__icon" aria-hidden="true"><use href="#i-search"/></svg>
+              <input class="input nsearch__input" id="notes-search" type="search" placeholder="Search notes…" aria-label="Search notes" autocomplete="off" spellcheck="false">
+              <button class="icon-btn icon-btn--sm nsearch__clear" type="button" id="notes-search-clear" aria-label="Clear search" hidden><svg class="icon"><use href="#i-x"/></svg></button>
+              <button class="icon-btn icon-btn--sm nsearch__filter" type="button" id="notes-filter" aria-label="Filter notes" aria-haspopup="menu" data-tip="Filter" data-tip-align="end"><svg class="icon"><use href="#i-filter"/></svg></button>
+            </div>
+            <button class="icon-btn nside__btn" type="button" id="notes-archive" aria-label="Archive" aria-pressed="false" data-tip="Archive"><svg class="icon"><use href="#i-inbox"/></svg><span class="nside__badge" hidden></span></button>
+            <button class="icon-btn nside__btn" type="button" id="notes-trash" aria-label="Trash" aria-pressed="false" data-tip="Trash" data-tip-align="end"><svg class="icon"><use href="#i-trash"/></svg><span class="nside__badge" hidden></span></button>
           </div>
           <div class="ntree" id="notes-tree"></div>
         </aside>
@@ -1980,7 +2003,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 function defaultUi() {
   const today = Dates.today();
-  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock', connView: 'graph', notesView: 'all', notesFilter: 'all', notesOpen: { 'g:notes': true, 'g:files': true, all: true } };
+  return { page: 'home', calMonth: Dates.month(today), calDay: today, taskDay: today, settingsSection: 'clock', homeView: 'clock', connView: 'graph', notesView: 'unsorted', notesFilter: 'all', notesOpen: { unsorted: true } };
 }
 /* Timer: stored as timestamps, never as a ticking counter, so it keeps
    time across refreshes. Elapsed time = elapsed + (now - startedAt). */
@@ -2069,6 +2092,7 @@ const ITEM_NORMALISERS = {
     it.meta.color = isHex(it.meta.color) ? it.meta.color.toLowerCase() : null;
     it.meta.pinned = it.meta.pinned === true;
     it.meta.folder = typeof it.meta.folder === 'string' && it.meta.folder ? it.meta.folder : null;
+    it.meta.order = Number.isFinite(it.meta.order) ? it.meta.order : null; // its place in its folder, once arranged
     it.meta.archived = it.meta.archived === true;
     it.meta.trashedAt = isIso(it.meta.trashedAt) ? it.meta.trashedAt : null;
     cleanNoteHtml(it);
@@ -2200,7 +2224,7 @@ function normaliseUi(raw) {
     settingsSection: u.settingsSection === '' || SETTINGS_SECTIONS.includes(u.settingsSection) ? u.settingsSection : d.settingsSection,
     homeView: u.homeView === 'calendar' ? 'calendar' : 'clock',
     connView: u.connView === 'list' ? 'list' : 'graph',
-    notesView: typeof u.notesView === 'string' && /^(all|today|week|archive|trash|folder:.+)$/.test(u.notesView) ? u.notesView : 'all',
+    notesView: typeof u.notesView === 'string' && /^(unsorted|archive|trash|folder:.+)$/.test(u.notesView) ? u.notesView : 'unsorted', // older views (All Notes, Today, This Week) land in Unsorted
     notesFilter: ['all', 'text', 'links', 'media', 'pinned', 'coloured', 'tasks'].includes(u.notesFilter) ? u.notesFilter : 'all',
     foldersSeeded: u.foldersSeeded === true,
     notesOpen: isObj(u.notesOpen) ? Object.fromEntries(Object.entries(u.notesOpen).filter(([k, v]) => typeof v === 'boolean' && k.length < 200)) : { ...d.notesOpen },
@@ -3194,7 +3218,6 @@ const QuickNotes = (() => {
   const sendIcon = $('#notes-send use');
   const sendLabel = $('#notes-send-label');
   const modeEl = $('#notes-mode');
-  const backEl = $('#note-backlinks');
   const footerEl = $('#note-footer');
   let timer = 0;
   let context = 'home'; // 'notes' while the editor sits on the Notes page
@@ -3243,34 +3266,24 @@ const QuickNotes = (() => {
   function paintFooter() {
     if (context !== 'notes') return;
     const n = editingId && Items.get(editingId);
-    const folder = n && n.meta.folder && Items.get(n.meta.folder);
+    const fid = n ? n.meta.folder : draft ? draftFolder : null;
+    const folder = fid && Items.get(fid);
+    const place = n && n.meta.archived ? 'Archive' : folder && folder.type === 'folder' ? folder.title : 'Unsorted';
     const words = (RichText.text(editor).match(/\S+/g) || []).length;
-    footerEl.textContent = [folder ? folder.title : n ? 'All Notes' : 'New note', n ? `Edited ${NotesData.label(n.updatedAt)}` : null, pluralise(words, 'word')].filter(Boolean).join(' · ');
+    footerEl.textContent = [place, n ? `Edited ${NotesData.label(n.updatedAt)}` : 'New note', pluralise(words, 'word')].filter(Boolean).join(' · ');
   }
   function sync(force = false) {
     const it = editingId && Items.get(editingId);
     if (editingId && (!it || it.meta.trashedAt)) { editingId = null; draft = false; force = true; } // deleted elsewhere
     if (force) { dirty = false; clearTimeout(timer); }
     const active = document.activeElement;
-    if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); paintBacklinks(); return; }
+    if (!force && (dirty || editor.contains(active) || active === titleIn)) { RichText.hydrate(editor); paintHead(); return; }
     const n = current();
     const title = n ? n.title : '';
     const html = n ? htmlOf(n) : '';
     if (titleIn.value !== title) titleIn.value = title;
     if (force || loaded !== html) { RichText.set(editor, html); loaded = html; } else RichText.hydrate(editor);
     paintHead();
-    paintBacklinks();
-  }
-  /** "Backlinks" under a saved note while it's open here. */
-  function paintBacklinks() {
-    const n = editingId && Items.get(editingId);
-    backEl.hidden = !n;
-    if (!n) return;
-    const from = Links.backlinks(n.id);
-    const sig = from.map((x) => `${x.id}:${Links.title(x)}`).join('|');
-    if (backEl.dataset.sig === sig && backEl.firstChild) return;
-    backEl.dataset.sig = sig;
-    backEl.replaceChildren(...Links.backlinkLine(from));
   }
   function caretToEnd() {
     const r = document.createRange();
@@ -3355,7 +3368,6 @@ const QuickNotes = (() => {
   });
   editor.addEventListener('drop', (e) => e.preventDefault());
   sendBtn.addEventListener('click', () => (editingId ? done() : sendToNotes()));
-  backEl.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) Links.open(b.dataset.open); });
   Persistence.onFlush(flush);
   return { render: () => sync(false), sync, flush, openNote, newNote, setContext, editingId: () => editingId, isDraft: () => draft, changed: onInput };
 })();
@@ -5121,14 +5133,7 @@ const Links = (() => {
     Navigation.go('notes');
     NotesPage.open(id);
   }
-  /** "Backlinks" and a button for each note or pin that links here. */
-  function backlinkLine(from) {
-    return [h('span', { class: 'backlinks__label', text: 'Backlinks' }),
-      ...(from.length
-        ? from.map((x) => h('button', { class: 'backlinks__item', type: 'button', dataset: { open: x.id }, title: `Open “${title(x)}”` }, x.type === 'pin' ? icon('pin') : null, title(x)))
-        : [h('span', { class: 'backlinks__none', text: 'None yet' })])];
-  }
-  return { node, nodes, title, edges, linksOf, backlinks, open, backlinkLine };
+  return { node, nodes, title, edges, linksOf, backlinks, open };
 })();
 
 /** Opens a web link outside the app, in the device's own browser — from a home-screen app too. */
@@ -7020,56 +7025,71 @@ const NoteTools = (() => {
 })();
 
 /* ---------- Notes page ----------
-   Two cards: the sidebar and the editor. The sidebar has a search field
-   (with a filter menu) above two collapsible groups, Notes (All Notes,
-   Today, This Week, Archive, Trash) and Files (folders); each view or
-   folder opens to show its notes as rows. Which sections are open is kept
-   in ui.notesOpen. The editor is the Home Notes card's own, moved in while
-   this page is open, so both show the same notes; the open note is
-   QuickNotes' (one source of truth). Notes carry meta.folder,
-   meta.archived and meta.trashedAt; folders are items of their own.
-   Deleting moves a note to Trash for 30 days. On narrow screens the
-   editor fills the page and the sidebar is a drawer. */
+   Two cards: the sidebar and the editor. The sidebar is folders: a search
+   field (with a filter menu) and Archive and Trash buttons, then each folder
+   as a rounded row that opens to list its notes ("Unsorted" first, for notes
+   in no folder; hidden when empty), and "New folder" at the end. Folders,
+   and the notes in them, can be dragged into a new order (a note into
+   another folder too). Order is meta.order: a folder's place; for a note,
+   its place in its folder once you've arranged it (null: newest first, above
+   the arranged ones). Archive and Trash swap the folders for a list of
+   those notes. Which folders are open is kept in ui.notesOpen; the folder
+   you're in (ui.notesView: folder:<id> or unsorted; archive or trash for
+   those lists) is where a new note goes. The editor is the Home Notes card's
+   own, moved in while this page is open, so both show the same notes; the
+   open note is QuickNotes' (one source of truth). Deleting moves a note to
+   Trash for 30 days. On narrow screens the editor fills the page and the
+   sidebar is a drawer. */
 const TRASH_DAYS = 30;
 const NotesPage = (() => {
   const layout = $('#notes-layout');
-  const side = $('#notes-side');
   const tree = $('#notes-tree');
   const search = $('#notes-search');
   const clearBtn = $('#notes-search-clear');
   const filterBtn = $('#notes-filter');
+  const archiveBtn = $('#notes-archive');
+  const trashBtn = $('#notes-trash');
   const editorCard = $('#notes-editor');
   const pane = $('#note-pane');
   const homeCard = $('.panel--notes');
   const drawerBtn = $('#notes-drawer-btn');
   const scrim = $('#notes-scrim');
   const narrowQuery = window.matchMedia('(max-width: 1099px) and (orientation: portrait), (max-width: 899px)');
-  const VIEWS = [['all', 'All Notes', 'notes'], ['today', 'Today', 'clock'], ['week', 'This Week', 'calendar'], ['archive', 'Archive', 'inbox'], ['trash', 'Trash', 'trash']];
   const FILTER_LABELS = [['all', 'All'], ['text', 'Text'], ['links', 'Links'], ['media', 'Media'], ['pinned', 'Pinned'], ['coloured', 'Coloured'], ['tasks', 'Has tasks']];
-  const PAGE = 20;              // notes shown per section before "Show more"
+  const PAGE = 20;              // notes shown per folder before "Show more"
   let query = '';
-  let searchOpen = {};          // while searching: sections opened or closed by hand (not saved)
-  const shown = new Map();      // section → how many notes it shows
-  let drawnOpen = new Set();    // sections drawn open last time (to animate the changes)
-  let reveal = null;            // { id, key }: scroll this note's row into view after the next draw
+  let searchOpen = {};          // while searching: folders opened or closed by hand (not saved)
+  const shown = new Map();      // folder → how many notes it shows
+  let drawnOpen = new Set();    // folders drawn open last time (to animate the changes)
+  let reveal = null;            // a note id: scroll its row into view after the next draw
+  let dragging = false;
 
   /* --- Data --- */
   const isTrashed = (n) => !!n.meta.trashedAt;
   const isLive = (n) => !n.meta.archived && !n.meta.trashedAt;
   const folders = () => Items.all('folder').slice().sort((a, b) => ((a.meta.order ?? 0) - (b.meta.order ?? 0)) || a.createdAt.localeCompare(b.createdAt));
   const view = () => UI.get().notesView;
+  const listMode = () => (view() === 'archive' || view() === 'trash' ? view() : null);
   const filter = () => UI.get().notesFilter;
   const opened = () => UI.get().notesOpen;
   const dayDiff = (iso) => Math.round((Dates.parse(Dates.today()) - Dates.parse(Dates.key(new Date(iso)))) / 86400000);
-  function inView(n, v) {
-    if (v === 'trash') return isTrashed(n);
+  /** The folder a note is in: `folder:<id>`, or `unsorted` (no folder, or one that's gone — older backups land here too). */
+  function keyOf(n) {
+    const f = n.meta.folder && Items.get(n.meta.folder);
+    return f && f.type === 'folder' ? `folder:${f.id}` : 'unsorted';
+  }
+  let lastFolder = null; // where you were before Archive / Trash
+  /** The folder you're in (a new note goes there). */
+  function currentFolder() {
+    const v = listMode() ? lastFolder || 'unsorted' : view();
+    return v && v.startsWith('folder:') && Items.get(v.slice(7)) ? v : 'unsorted';
+  }
+  function inKey(n, key) {
+    if (key === 'trash') return isTrashed(n);
     if (isTrashed(n)) return false;
-    if (v === 'archive') return !!n.meta.archived;
+    if (key === 'archive') return !!n.meta.archived;
     if (n.meta.archived) return false;
-    if (v === 'today') return dayDiff(n.updatedAt) === 0;
-    if (v === 'week') return dayDiff(n.updatedAt) < 7;
-    if (v.startsWith('folder:')) return n.meta.folder === v.slice(7);
-    return true;
+    return keyOf(n) === key;
   }
   const html = (n) => (typeof n.meta.html === 'string' ? n.meta.html : '');
   const hasLinks = (n) => /<a\b/i.test(html(n));
@@ -7086,9 +7106,13 @@ const NotesPage = (() => {
   const q = () => query.trim().toLowerCase();
   const matches = (n, s) => !s || `${n.title}\n${n.content}`.toLowerCase().includes(s);
   const passes = (n) => (FILTERS[filter()] || FILTERS.all)(n) && matches(n, q());
-  /** A section's notes: pinned first, then the latest edit first. */
-  const notesIn = (key) => Items.all('capture').filter((n) => inView(n, key) && passes(n))
-    .sort((a, b) => ((b.meta.pinned ? 1 : 0) - (a.meta.pinned ? 1 : 0)) || b.updatedAt.localeCompare(a.updatedAt));
+  /** A folder's notes: pinned first, then the newest of those not yet arranged, then the arranged ones in their order. */
+  const byPlace = (a, b) => ((b.meta.pinned ? 1 : 0) - (a.meta.pinned ? 1 : 0))
+    || ((a.meta.order == null ? 0 : 1) - (b.meta.order == null ? 0 : 1))
+    || (a.meta.order != null && b.meta.order != null ? a.meta.order - b.meta.order : 0)
+    || b.updatedAt.localeCompare(a.updatedAt);
+  const notesIn = (key, all = false) => Items.all('capture').filter((n) => inKey(n, key) && (all || passes(n)))
+    .sort(key === 'archive' || key === 'trash' ? (a, b) => b.updatedAt.localeCompare(a.updatedAt) : byPlace);
 
   /* --- Actions (each with Undo where it can be undone) --- */
   function trash(id) {
@@ -7118,25 +7142,45 @@ const NotesPage = (() => {
     const cutoff = Date.now() - TRASH_DAYS * 86400000;
     Items.all('capture').filter((n) => isTrashed(n) && Date.parse(n.meta.trashedAt) < cutoff).forEach((n) => Items.remove(n.id));
   }
-  function moveTo(id, folderId) {
+  const folderName = (key) => (key === 'unsorted' ? 'Unsorted' : (Items.get(key.slice(7)) || { title: 'Folder' }).title);
+  /** Positions for items in the given id order (one store update; not an edit, so no new "edited" time). */
+  function setOrder(ids, extra = null) {
+    Store.update((s) => {
+      ids.forEach((id, i) => { const it = s.items.find((x) => x.id === id); if (it) it.meta = { ...it.meta, order: i }; });
+      if (extra) extra(s);
+    }, 'items');
+  }
+  /** Moves a note to another folder; with `ids` (that folder's notes in their new order) it lands at its place there. */
+  function moveTo(id, folderKey, ids = null) {
     const n = Items.get(id);
-    if (!n || (n.meta.folder || null) === (folderId || null)) return;
-    const before = n.meta.folder || null;
-    Items.update(id, { meta: { folder: folderId || null } });
-    const f = folderId && Items.get(folderId);
-    Toast.show(f ? `Moved to ${f.title}` : 'Moved out of its folder', { action: { label: 'Undo', run: () => Items.update(id, { meta: { folder: before } }) } });
+    if (!n) return;
+    const from = keyOf(n);
+    if (from === folderKey && !ids) return;
+    const before = { folder: n.meta.folder || null, order: n.meta.order ?? null };
+    const folder = folderKey === 'unsorted' ? null : folderKey.slice(7);
+    if (ids) setOrder(ids, (s) => { const it = s.items.find((x) => x.id === id); if (it) it.meta = { ...it.meta, folder }; });
+    else setOrder([], (s) => { const it = s.items.find((x) => x.id === id); if (it) it.meta = { ...it.meta, folder, order: null }; });
+    if (from === folderKey) return;
+    Toast.show(`Moved to ${folderName(folderKey)}`, {
+      action: { label: 'Undo', run: () => setOrder([], (s) => { const it = s.items.find((x) => x.id === id); if (it) it.meta = { ...it.meta, ...before }; }) },
+    });
   }
   function newNote() {
-    const v = view();
-    if (v === 'trash' || v === 'archive') UI.set({ notesView: 'all' });
+    const key = currentFolder();
+    if (listMode()) UI.set({ notesView: key });
     drawer(false);
     editorCard.classList.remove('is-empty'); // show the editor first, so its title can take focus
-    QuickNotes.newNote(v.startsWith('folder:') ? v.slice(7) : null);
+    QuickNotes.newNote(key === 'unsorted' ? null : key.slice(7));
   }
   function setOpen(key, on) { UI.set({ notesOpen: { ...opened(), [key]: on } }); }
   function toggle(key) {
     if (q()) { searchOpen = { ...searchOpen, [key]: !isOpen(key) }; render(); return; }
     setOpen(key, !isOpen(key));
+  }
+  function showList(kind) {
+    if (listMode() === kind) { UI.set({ notesView: lastFolder || 'unsorted' }); return; }
+    if (!listMode()) lastFolder = view() || 'unsorted';
+    UI.set({ notesView: kind });
   }
 
   /* --- Folders --- */
@@ -7161,14 +7205,24 @@ const NotesPage = (() => {
     const moved = Items.all('capture').filter((n) => n.meta.folder === id).map((n) => n.id);
     moved.forEach((nid) => Items.update(nid, { meta: { folder: null } }));
     const token = Items.remove(id);
-    if (view() === `folder:${id}`) UI.set({ notesView: 'all' });
-    Toast.show(`Folder deleted${moved.length ? ` · ${pluralise(moved.length, 'note')} moved to All Notes` : ''}`, {
+    if (view() === `folder:${id}`) UI.set({ notesView: 'unsorted' });
+    Toast.show(`Folder deleted${moved.length ? ` · ${pluralise(moved.length, 'note')} moved to Unsorted` : ''}`, {
       action: { label: 'Undo', run: () => { Items.restore(token); moved.forEach((nid) => Items.update(nid, { meta: { folder: id } })); } },
     });
+  }
+  function moveFolder(id, delta) {
+    const ids = folders().map((f) => f.id);
+    const i = ids.indexOf(id);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    setOrder(ids);
   }
   function folderMenu(id, anchor) {
     const f = Items.get(id);
     if (!f) return;
+    const ids = folders().map((x) => x.id);
+    const i = ids.indexOf(id);
     Popover.open({
       anchor, key: `folder:${id}`, label: `Options for ${f.title}`,
       getAnchor: () => tree.querySelector(`[data-folder="${CSS.escape(id)}"] .row-more`),
@@ -7176,6 +7230,9 @@ const NotesPage = (() => {
         menuItem('edit', 'Rename', () => { Popover.close(false); folderDialog(f); }),
         menuSep(),
         colourGroup(f.meta.color, (c) => Items.update(id, { meta: { color: c } })),
+        menuSep(),
+        menuItem('arrow-up', 'Move up', () => { Popover.close(true); moveFolder(id, -1); }, { disabled: i <= 0 }),
+        menuItem('arrow-down', 'Move down', () => { Popover.close(true); moveFolder(id, 1); }, { disabled: i >= ids.length - 1 }),
         menuSep(),
         menuItem('trash', 'Delete', () => { Popover.close(false); deleteFolder(id); }, { danger: true }),
       ],
@@ -7186,7 +7243,7 @@ const NotesPage = (() => {
   function noteMenu(id, sec, anchor) {
     const n = Items.get(id);
     if (!n) return;
-    const getAnchor = () => tree.querySelector(`.nnote[data-id="${CSS.escape(id)}"][data-sec="${CSS.escape(sec)}"] .row-more`);
+    const getAnchor = () => tree.querySelector(`.nnote[data-id="${CSS.escape(id)}"] .row-more`);
     const items = isTrashed(n) ? [
       menuItem('reset', 'Restore', () => { Popover.close(false); restore(id); }),
       menuSep(),
@@ -7206,13 +7263,13 @@ const NotesPage = (() => {
   }
   function folderPicker(id, anchor) {
     const n = Items.get(id);
-    const cur = n && (n.meta.folder || null);
+    const cur = n && keyOf(n);
     Popover.open({
       anchor, key: `nmove:${id}`, label: 'Move to folder',
       content: [
         h('div', { class: 'panel__title menu__label', text: 'Move to' }),
-        menuItem('notes', 'No folder', () => { Popover.close(false); moveTo(id, null); }, { disabled: !cur }),
-        ...folders().map((f) => menuItem('files', f.title, () => { Popover.close(false); moveTo(id, f.id); }, { disabled: cur === f.id })),
+        menuItem('notes', 'Unsorted', () => { Popover.close(false); moveTo(id, 'unsorted'); }, { disabled: cur === 'unsorted' }),
+        ...folders().map((f) => menuItem('files', f.title, () => { Popover.close(false); moveTo(id, `folder:${f.id}`); }, { disabled: cur === `folder:${f.id}` })),
       ],
     });
   }
@@ -7291,64 +7348,78 @@ const NotesPage = (() => {
     return out;
   }
   const isOpen = (key) => (q() && key in searchOpen ? searchOpen[key] : q() ? true : !!opened()[key]);
-  function noteRow(n, sec, selected) {
+  const handle = (label) => h('button', { class: 'nhandle', type: 'button', tabindex: '-1', 'aria-hidden': 'true', title: label }, icon('grip'));
+  function noteRow(n, sec, selected, movable) {
     const { title } = NotesData.parts(n);
     return h('div', {
       class: `nnote${n.id === selected ? ' is-selected' : ''}${n.meta.color ? ' has-color' : ''}`,
-      dataset: { id: n.id, sec }, style: n.meta.color ? `--row-c:${n.meta.color}` : null, draggable: isTrashed(n) ? null : 'true',
+      dataset: { id: n.id, sec }, style: n.meta.color ? `--row-c:${n.meta.color}` : null,
     },
+      movable ? handle('Drag to reorder or move to another folder') : null,
       h('button', { class: 'nnote__main', type: 'button', dataset: { action: 'open' }, 'aria-current': n.id === selected ? 'true' : null },
         h('span', { class: 'nnote__title' }, n.meta.pinned ? icon('pin') : null, ...marked(title, q())),
         h('time', { class: 'nnote__time', datetime: n.updatedAt, text: whenOf(n.updatedAt) })),
       h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'menu' }, 'aria-label': `More options for “${title}”`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`nrow:${n.id}:${sec}`)) }, icon('more')));
   }
-  /** One view or folder: its row, and (opening below it) its notes. */
-  function section({ key, label, iconName, folder = null, selected }) {
+  /** One folder (or Unsorted): a rounded row that opens to show its notes. */
+  function folderCard(key, selected) {
+    const folder = key === 'unsorted' ? null : Items.get(key.slice(7));
     const notes = notesIn(key);
+    if (!folder && !notesIn(key, true).length) return null; // Unsorted shows only when it has notes
     if (q() && !notes.length) return null;
+    const label = folder ? folder.title : 'Unsorted';
     const open = isOpen(key);
     const limit = Math.max(PAGE, shown.get(key) || PAGE);
-    const head = h('div', {
-      class: `nside__item${folder ? ' nside__folder' : ''}`, 'aria-current': String(view() === key),
-      dataset: folder ? { folder: folder.id, drop: folder.id } : key === 'all' ? { drop: '' } : {},
+    const color = folder && folder.meta.color;
+    const rows = notes.slice(0, limit).map((n) => noteRow(n, key, selected, !q()));
+    return h('div', {
+      class: `nfold${open ? ' is-open' : ''}${color ? ' has-color' : ''}${folder ? '' : ' nfold--unsorted'}`,
+      dataset: folder ? { key, folder: folder.id } : { key }, style: color ? `--task-c:${color}` : null,
     },
-      h('button', { class: 'nchev', type: 'button', dataset: { toggle: key }, 'aria-expanded': String(open), 'aria-label': `${open ? 'Hide' : 'Show'} notes in ${label}` }, icon('chevron', 'nchev__icon')),
-      h('button', { class: 'nside__main', type: 'button', dataset: { view: key } },
-        icon(iconName), h('span', { class: 'nside__label' }, ...marked(label, folder ? q() : '')), h('span', { class: 'nside__count', text: String(notes.length) })),
-      folder ? h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'folder-menu' }, 'aria-label': `Options for ${folder.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`folder:${folder.id}`)) }, icon('more')) : null);
-    if (folder && folder.meta.color) $('.nside__main .icon', head).style.color = folder.meta.color;
-    const rows = notes.slice(0, limit).map((n) => noteRow(n, key, selected));
-    const body = h('div', { class: 'nbody' }, h('div', null, h('div', { class: 'nnotes', role: 'group', 'aria-label': `Notes in ${label}` },
-      rows.length ? rows : h('div', { class: 'nnote__none', text: folder ? 'Folder is empty' : 'No notes' }),
-      notes.length > limit ? h('button', { class: 'link-btn nnote__more', type: 'button', dataset: { more: key }, text: `Show more (${notes.length - limit})` }) : null,
-      key === 'trash' && notes.length && !q() ? h('button', { class: 'link-btn nnote__more', type: 'button', dataset: { action: 'empty-trash' }, text: 'Empty Trash' }) : null)));
-    return h('div', { class: `nitem${open ? ' is-open' : ''}`, dataset: { key } }, head, body);
+      h('div', { class: 'nfold__head' },
+        folder && !q() ? handle('Drag to reorder') : h('span', { class: 'nhandle nhandle--none', 'aria-hidden': 'true' }),
+        h('button', { class: 'nchev', type: 'button', dataset: { toggle: key }, 'aria-expanded': String(open), 'aria-label': `${open ? 'Hide' : 'Show'} notes in ${label}` }, icon('chevron', 'nchev__icon')),
+        h('button', { class: 'nfold__main', type: 'button', dataset: { pick: key }, 'aria-expanded': String(open) },
+          icon(folder ? 'files' : 'notes'), h('span', { class: 'nfold__label', text: label }), h('span', { class: 'nfold__count', text: String(notes.length) })),
+        folder ? h('button', { class: 'icon-btn icon-btn--sm row-more', type: 'button', dataset: { action: 'folder-menu' }, 'aria-label': `Options for ${folder.title}`, 'aria-haspopup': 'menu', 'aria-expanded': String(Popover.isOpenFor(`folder:${folder.id}`)) }, icon('more')) : null),
+      h('div', { class: 'nbody' }, h('div', null, h('div', { class: 'nnotes', role: 'group', 'aria-label': `Notes in ${label}` },
+        rows.length ? rows : h('div', { class: 'nnote__none', text: 'Folder is empty' }),
+        notes.length > limit ? h('button', { class: 'link-btn nnote__more', type: 'button', dataset: { more: key }, text: `Show more (${notes.length - limit})` }) : null))));
   }
-  function group(key, label, iconName, sections, extra = null) {
-    const list = sections.filter(Boolean);
-    if (q() && !list.length) return null;
-    const open = isOpen(key);
-    return h('div', { class: `ngroup${open ? ' is-open' : ''}`, dataset: { key } },
-      h('div', { class: 'ngroup__head' },
-        h('button', { class: 'ngroup__toggle', type: 'button', dataset: { toggle: key }, 'aria-expanded': String(open) },
-          h('span', { class: 'nchev', 'aria-hidden': 'true' }, icon('chevron', 'nchev__icon')), icon(iconName), h('span', { text: label })),
-        extra),
-      h('div', { class: 'nbody' }, h('div', null, ...list)));
+  /** Archive or Trash: the list of those notes, with the way back. */
+  function listView(kind, selected) {
+    const notes = notesIn(kind);
+    const all = notesIn(kind, true);
+    return [
+      h('button', { class: 'nback', type: 'button', dataset: { action: 'back' } }, icon('left'), 'Back to folders'),
+      h('div', { class: 'nlist__title', text: kind === 'trash' ? 'Trash' : 'Archive' }),
+      notes.length
+        ? h('div', { class: 'nnotes nlist', role: 'group', 'aria-label': kind === 'trash' ? 'Notes in Trash' : 'Archived notes' }, notes.map((n) => noteRow(n, kind, selected, false)))
+        : h('div', { class: 'nnote__none', text: q() && all.length ? 'No results' : kind === 'trash' ? 'Trash is empty' : 'Nothing archived' }),
+      kind === 'trash' && all.length ? h('p', { class: 'nlist__note' }, `Notes are deleted for good after ${TRASH_DAYS} days. `,
+        h('button', { class: 'link-btn', type: 'button', dataset: { action: 'empty-trash' }, text: 'Empty Trash' })) : null,
+    ];
   }
   function render() {
+    if (dragging) return; // a drag redraws when it ends
     const selected = QuickNotes.editingId();
     const scroll = tree.scrollTop;
-    const notes = group('g:notes', 'Notes', 'notes', VIEWS.map(([key, label, ic]) => section({ key, label, iconName: ic, selected })));
-    const files = group('g:files', 'Files', 'files', folders().map((f) => section({ key: `folder:${f.id}`, label: f.title, iconName: 'files', folder: f, selected })),
-      h('button', { class: 'icon-btn icon-btn--sm', type: 'button', dataset: { action: 'folder-new' }, 'aria-label': 'New folder', 'data-tip': 'New folder', 'data-tip-align': 'end' }, icon('plus')));
-    const empty = q() && !notes && !files ? h('div', { class: 'tasks-empty' },
-      h('span', { class: 'tasks-empty__mark', 'aria-hidden': 'true' }, icon('search')),
-      h('p', { class: 'tasks-empty__title', text: 'No results' }),
-      h('p', { class: 'tasks-empty__text', text: `No notes match “${query.trim()}”.` })) : null;
-    tree.replaceChildren(...[notes, files, empty].filter(Boolean));
-    // Sections that just opened or closed are drawn as they were, then changed, so they animate.
-    const now = new Set($$('.ngroup.is-open, .nitem.is-open', tree).map((el) => el.dataset.key));
-    const changed = $$('.ngroup, .nitem', tree).filter((el) => now.has(el.dataset.key) !== drawnOpen.has(el.dataset.key));
+    const mode = listMode();
+    let content;
+    if (mode) content = listView(mode, selected);
+    else {
+      const cards = ['unsorted', ...folders().map((f) => `folder:${f.id}`)].map((k) => folderCard(k, selected)).filter(Boolean);
+      const empty = q() && !cards.length ? h('div', { class: 'tasks-empty' },
+        h('span', { class: 'tasks-empty__mark', 'aria-hidden': 'true' }, icon('search')),
+        h('p', { class: 'tasks-empty__title', text: 'No results' }),
+        h('p', { class: 'tasks-empty__text', text: `No notes match “${query.trim()}”.` })) : null;
+      content = [...cards, empty, q() ? null : h('button', { class: 'nnew', type: 'button', dataset: { action: 'folder-new' } }, icon('plus'), 'New folder')];
+    }
+    tree.replaceChildren(...content.filter(Boolean));
+    tree.classList.toggle('is-list', !!mode);
+    // Folders that just opened or closed are drawn as they were, then changed, so they animate.
+    const now = new Set($$('.nfold.is-open', tree).map((el) => el.dataset.key));
+    const changed = $$('.nfold', tree).filter((el) => now.has(el.dataset.key) !== drawnOpen.has(el.dataset.key));
     if (changed.length && !prefersReducedMotion()) {
       changed.forEach((el) => el.classList.toggle('is-open'));
       void tree.offsetHeight;
@@ -7356,14 +7427,22 @@ const NotesPage = (() => {
     }
     drawnOpen = now;
     tree.scrollTop = scroll; // after the above: reading layout first would skip the animation
-    // Search field and filter state.
+    // Search, filter, Archive and Trash.
     clearBtn.hidden = !query;
     filterBtn.setAttribute('aria-pressed', String(filter() !== 'all'));
     filterBtn.setAttribute('aria-label', filter() === 'all' ? 'Filter notes' : `Filter: ${FILTER_LABELS.find(([k]) => k === filter())[1]}`);
+    [[archiveBtn, 'archive', 'Archive'], [trashBtn, 'trash', 'Trash']].forEach(([btn, kind, label]) => {
+      const n = notesIn(kind, true).length;
+      btn.setAttribute('aria-pressed', String(mode === kind));
+      btn.setAttribute('aria-label', `${label}${n ? `, ${pluralise(n, 'note')}` : ''}`);
+      const badge = $('.nside__badge', btn);
+      badge.hidden = !n;
+      badge.textContent = n > 99 ? '99+' : String(n);
+    });
     // The editor card: the open note (or a new one), else "No note open".
     editorCard.classList.toggle('is-empty', !selected && !QuickNotes.isDraft());
     if (reveal) {
-      const r = tree.querySelector(`.nnote[data-id="${CSS.escape(reveal.id)}"][data-sec="${CSS.escape(reveal.key)}"]`) || tree.querySelector(`.nnote[data-id="${CSS.escape(reveal.id)}"]`);
+      const r = tree.querySelector(`.nnote[data-id="${CSS.escape(reveal)}"]`);
       reveal = null;
       if (r) setTimeout(() => r.scrollIntoView({ block: 'nearest' }), 380);
     }
@@ -7376,19 +7455,17 @@ const NotesPage = (() => {
     scrim.hidden = !on;
   }
 
-  /** Opens a note here (from the sidebar, or a note link anywhere), with its section open in the sidebar. */
+  /** Opens a note here (from the sidebar, or a note link anywhere), with its folder open in the sidebar. */
   function open(id) {
     const n = Items.get(id);
     if (!n || isTrashed(n)) return;
     if (!passes(n)) { query = ''; search.value = ''; searchOpen = {}; UI.set({ notesFilter: 'all' }); }
-    const key = inView(n, view()) ? view() : n.meta.archived ? 'archive' : 'all';
+    const key = n.meta.archived ? 'archive' : keyOf(n);
     const idx = notesIn(key).findIndex((x) => x.id === id);
     if (idx >= PAGE) shown.set(key, Math.ceil((idx + 1) / PAGE) * PAGE);
-    const o = opened();
-    if (!o[key] || !o[key === 'all' || key === 'archive' || key === 'today' || key === 'week' || key === 'trash' ? 'g:notes' : 'g:files']) {
-      UI.set({ notesOpen: { ...o, [key]: true, [key.startsWith('folder:') ? 'g:files' : 'g:notes']: true } });
-    }
-    reveal = { id, key };
+    if (key === 'archive') { if (!listMode()) lastFolder = view() || 'unsorted'; UI.set({ notesView: 'archive' }); }
+    else UI.set({ notesView: key, notesOpen: { ...opened(), [key]: true } });
+    reveal = id;
     QuickNotes.openNote(id, { focus: false });
     scheduleRender();
   }
@@ -7402,6 +7479,154 @@ const NotesPage = (() => {
     if (!here) drawer(false);
   }
 
+  /* --- Dragging (pointer events: mouse, pen and touch) --- */
+  /** Scrolls the sidebar while a drag nears its top or bottom edge. */
+  function edgeScroller(onScroll) {
+    let y = 0; let raf = 0;
+    const step = () => {
+      raf = 0;
+      const r = tree.getBoundingClientRect();
+      const v = y < r.top + 36 ? -Math.ceil((r.top + 36 - y) / 4) : y > r.bottom - 36 ? Math.ceil((y - (r.bottom - 36)) / 4) : 0;
+      if (!v) return;
+      const before = tree.scrollTop;
+      tree.scrollTop += Math.max(-14, Math.min(14, v));
+      if (tree.scrollTop !== before) onScroll();
+      raf = requestAnimationFrame(step);
+    };
+    return { at(ny) { y = ny; if (!raf) raf = requestAnimationFrame(step); }, stop() { cancelAnimationFrame(raf); raf = 0; } };
+  }
+  /** Folders: the row follows the pointer and the others make room (like tasks). */
+  function startFolderDrag(e, grip) {
+    const card = grip.closest('.nfold');
+    const cards = $$('.nfold[data-folder]', tree);
+    const from = cards.indexOf(card);
+    if (from < 0) return;
+    e.preventDefault();
+    Popover.close(false);
+    const rects = cards.map((c) => c.getBoundingClientRect());
+    const gap = cards.length > 1 ? rects[1].top - rects[0].bottom : 6;
+    const shiftBy = rects[from].height + gap;
+    const startY = e.clientY;
+    const scroll0 = tree.scrollTop;
+    let lastY = startY;
+    let to = from;
+    let moved = false;
+    dragging = true;
+    card.classList.add('is-dragging');
+    document.documentElement.classList.add('is-dragging');
+    try { grip.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    const update = () => {
+      const scrolled = tree.scrollTop - scroll0;
+      const minDy = rects[0].top - rects[from].top;
+      const maxDy = rects[rects.length - 1].bottom - rects[from].bottom;
+      const dy = Math.max(minDy, Math.min(maxDy, lastY - startY + scrolled));
+      card.style.transform = `translateY(${dy}px)`;
+      const mid = rects[from].top + rects[from].height / 2 + dy;
+      to = from;
+      for (let i = from + 1; i < cards.length; i++) if (mid >= rects[i].top + rects[i].height / 2) to = i;
+      for (let i = from - 1; i >= 0; i--) if (mid <= rects[i].top + rects[i].height / 2) to = i;
+      cards.forEach((c, i) => {
+        if (i === from) return;
+        const s = i > from && i <= to ? -shiftBy : i < from && i >= to ? shiftBy : 0;
+        c.style.transform = s ? `translateY(${s}px)` : '';
+      });
+    };
+    const edge = edgeScroller(update);
+    const onMove = (ev) => { lastY = ev.clientY; if (Math.abs(lastY - startY) > 3) moved = true; edge.at(lastY); update(); };
+    const onEnd = () => {
+      grip.removeEventListener('pointermove', onMove);
+      grip.removeEventListener('pointerup', onEnd);
+      grip.removeEventListener('pointercancel', onEnd);
+      edge.stop();
+      document.documentElement.classList.remove('is-dragging');
+      dragging = false;
+      if (moved && to !== from) {
+        const ids = cards.map((c) => c.dataset.folder);
+        const [m] = ids.splice(from, 1);
+        ids.splice(to, 0, m);
+        setOrder(ids); // the redraw replaces the rows, clearing the transforms
+      } else {
+        cards.forEach((c) => { c.style.transform = ''; });
+        card.classList.remove('is-dragging');
+      }
+    };
+    grip.addEventListener('pointermove', onMove);
+    grip.addEventListener('pointerup', onEnd);
+    grip.addEventListener('pointercancel', onEnd);
+  }
+  /** Notes: a copy of the row follows the pointer; a line shows where it will land, in its folder or another one. */
+  function startNoteDrag(e, grip) {
+    const row = grip.closest('.nnote');
+    const id = row.dataset.id;
+    const fromKey = row.closest('.nfold').dataset.key;
+    e.preventDefault();
+    Popover.close(false);
+    const r0 = row.getBoundingClientRect();
+    const startY = e.clientY;
+    let ghost = null;
+    let target = null; // { key, index }
+    const marker = h('div', { class: 'nmark', 'aria-hidden': 'true' });
+    dragging = true;
+    try { grip.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    let lastY = startY;
+    const update = () => {
+      if (!ghost) return;
+      ghost.style.transform = `translateY(${lastY - startY}px)`;
+      $$('.nfold.is-drop', tree).forEach((c) => c.classList.remove('is-drop'));
+      const hitEl = document.elementFromPoint(r0.left + Math.min(r0.width / 2, 60), lastY);
+      const card = hitEl && hitEl.closest && tree.contains(hitEl) ? hitEl.closest('.nfold') : null;
+      if (!card) { target = null; marker.remove(); return; }
+      const key = card.dataset.key;
+      const rows = card.classList.contains('is-open') ? $$('.nnote', card).filter((x) => x !== row) : [];
+      if (!rows.length) { target = { key, index: 0 }; marker.remove(); card.classList.add('is-drop'); return; }
+      let index = rows.length;
+      for (let i = 0; i < rows.length; i++) { const b = rows[i].getBoundingClientRect(); if (lastY < b.top + b.height / 2) { index = i; break; } }
+      target = { key, index };
+      if (index < rows.length) rows[index].before(marker); else rows[rows.length - 1].after(marker);
+      if (key !== fromKey) card.classList.add('is-drop');
+    };
+    const edge = edgeScroller(update);
+    const onMove = (ev) => {
+      lastY = ev.clientY;
+      if (!ghost) {
+        if (Math.abs(lastY - startY) < 4) return;
+        ghost = row.cloneNode(true);
+        ghost.classList.add('nnote--ghost');
+        Object.assign(ghost.style, { left: `${r0.left}px`, top: `${r0.top}px`, width: `${r0.width}px`, height: `${r0.height}px` });
+        document.body.append(ghost);
+        row.classList.add('is-placeholder');
+        document.documentElement.classList.add('is-dragging');
+      }
+      edge.at(lastY);
+      update();
+    };
+    const onEnd = () => {
+      grip.removeEventListener('pointermove', onMove);
+      grip.removeEventListener('pointerup', onEnd);
+      grip.removeEventListener('pointercancel', onEnd);
+      edge.stop();
+      document.documentElement.classList.remove('is-dragging');
+      dragging = false;
+      if (ghost) ghost.remove();
+      marker.remove();
+      row.classList.remove('is-placeholder');
+      $$('.nfold.is-drop', tree).forEach((c) => c.classList.remove('is-drop'));
+      if (!ghost || !target) { render(); return; }
+      const others = notesIn(target.key, true).filter((n) => n.id !== id).map((n) => n.id);
+      const ids = [...others.slice(0, target.index), id, ...others.slice(target.index)];
+      if (target.key === fromKey) {
+        const before = notesIn(fromKey, true).map((n) => n.id);
+        if (ids.join() !== before.join()) setOrder(ids); else render();
+      } else {
+        moveTo(id, target.key, ids);
+        UI.set({ notesOpen: { ...opened(), [target.key]: true } });
+      }
+    };
+    grip.addEventListener('pointermove', onMove);
+    grip.addEventListener('pointerup', onEnd);
+    grip.addEventListener('pointercancel', onEnd);
+  }
+
   function clearSearch() {
     query = '';
     search.value = '';
@@ -7413,35 +7638,49 @@ const NotesPage = (() => {
     search.addEventListener('keydown', (e) => { if (e.key === 'Escape' && search.value) { e.stopPropagation(); clearSearch(); } });
     clearBtn.addEventListener('click', () => { clearSearch(); search.focus(); });
     filterBtn.addEventListener('click', filterMenu);
+    archiveBtn.addEventListener('click', () => showList('archive'));
+    trashBtn.addEventListener('click', () => showList('trash'));
+    tree.addEventListener('pointerdown', (e) => {
+      const grip = e.target.closest('.nhandle:not(.nhandle--none)');
+      if (!grip || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (grip.closest('.nnote')) startNoteDrag(e, grip); else startFolderDrag(e, grip);
+    });
     tree.addEventListener('click', (e) => {
       const t = e.target.closest('[data-toggle]');
       if (t) { toggle(t.dataset.toggle); return; }
+      const pick = e.target.closest('[data-pick]');
+      if (pick) {
+        // Tapping a folder opens (or closes) it, and makes it the folder you're in.
+        const key = pick.dataset.pick;
+        if (q()) { searchOpen = { ...searchOpen, [key]: !isOpen(key) }; UI.set({ notesView: key }); return; }
+        UI.set({ notesView: key, notesOpen: { ...opened(), [key]: !isOpen(key) } });
+        return;
+      }
       if (e.target.closest('[data-action="folder-new"]')) { folderDialog(); return; }
+      if (e.target.closest('[data-action="back"]')) { UI.set({ notesView: lastFolder || 'unsorted' }); return; }
       const fm = e.target.closest('[data-action="folder-menu"]');
       if (fm) { folderMenu(fm.closest('[data-folder]').dataset.folder, fm); return; }
       if (e.target.closest('[data-action="empty-trash"]')) { emptyTrash(); return; }
       const more = e.target.closest('[data-more]');
       if (more) { shown.set(more.dataset.more, (shown.get(more.dataset.more) || PAGE) + PAGE); render(); return; }
-      const v = e.target.closest('[data-view]');
-      if (v) {
-        // Choosing a view or folder selects it and opens it.
-        const key = v.dataset.view;
-        if (q()) searchOpen = { ...searchOpen, [key]: true };
-        UI.set({ notesView: key, notesOpen: q() ? opened() : { ...opened(), [key]: true } });
-        return;
-      }
       const el = e.target.closest('[data-action]');
       const r = el && el.closest('.nnote');
       if (!r) return;
       if (el.dataset.action === 'menu') noteMenu(r.dataset.id, r.dataset.sec, el);
-      else if (Date.now() - swipedAt > 400) { QuickNotes.openNote(r.dataset.id, { focus: false }); drawer(false); scheduleRender(); }
+      else if (Date.now() - swipedAt > 400) {
+        const sec = r.dataset.sec;
+        if (sec !== 'archive' && sec !== 'trash' && view() !== sec) UI.set({ notesView: sec });
+        QuickNotes.openNote(r.dataset.id, { focus: false });
+        drawer(false);
+        scheduleRender();
+      }
     });
     // Swipe left on a note row (touch) opens its menu.
     let swipe = null;
     let swipedAt = 0;
     tree.addEventListener('pointerdown', (e) => {
       const r = e.target.closest('.nnote');
-      swipe = r && e.pointerType !== 'mouse' ? { r, x: e.clientX, y: e.clientY } : null;
+      swipe = r && e.pointerType !== 'mouse' && !e.target.closest('.nhandle') ? { r, x: e.clientX, y: e.clientY } : null;
     });
     tree.addEventListener('pointermove', (e) => {
       if (!swipe) return;
@@ -7450,27 +7689,6 @@ const NotesPage = (() => {
     });
     tree.addEventListener('pointerup', () => { swipe = null; });
     tree.addEventListener('pointercancel', () => { swipe = null; });
-    // Drag a note onto a folder (or All Notes) to move it there.
-    const NOTE_TYPE = 'application/x-still-note';
-    tree.addEventListener('dragstart', (e) => {
-      const r = e.target.closest && e.target.closest('.nnote');
-      if (!r) return;
-      e.dataTransfer.setData(NOTE_TYPE, r.dataset.id);
-      e.dataTransfer.setData('text/plain', NotesData.parts(Items.get(r.dataset.id)).title);
-      e.dataTransfer.effectAllowed = 'move';
-      r.classList.add('is-dragging');
-    });
-    tree.addEventListener('dragend', (e) => { const r = e.target.closest && e.target.closest('.nnote'); if (r) r.classList.remove('is-dragging'); $$('.is-drop', tree).forEach((x) => x.classList.remove('is-drop')); });
-    const target = (e) => { const t = e.target.closest && e.target.closest('[data-drop]'); return t && Array.from(e.dataTransfer.types || []).includes(NOTE_TYPE) ? t : null; };
-    tree.addEventListener('dragover', (e) => { const t = target(e); if (!t) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; $$('.is-drop', tree).forEach((x) => x !== t && x.classList.remove('is-drop')); t.classList.add('is-drop'); });
-    tree.addEventListener('dragleave', (e) => { const t = target(e); if (t && !t.contains(e.relatedTarget)) t.classList.remove('is-drop'); });
-    tree.addEventListener('drop', (e) => {
-      const t = target(e);
-      if (!t) return;
-      e.preventDefault();
-      t.classList.remove('is-drop');
-      moveTo(e.dataTransfer.getData(NOTE_TYPE), t.dataset.drop || null);
-    });
     drawerBtn.addEventListener('click', () => drawer(!layout.classList.contains('is-drawer')));
     scrim.addEventListener('click', () => drawer(false));
     $('#notes-new').addEventListener('click', newNote);
@@ -7774,6 +7992,7 @@ function init() {
     Persistence.schedule();
     if (reason !== 'graph') scheduleRender(); // the graph saving its own layout needs no redraw
     if (reason === 'restore' || reason === 'reset') { Popover.close(false); QuickNotes.sync(true); }
+    if (reason === 'restore') NotesPage.purgeTrash();
   });
   Calendar.build();
   TaskPanel.build();
