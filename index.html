@@ -61,6 +61,11 @@
   --shadow-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75);
   --shadow-ctl: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3);
   --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px);
+  --glow: rgba(255, 255, 255, 0.035);   /* a soft overhead light in the ambient background */
+  /* Blur: cards sit on the smooth ambient light, so half the blur looks the same there and costs
+     less; things that float over content take the full Blur strength. */
+  --blur-card: calc(var(--blur) * 0.5);
+  --blur-scrim: 4px;                     /* behind a dialog */
   /* Stacking order: five named levels (plus small local ones inside a component) */
   --z-raised: 5;      /* grabbers, an expanded card */
   --z-sticky: 20;     /* top bar */
@@ -123,6 +128,7 @@
   --i-md: 20px;
   --i-lg: 24px;
   --topbar-h: 56px;
+  --head-h: 44px;         /* every card's header row (a note's title, the calendar's month) */
 
   /* Motion: calm, then precise. Four durations; the slow-fast-slow curve for things that move on
      their own, a quick settle for things that arrive, a gentle spring for things under a finger. */
@@ -154,6 +160,7 @@
   --ctl-h-sm: 26px;
   --cal-day: clamp(26px, 3.7vh, 32px);
   --gutter: var(--s5);
+  --head-h: 36px;
   /* Compact keeps close to the old sizes for anyone who wants more on screen (12px stays the floor). */
   --fs-body: 14px;
   --fs-footnote: 12px;
@@ -228,22 +235,25 @@ kbd {
 .icon--sm { --is: 16; }
 .icon--lg { --is: 24; }
 
-/* Ambient light behind the glass */
+/* ---------- Glass: three layers, one recipe each ----------
+   Canvas: the ambient light, two soft accent glows and an overhead light on the theme's background.
+   Surface (cards, the top bar): glass fill with a faint top sheen, a hairline, a top highlight and a soft shadow.
+   Floating (popovers, dialogs, toasts, menus): the raised fill, a stronger hairline and the deeper shadow (see Overlays). */
 .ambient {
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(60vmax 45vmax at 8% -12%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 62%),
-    radial-gradient(55vmax 40vmax at 104% 112%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%),
+    radial-gradient(70vmax 40vmax at 50% -18%, var(--glow), transparent 70%),
+    radial-gradient(60vmax 45vmax at 8% -12%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%),
+    radial-gradient(55vmax 40vmax at 104% 112%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
     linear-gradient(180deg, var(--bg), var(--bg-deep));
 }
 
-/* Glass surface, shared by panels, the top bar, dialogs and popovers */
 .glass {
-  background: var(--surface);
+  background: var(--sheen), var(--surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
-  backdrop-filter: blur(var(--blur)) saturate(140%);
+  box-shadow: var(--shadow-1);
+  -webkit-backdrop-filter: blur(var(--blur-card)) saturate(140%);
+  backdrop-filter: blur(var(--blur-card)) saturate(140%);
   transition: background-color var(--t-theme) var(--ease), border-color var(--t-theme) var(--ease), border-radius var(--t-theme) var(--ease);
 }
 
@@ -472,7 +482,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 }
 .topbar::before {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
-  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+  background: var(--sheen), var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-1);
   -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
   backdrop-filter: blur(var(--blur)) saturate(140%);
   transition: background-color var(--t-theme) var(--ease), border-color var(--t-theme) var(--ease);
@@ -573,7 +583,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .page-head__title { font: var(--fw-semibold) var(--fs-title-lg)/var(--lh-tight) var(--font-head); letter-spacing: var(--ls-title-lg); }
 .page-head__sub { margin-top: var(--s2); color: var(--text-2); font-size: var(--fs-body); text-wrap: pretty; }
 
-.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); flex: none; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: var(--ctl-h-sm); margin-bottom: var(--s3); flex: none; }
 .subhead { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--text); display: flex; align-items: center; gap: var(--s2); }
 .count { font-size: var(--fs-footnote); color: var(--text-3); font-variant-numeric: tabular-nums; }
 
@@ -612,8 +622,9 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   position: relative; flex: 1; display: grid;
   grid-template-columns: var(--dash-cols, minmax(var(--col-min), 1fr) minmax(var(--col-min), 0.85fr) minmax(var(--col-min), 1.3fr)); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 600px; }
 .panel { display: flex; flex-direction: column; min-height: 0; padding: var(--pad); border-radius: var(--r-lg); }
-/* Every card's first row (header, search bar, month bar) has this height. */
-.panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s4); flex: none; }
+/* A card's header row: the title on the left (title role), quiet status after it, actions on the right;
+   44px tall (36 in Compact), with the same space under it in every card. */
+.panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--head-h); margin: calc((var(--head-h) - var(--ctl-h)) / -2) 0 var(--s3); flex: none; }
 .panel__title { font-size: var(--fs-caption); font-weight: var(--fw-semibold); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-3); }
 .panel__section { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--border); }
 .list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
@@ -660,7 +671,7 @@ html.is-resizing[data-resize="row"] * { cursor: row-resize !important; }
 /* Focus ring only when the card was reached with the keyboard. */
 html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* Expanded: grows down over the Connections card, which stays in place. */
-.panel--time.is-expanded { z-index: 6; background: var(--surface-raised); box-shadow: var(--shadow-pop); }
+.panel--time.is-expanded { z-index: 6; background: var(--sheen), var(--surface-raised); box-shadow: var(--shadow-2); }
 .views { position: relative; flex: 1; min-height: 0; overflow: hidden; margin: 0 calc(var(--pad) * -1); touch-action: pan-y; }
 .views__track { position: relative; height: 100%; }
 /* Each view sits on top of the other; transforms slide them in and out. */
@@ -793,7 +804,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 }
 .timer-pill .icon { --is: 14; color: var(--accent-ink); }
 .panel--time.is-pulsing { animation: timer-pulse 0.9s var(--ease) 3; }
-@keyframes timer-pulse { 50% { box-shadow: var(--shadow), 0 0 0 3px var(--accent-soft), 0 0 40px -6px var(--accent); } }
+@keyframes timer-pulse { 50% { box-shadow: var(--shadow-1), 0 0 0 3px var(--accent-soft), 0 0 40px -6px var(--accent); } }
 
 /* Clock face artwork (drawn by ClockFace) */
 .clock__rim { fill: var(--surface-sunken); stroke: var(--border-strong); }
@@ -1178,7 +1189,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .notes__status.is-visible { opacity: 1; }
 
 /* Calendar */
-.cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--ctl-h); margin-bottom: var(--s3); flex: none; }
+.cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); height: var(--head-h); margin: calc((var(--head-h) - var(--ctl-h)) / -2) 0 var(--s2); flex: none; }
 .cal__nav { display: flex; align-items: center; gap: var(--s0); }
 .cal__month { font: var(--fw-semibold) var(--fs-title)/1.3 var(--font-head); letter-spacing: var(--ls-title); min-width: 0; white-space: nowrap; overflow: hidden; }
 .view--calendar .btn.is-away { color: var(--accent); }
@@ -1221,7 +1232,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .wday__num { font-size: var(--fs-caption); color: var(--text-3); font-variant-numeric: tabular-nums; }
 .wday.is-today .wday__num { color: var(--accent-ink); font-weight: var(--fw-semibold); }
 
-.tasks__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); flex: none; }
+.tasks__head { display: flex; align-items: center; gap: var(--s3); min-height: var(--ctl-h-sm); margin-bottom: var(--s3); flex: none; }
 .tasks__head .subhead { flex: 1; min-width: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tasks__add { width: var(--ctl-h-sm); height: var(--ctl-h-sm); border-radius: var(--r-sm); }
 .tasks__add .icon { --is: 16; }
@@ -1698,6 +1709,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                               : 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3)',
         '--sheen': light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
                          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
+        '--glow': light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
         '--blur': num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
         /* One dial: cards take it as set, everything else follows from it. */
         '--r-xs': Math.round(radius * 0.25) + 'px',
