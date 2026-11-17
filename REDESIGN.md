@@ -1,7 +1,7 @@
 # STILL redesign
 
-**Status: Step 1, the audit and a proposed direction. No code has changed yet.**
-Branch: `redesign`. Nothing here touches `main` until you approve.
+**Status: done.** Steps 1–4 are complete. Step 4 (what changed, measured before and after) is
+at the end of this file. Branch: `redesign`, one small commit per step.
 
 ## How I audited it
 
@@ -239,3 +239,96 @@ Each step is one small commit, so you can review or roll back any single one:
 
 1. **Bigger text.** Body text would go from 12.5px to 15px, and the smallest text from 11px to 12px. That's the biggest visible change, and I recommend it. Compact density would stay close to today's sizes for anyone who wants more on screen.
 2. **Performance mode** adds one optional setting, as described above. OK?
+
+---
+
+## Step 4: what changed, before and after
+
+Everything below was measured the same way as the audit, on the finished `redesign` branch.
+
+### The commits
+
+Each step is one commit, so any one can be reviewed or reverted on its own. Fix commits follow
+the step they correct.
+
+| # | Commit | What it does |
+|---|---|---|
+| 1 | Design tokens | The new tokens only; pixel-identical to before |
+| 2 | Theme contrast | AA colours in every theme, Custom included |
+| 3 | Type | Seven roles, 15px body, 12px floor |
+| 4 | Spacing and radii | Every corner from the one dial; spacing on the 4/8 grid |
+| 5 | Buttons and icons | One family, one set of states, one stroke |
+| 6 | Fields and controls | Visible edges, one focus ring, iOS-like switches |
+| 7 | Glass | One surface recipe, a richer ambient light, one header row |
+| 8 | Overlays | One floating recipe, roomier dialogs, a toast with an icon |
+| — | Fix | Recent's height follows the new row gap |
+| 9 | Home cards | Soft rows, quiet finished tasks, a clearer calendar |
+| 10 | Pages | Notes, Connections, Pins and Settings; one empty-state look |
+| 11 | Event editor | The app's own date and time fields |
+| 12 | Motion | Four durations, settling entrances, press feedback, calm reduced motion |
+| — | Fix | Header rows start level with the week strip |
+| 13 | Touch | Every control a 44px target on touch screens |
+| 14 | Performance mode | Solid surfaces and lighter effects for slower computers |
+| — | Fix | On touch screens the toolbar's tools share its width |
+| 15 | Responsive | A smaller clock card on phones; every screen size checked |
+
+### Contrast (on a card)
+
+| Theme | Faint text | Secondary text | Red | Control edge |
+|---|---|---|---|---|
+| Graphite | 3.82 → **4.96** | 7.16 → 7.16 | 6.48 → 6.48 | 1.21 → **3.40** |
+| Midnight | 3.72 → **5.03** | 7.06 → 7.06 | 6.50 → 6.50 | 1.16 → **3.46** |
+| Forest | 3.70 → **4.95** | 7.01 → 7.01 | 6.42 → 6.42 | 1.19 → **3.50** |
+| Mocha | 3.68 → **5.06** | 6.83 → 6.83 | 6.34 → 6.34 | 1.19 → **3.46** |
+| Light | 3.12 → **4.79** | 5.77 → **6.14** | 2.49 → **4.71** | 1.23 → **3.17** |
+
+- **Every combination passes.** All 6 themes × 7 accents × 3 glass transparencies meet AA. The weakest is 4.51:1, the readable accent on a Custom theme.
+- **What was solved.** Faint text, secondary text, the readable accent and the red, green and amber reach at least 4.5:1. Control edges reach at least 3:1.
+- **What stayed.** Colours that already passed are unchanged.
+
+### Everything else, measured
+
+| Area | Before | After |
+|---|---|---|
+| Text sizes on Home | 13, including 12.96 and 14.48 | The roles (12, 13, 15, 17) and the clock and timer numerals*, plus the timer's Start/Reset, which scale with the card between 13 and 15 |
+| Most common text size | 12.5px (rows, menus, buttons) | 15px |
+| Smallest text | 9.5px (badges), 10.5px (phone tabs) | 12px |
+| Radii that ignored Corner roundness | 9 | 0 |
+| Shadows | 17, one per component | 3 recipes |
+| Hard-coded blurs | 4 | 0 (the dialog scrim is a token) |
+| Icon sizes | 10 (11–28px), 5 stroke widths | 16 / 20 / 24, plus 14 in a line of text; one drawn weight |
+| Disabled looks | 4 | 1 |
+| Focus styles | 4 | 1 |
+| iPad controls under 44px | 101 on Home | 0, except the week strip's seven days (27 × 64) |
+| Pressed (`:active`) states | 5 | Every button, row, chip, swatch and day |
+| Reduced motion | Everything cut to 1ms | Nothing moves; overlays still fade |
+| Live blur layers | 14 | The same in normal mode; 0 in Performance mode |
+
+\* The 14px Wikipedia "W" glyph in the toolbar is drawn as text but is an icon.
+
+### Checked
+
+- **Every existing test suite passes**, about 1,200 checks, apart from these:
+  - *test12, test13, test19, test20* check exact pixel positions or layouts from builds before the redesign and earlier releases. They fail by design: the sizes they pin have changed.
+  - *test9*: one check pins Recent's old pixel position. Its nav-chip drag checks were flaky before the redesign and still are.
+- **Three new suites:**
+  - *test26*: date and time fields, 40 checks.
+  - *test27*: Performance mode, 18 checks.
+  - *test28*: the settings matrix and old backups, 12 checks.
+- **Settings matrix.** Every theme with every accent, every font with both densities and 12/24h, in dark and Light, on Home and Notes: no errors, no sideways scrolling, no clipped cards, and the clock follows the setting.
+- **Old backups.** Three real backups from earlier versions load with every item and setting, and save back as `still-backup` v1. Their files had no `performanceMode`, so they load with it off.
+- **Screen sizes.** Phone, iPad portrait and landscape, the Raspberry Pi's 800×480, 1024×600 and 1280×720 screens, and 1440 and 1920 desktops: no sideways scrolling and no clipped cards.
+
+### Where the result differs from the plan
+
+- **Phone, first screen.** The clock card is smaller (about 62% of the screen, down from 600px), so the timer and the start of the next card show on the first screen. That next card is Connections, not Tasks. On phones the cards follow your layout's reading order, and changing that order would have changed behaviour.
+- **Toast position.** It's larger, has an icon, and stays clear of the phone's tab bar, but it's still at the bottom centre. Any fixed spot covers something; this one usually covers the least.
+- **Performance mode and the background.** The background never moved, so there was nothing to stop. Instead, Performance mode makes the background a plain gradient.
+- **Week strip days.** They're as wide as the card allows (seven share it) and 64px tall. They can't reach 44px wide without a wider card.
+- **Field edges in Light.** Meeting 3:1 makes field outlines a little firmer than Apple's own. That's the cost of the contrast promise.
+
+### Not changed
+
+- **The data format.** The only addition is `performanceMode`. Backups are still `still-backup` v1.
+- **Behaviour and shortcuts.** Every feature, drag, gesture and shortcut works as before. The date and time fields keep the inputs' interface, so the event editor's rules are unchanged.
+- **Static and offline.** Still one static file that works offline, with no build and no server.
