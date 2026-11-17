@@ -1066,6 +1066,8 @@ html[data-input="key"] .panel--time:focus { box-shadow: var(--shadow), 0 0 0 2px
 .nnote .row-more { width: 24px; height: 24px; }
 .nnote:hover .row-more, .nnote:focus-within .row-more { opacity: 1; }
 .nnote .hit { background: var(--accent-soft); color: var(--text); border-radius: 3px; padding: 0 1px; }
+/* On a tinted row (selected, or a colour you chose) small text takes the stronger grey, so it keeps AA contrast whatever the tint. */
+.nnote.is-selected .nnote__time, .nnote.has-color .nnote__time, .nfold.has-color .nfold__count, .mini-row.has-color .mini-row__date { color: var(--text-2); }
 .nnote__none { min-height: 30px; display: flex; align-items: center; padding-left: var(--s2); font-size: var(--fs-sm); color: var(--text-3); }
 .nnote__more { align-self: flex-start; margin: 2px 0 0 var(--s2); }
 /* "New folder": a quiet dashed row at the end. */
@@ -1565,15 +1567,26 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     return (l + 0.05) / 0.0518 > 1.05 / (l + 0.05) ? '#0e0f12' : '#ffffff';
   }
   function contrast(a, b) { var x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
-  /** The accent as text on the page: itself when it reads (4.5:1 on the background and on panels),
-      otherwise moved towards the text colour just until it does. */
-  function accentInk(accent, b) {
-    for (var t = 0; t < 1; t += 0.1) {
-      var c = mix(accent, b.text, t);
-      if (contrast(c, b.bg) >= 4.5 && contrast(c, b.panel) >= 4.5) return c;
+  /** `from`, moved towards `to` just until it reaches `target`:1 against every colour in `grounds`
+      (so a colour that already reads stays exactly as it is). */
+  function solve(from, to, grounds, target) {
+    for (var t = 0; t <= 1.0001; t += 0.02) {
+      var c = mix(from, to, Math.min(1, t));
+      if (grounds.every(function (g) { return contrast(c, g) >= target; })) return c;
     }
-    return b.text;
+    return to;
   }
+  /** Everything text or a control edge can sit on: the page, a card's glass, a raised surface
+      (dialogs, popovers) and a sunken field. (On accent-tinted rows, small text uses --text-2.) */
+  function groundsOf(b, alpha, light) {
+    var card = mix(b.bg, b.panel, alpha);
+    var raised = mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92));
+    var sunken = light ? mix(card, b.line, 0.05) : mix(card, '#000000', 0.22);
+    return { text: [b.bg, card, raised, sunken], ctl: [card, raised, sunken] };
+  }
+  /** The accent as text: itself when it reads (4.5:1 everywhere text sits), otherwise moved towards
+      the text colour just until it does. */
+  function accentInk(accent, b, g) { return solve(accent, b.text, g.text, 4.5); }
   function num(v, d, lo, hi) { v = typeof v === 'number' && isFinite(v) ? v : d; return Math.min(hi, Math.max(lo, v)); }
 
   function baseOf(s) {
@@ -1593,6 +1606,13 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var alpha = 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100;
     var radius = num(s.radius, DEFAULTS.radius, 4, 28);
     var font = FONTS[s.font] || FONTS.inter;
+    var g = groundsOf(b, alpha, light);
+    /* Secondary and faint text keep their place between the text and the background, but never
+       drop below 4.5:1 (WCAG AA) on anything they can sit on, in any theme, Custom included. */
+    var text3 = solve(mix(b.text, b.bg, 0.54), b.text, g.text, 4.6);
+    var low = Math.min.apply(null, g.text.map(function (x) { return contrast(text3, x); }));
+    /* Secondary text stays a clear step above faint text: at least 6:1, and 1.2× faint's contrast. */
+    var text2 = solve(mix(b.text, b.bg, 0.32), b.text, g.text, Math.max(6, low * 1.2));
     return {
       scheme: light ? 'light' : 'dark',
       density: s.density === 'compact' ? 'compact' : 'comfortable',
@@ -1609,11 +1629,17 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
         '--border': rgba(b.line, light ? 0.11 : 0.07),
         '--border-strong': rgba(b.line, light ? 0.19 : 0.12),
         '--text': b.text,
-        '--text-2': mix(b.text, b.bg, 0.32),
-        '--text-3': mix(b.text, b.bg, 0.54),
+        '--text-2': text2,
+        '--text-3': text3,
         '--accent': accent,
         '--on-accent': readable(accent),
-        '--accent-ink': accentInk(accent, b),
+        '--accent-ink': accentInk(accent, b, g),
+        /* Status colours: a red, green and amber that read (4.5:1) on this theme. */
+        '--danger': solve(light ? '#e5484d' : '#ef7a7a', b.text, g.text, 4.6),
+        '--success': solve(light ? '#30a46c' : '#6fcf97', b.text, g.text, 4.6),
+        '--warning': solve(light ? '#d39a1f' : '#e6c26b', b.text, g.text, 4.6),
+        /* Edges that identify a control: 3:1 against the card, a raised surface and a field. */
+        '--line-ctl': solve(mix(b.text, b.bg, 0.8), b.text, g.ctl, 3.1),
         '--backdrop': light ? 'rgba(40, 50, 60, 0.28)' : 'rgba(6, 7, 9, 0.55)',
         '--shadow': light ? '0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 40px -22px rgba(25, 35, 50, 0.28)'
                           : '0 1px 0 rgba(255, 255, 255, 0.035) inset, 0 24px 48px -24px rgba(0, 0, 0, 0.65)',
