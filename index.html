@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter">
+<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter" data-perf="off">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1485,6 +1485,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 
 .range-wrap { display: flex; align-items: center; gap: var(--s3); flex: none; }
 .range { -webkit-appearance: none; appearance: none; width: 168px; height: 28px; margin: 0; background: transparent; cursor: pointer; }
+.range:disabled { opacity: var(--disabled); cursor: not-allowed; }
 .range::-webkit-slider-runnable-track { height: 4px; border-radius: var(--r-pill); background: linear-gradient(to right, var(--accent) var(--p, 50%), var(--fill-hover) var(--p, 50%)); }
 .range::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.3); transition: transform var(--dur-2) var(--ease-spring); }
 .range:active::-webkit-slider-thumb { transform: scale(1.1); }
@@ -1649,6 +1650,16 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nsearch__input:placeholder-shown { padding-right: 40px; }
 }
 
+/* ---------- Performance mode (Settings → Appearance) ----------
+   For slower computers like a Raspberry Pi. The theme engine makes surfaces solid (the same colours they
+   show over the background), turns blur off and uses small shadows; here nothing blurs at all (the
+   dialog scrim included), the background is a plain gradient, lists don't fade at their ends (the toolbar keeps its fade: it says there are more tools), and
+   transitions are shorter with no spring. Every feature stays the same. */
+:root[data-perf="on"] { --blur-scrim: 0px; --dur-1: 80ms; --dur-2: 120ms; --dur-3: 180ms; --dur-4: 240ms; --ease-spring: var(--ease-out); }
+:root[data-perf="on"] *, :root[data-perf="on"] *::before, :root[data-perf="on"] *::after, :root[data-perf="on"] dialog::backdrop { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-perf="on"] .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+:root[data-perf="on"] .list { -webkit-mask-image: none !important; mask-image: none !important; }
+
 /* ---------- 10. Motion ---------- */
 /* Pages rise a little as they fade in; dialogs rise and settle; popovers grow from the button that
    opened them (the script sets their transform-origin); toasts rise on the spring. Exits are quicker. */
@@ -1765,6 +1776,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var accent = isHex(s.accent) ? s.accent : b.accent;
     var light = luminance(b.bg) > 0.35;
     var alpha = 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100;
+    var perf = s.performanceMode === true;
     var radius = num(s.radius, DEFAULTS.radius, 4, 28);
     var font = FONTS[s.font] || FONTS.inter;
     var g = groundsOf(b, alpha, light);
@@ -1778,12 +1790,13 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
       scheme: light ? 'light' : 'dark',
       density: s.density === 'compact' ? 'compact' : 'comfortable',
       font: FONTS[s.font] ? s.font : 'inter',
+      perf: perf,
       bg: b.bg,
       vars: {
         '--bg': b.bg,
         '--bg-deep': mix(b.bg, light ? '#ffffff' : '#000000', light ? 0.35 : 0.3),
-        '--surface': rgba(b.panel, alpha.toFixed(2)),
-        '--surface-raised': rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
+        '--surface': perf ? mix(b.bg, b.panel, alpha) : rgba(b.panel, alpha.toFixed(2)),
+        '--surface-raised': perf ? mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92)) : rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
         '--surface-sunken': light ? rgba(b.line, 0.05) : 'rgba(0, 0, 0, 0.22)',
         '--hover': rgba(b.line, light ? 0.05 : 0.05),
         '--hover-strong': rgba(b.line, light ? 0.085 : 0.08),
@@ -1804,16 +1817,18 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
         /* Edges that identify a control: 3:1 against the card, a raised surface and a field. */
         '--line-ctl': solve(mix(b.text, b.bg, 0.8), b.text, g.ctl, 3.1),
         '--backdrop': light ? 'rgba(40, 50, 60, 0.28)' : 'rgba(6, 7, 9, 0.55)',
-        '--shadow-1': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(25, 35, 50, 0.06), 0 16px 40px -22px rgba(25, 35, 50, 0.25)'
-                            : 'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6)',
-        '--shadow-2': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(25, 35, 50, 0.08), 0 32px 72px -24px rgba(25, 35, 50, 0.35)'
-                            : 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75)',
+        '--shadow-1': perf ? (light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(25, 35, 50, 0.12)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3)')
+                    : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(25, 35, 50, 0.06), 0 16px 40px -22px rgba(25, 35, 50, 0.25)'
+                    : 'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6)',
+        '--shadow-2': perf ? (light ? '0 4px 14px rgba(25, 35, 50, 0.18)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45)')
+                    : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(25, 35, 50, 0.08), 0 32px 72px -24px rgba(25, 35, 50, 0.35)'
+                    : 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75)',
         '--shadow-ctl': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
                               : 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3)',
-        '--sheen': light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
-                         : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
+        '--sheen': perf ? 'none' : light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
+                                         : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
         '--glow': light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
-        '--blur': num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
+        '--blur': perf ? '0px' : num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
         /* One dial: cards take it as set, everything else follows from it. */
         '--r-xs': Math.round(radius * 0.25) + 'px',
         '--r-sm': Math.round(radius * 0.38) + 'px',
@@ -1845,6 +1860,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     root.setAttribute('data-scheme', t.scheme);
     root.setAttribute('data-density', t.density);
     root.setAttribute('data-font', t.font);
+    root.setAttribute('data-perf', t.perf ? 'on' : 'off');
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t.bg);
     loadFont(t.font);
@@ -2297,6 +2313,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   // Appearance
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
+  performanceMode: false, // solid surfaces and lighter effects, for slower computers (Settings → Appearance)
   cardSizes: null, // older Home card sizes ({ cols: [a, b, c], split }); read into homeLayout when that's missing
   notesSizes: null, // the Notes page's two columns, the same way ({ cols: [sidebar, editor] })
   homeLayout: null, // Home's arrangement and sizes: { cols: [{ cards, w, split }] } (see HomeLayout), or null for the default
@@ -2481,6 +2498,7 @@ function normaliseSettings(raw) {
     blur: clampNum(s.blur, 0, 40, d.blur),
     radius: clampNum(s.radius, 4, 28, d.radius),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
+    performanceMode: bool(s.performanceMode, d.performanceMode),
     navOrder: (() => {
       const v = Array.isArray(s.navOrder) ? s.navOrder.filter((x, i, a) => PAGE_IDS.includes(x) && a.indexOf(x) === i) : [];
       return [...v, ...PAGE_IDS.filter((x) => !v.includes(x))];
@@ -3109,7 +3127,7 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
    the relevant settings change. */
 const Theme = (() => {
   let applied = '';
-  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density'];
+  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'performanceMode'];
   function apply() {
     const s = Settings.get();
     const key = JSON.stringify(KEYS.map((k) => s[k]));
@@ -4640,7 +4658,16 @@ const SettingsPanel = (() => {
             preview: h('span', { class: 'tile__font', style: `font-family:${FONTS[id].head || FONTS[id].body}`, text: 'Aa' }),
           })), s.font, 'Font', (v) => set({ font: v })), { keywords: 'typeface inter system sf pro jetbrains mono playfair serif' }),
           row('Glass transparency', range('transparency', s.transparency, 0, 80, 'Glass transparency', (v) => `${v}%`), { keywords: 'opacity glass' }),
-          row('Blur strength', range('blur', s.blur, 0, 40, 'Blur strength', (v) => `${v}px`), { keywords: 'frosted glass' }),
+          (() => {
+            const ctl = range('blur', s.blur, 0, 40, 'Blur strength', (v) => `${v}px`);
+            if (s.performanceMode) $('input', ctl).disabled = true;
+            return row('Blur strength', ctl, { keywords: 'frosted glass', hint: s.performanceMode ? 'Off in Performance mode' : '' });
+          })(),
+          (() => {
+            const ctl = toggle('performanceMode', s.performanceMode, 'Performance mode');
+            $('input', ctl).addEventListener('change', () => refresh());
+            return row('Performance mode', ctl, { keywords: 'raspberry pi slow fast speed lighter effects blur solid smooth', hint: 'Solid surfaces and lighter effects, for slower computers like a Raspberry Pi' });
+          })(),
           row('Corner roundness', range('radius', s.radius, 4, 28, 'Corner roundness', (v) => `${v}px`), { keywords: 'radius rounded corners' }),
           row('Density', seg('density', [['comfortable', 'Comfortable'], ['compact', 'Compact']], s.density, 'Density'), { keywords: 'spacing compact comfortable' }),
           stackRow('Nav icons', navChips(s, refresh), { keywords: 'reorder rearrange order navigation icons top bar' }),
