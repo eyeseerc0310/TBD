@@ -1551,7 +1551,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .dashboard { grid-template-columns: minmax(0, 1fr); }
   .dcol { display: contents; }
   .dcol > .panel { order: var(--read, 0); }
-  .panel--time { height: 600px; }
+  /* The clock takes a little under two thirds of the screen, so Tasks starts on the first screen. */
+  .panel--time { height: 440px; height: clamp(400px, 62svh, 520px); }
   .notes__area { min-height: 180px; }
   .notes__area, .notes__saved { flex: none; }
   .mini-grid { grid-template-columns: minmax(0, 1fr); }
