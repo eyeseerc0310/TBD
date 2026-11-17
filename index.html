@@ -1626,7 +1626,10 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .timer__time { min-height: var(--hit); }
   .card__open { position: relative; }
   .card__open::before { content: ""; position: absolute; inset: min(0px, calc((100% - var(--hit)) / 2)) 0; }
-  .tool { width: 36px; height: 36px; }
+  /* The formatting tools share the toolbar's width (28 to 40px each; narrower cards scroll as before);
+     36px tall, and the toolbar's own padding lets each one's target reach 44px. */
+  .note-tools { container-type: inline-size; padding-block: var(--s1); margin-top: calc(var(--s2) - var(--s1)); margin-bottom: calc(var(--s1) * -1); }
+  .tool { width: clamp(28px, (100cqi - 64px) / 12, 40px); height: 36px; }   /* 64px: the gaps between the twelve tools and their groups, with a little slack */
   .check-hit { width: var(--hit); height: var(--hit); }
   .check { width: 22px; height: 22px; }
   .task__handle, .nhandle { width: 24px; height: var(--hit); }
