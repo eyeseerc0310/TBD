@@ -428,7 +428,28 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .swatch--none .icon { --is: 16; opacity: 1; transform: none; stroke-width: calc(33.6 / var(--is)); }
 .swatch--custom { cursor: pointer; background: conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
 .swatch--custom[aria-pressed="true"] { background: radial-gradient(circle, var(--c) 0 7px, transparent 7.5px), conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
-.swatch--custom input { position: absolute; inset: 0; border-radius: 50%; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: 0; padding: 0; }
+.swatch--custom[aria-expanded="true"] { box-shadow: 0 0 0 1px var(--border-strong) inset, 0 0 0 2px var(--surface-raised), 0 0 0 4px var(--accent-ink); }
+/* A colour picker: the swatches, and the colour wheel that opens under them. */
+.cpick { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+.srow .cpick { align-items: flex-end; }
+.cpick__wheel[hidden] { display: none; }
+.cpick__wheel { animation: pop-in var(--dur-2) var(--ease-out); transform-origin: top center; }
+/* The colour wheel: a hue ring round a square (richness across, brightness down), a hex field and before / now. */
+.cw { display: flex; flex-direction: column; align-items: center; gap: var(--s3); width: 200px; }
+.cw-disc { position: relative; width: 200px; height: 200px; flex: none; border-radius: 50%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; }
+.cw-disc canvas { width: 200px; height: 200px; display: block; }
+.cw-disc:focus-visible { outline-offset: 4px; }
+.cw-knob {
+  position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; pointer-events: none;
+  box-shadow: 0 0 0 2.5px #fff, 0 0 0 3.5px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: width var(--dur-1) var(--ease), height var(--dur-1) var(--ease), margin var(--dur-1) var(--ease);
+}
+.cw-disc.is-held .cw-knob { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+.cw-foot { display: flex; align-items: center; gap: var(--s2); width: 100%; }
+.cw-compare { display: flex; flex: none; border-radius: var(--r-sm); overflow: hidden; box-shadow: 0 0 0 1px var(--border-strong); }
+.cw-was, .cw-now { width: 32px; height: var(--ctl-h); background: var(--c, transparent); }
+.cw-was { cursor: pointer; }
+.cw-hex { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* Date and time fields (the event editor): a field you tap, its picker opening inline under the row. */
 .pick { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; text-align: left; cursor: pointer; font-variant-numeric: tabular-nums; }
@@ -1501,9 +1522,9 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   font-size: var(--fs-footnote); color: var(--text-2); font-variant-numeric: tabular-nums; cursor: pointer;
 }
 .color-field:hover { border-color: var(--text-3); }
-.color-field:has(:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+
 .color-field__dot { width: 22px; height: 22px; border-radius: var(--r-xs); background: var(--c); box-shadow: 0 0 0 1px var(--border-strong) inset; }
-.color-field input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+.color-field[aria-expanded="true"] { border-color: var(--accent-ink); }
 
 /* ---------- 9. Responsive ---------- */
 @media (max-width: 1099px) {
@@ -3038,7 +3059,7 @@ const Popover = (() => {
     const onDown = (e) => { if (!el.contains(e.target) && !(current && current.anchorEl().contains(e.target))) close(false); };
     const onKey = (e) => {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); return; }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(e.target.closest && e.target.closest('.cw'))) {   // the colour wheel uses its own arrows
         const items = $$('.menu__item:not(:disabled)', el);
         if (!items.length) return;
         e.preventDefault();
@@ -3096,9 +3117,126 @@ const Popover = (() => {
 })();
 
 /** Colour picker: palette swatches, optional "None", and a custom colour wheel. */
+/* ---------- Colour wheel ----------
+   The app's own colour picker (the system one, on an iPad, closed as soon as a drag changed the
+   colour). A hue ring round a square: across it how rich the colour is, down it how bright.
+   A hex field to type into, and the colour it started from beside the new one (tap it to go
+   back). `onInput(hex)` as it moves (optional), `onCommit(hex)` when a drag ends, a hex is
+   typed or the old colour is tapped. Arrow keys on the wheel: ←/→ turn the hue, ↑/↓ the
+   brightness (Shift: bigger steps). */
+function hsv2hex(h0, s, v) {
+  const f = (n) => { const k = (n + h0 / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); };
+  return `#${[f(5), f(3), f(1)].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+}
+function hex2hsv(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b); const d = mx - Math.min(r, g, b);
+  let hh = 0;
+  if (d) hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(hh * 60 + 360) % 360, mx ? d / mx : 0, mx];
+}
+function colourWheel({ value, onInput = null, onCommit }) {
+  const DISC = 200; const RING = 18; const SQ = Math.floor((DISC / 2 - RING - 6) * Math.SQRT2); const SQ0 = (DISC - SQ) / 2;
+  const start = isHex(value) ? value.toLowerCase() : '#4d9078';
+  let hsv = hex2hsv(start);
+  let ringImg = null;
+  const canvas = h('canvas', { 'aria-hidden': 'true' });
+  const hk = h('span', { class: 'cw-knob cw-knob--hue', 'aria-hidden': 'true' });
+  const sk = h('span', { class: 'cw-knob', 'aria-hidden': 'true' });
+  const disc = h('div', { class: 'cw-disc', tabindex: '0', role: 'group', 'aria-label': 'Colour wheel: arrow keys change the hue and brightness' }, canvas, hk, sk);
+  const was = h('button', { class: 'cw-was', type: 'button', title: 'Back to the colour before', 'aria-label': 'Back to the colour before', style: `--c:${start}` });
+  const now = h('span', { class: 'cw-now', 'aria-hidden': 'true' });
+  const hexIn = h('input', { class: 'input cw-hex', type: 'text', maxlength: 7, spellcheck: 'false', autocomplete: 'off', autocapitalize: 'off', 'aria-label': 'Hex colour' });
+  const el = h('div', { class: 'cw' }, disc, h('div', { class: 'cw-foot' }, h('span', { class: 'cw-compare' }, was, now), hexIn));
+  const hex = () => hsv2hex(hsv[0], hsv[1], hsv[2]);
+  function draw() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2); const m = DISC / 2;
+    if (canvas.width !== DISC * dpr) { canvas.width = canvas.height = DISC * dpr; ringImg = null; }
+    const c = canvas.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, DISC, DISC);
+    if (!ringImg) {   // the hue ring, in fine slices, drawn once
+      ringImg = document.createElement('canvas'); ringImg.width = ringImg.height = DISC * dpr;
+      const r = ringImg.getContext('2d'); r.setTransform(dpr, 0, 0, dpr, 0, 0);
+      for (let a = 0; a < 360; a += 0.5) {
+        r.beginPath(); r.moveTo(m, m); r.arc(m, m, m, (a - 90.4) * Math.PI / 180, (a - 89.4) * Math.PI / 180); r.closePath();
+        r.fillStyle = `hsl(${a},100%,50%)`; r.fill();
+      }
+      r.globalCompositeOperation = 'destination-out'; r.beginPath(); r.arc(m, m, m - RING, 0, Math.PI * 2); r.fill();
+    }
+    c.drawImage(ringImg, 0, 0, DISC, DISC);
+    c.save(); c.beginPath(); if (c.roundRect) c.roundRect(SQ0, SQ0, SQ, SQ, 8); else c.rect(SQ0, SQ0, SQ, SQ); c.clip();
+    c.fillStyle = `hsl(${hsv[0]},100%,50%)`; c.fillRect(SQ0, SQ0, SQ, SQ);
+    let g = c.createLinearGradient(SQ0, 0, SQ0 + SQ, 0); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(SQ0, SQ0, SQ, SQ);
+    g = c.createLinearGradient(0, SQ0, 0, SQ0 + SQ); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, '#000'); c.fillStyle = g; c.fillRect(SQ0, SQ0, SQ, SQ);
+    c.restore();
+  }
+  function show(skipHex = false) {
+    const x = hex(); const a = (hsv[0] - 90) * Math.PI / 180; const mr = DISC / 2 - RING / 2;
+    draw();
+    hk.style.transform = `translate(${DISC / 2 + Math.cos(a) * mr}px, ${DISC / 2 + Math.sin(a) * mr}px)`;
+    hk.style.background = `hsl(${hsv[0]},100%,50%)`;
+    sk.style.transform = `translate(${SQ0 + hsv[1] * SQ}px, ${SQ0 + (1 - hsv[2]) * SQ}px)`;
+    sk.style.background = x;
+    now.style.setProperty('--c', x);
+    if (!skipHex) hexIn.value = x.toUpperCase();
+    hexIn.removeAttribute('aria-invalid');
+  }
+  function setHsv(hh, s, v, { commit = false, skipHex = false } = {}) {
+    hsv = [((hh % 360) + 360) % 360, Math.max(0, Math.min(1, s)), Math.max(0, Math.min(1, v))];
+    show(skipHex);
+    if (onInput) onInput(hex());
+    if (commit) onCommit(hex());
+  }
+  function fromHex(x, opts) { const n = hex2hsv(x); setHsv(n[1] && n[2] ? n[0] : hsv[0], n[1], n[2], opts); }  // a grey keeps its hue
+  disc.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const r0 = disc.getBoundingClientRect(); const k = r0.width / DISC;
+    const at = (ev) => ({ x: (ev.clientX - r0.left) / k, y: (ev.clientY - r0.top) / k });
+    const p = at(e); const d = Math.hypot(p.x - DISC / 2, p.y - DISC / 2);
+    const ring = d > DISC / 2 - RING - 4;
+    if (d > DISC / 2 + 4) return;
+    if (!ring && (p.x < SQ0 - 8 || p.y < SQ0 - 8 || p.x > SQ0 + SQ + 8 || p.y > SQ0 + SQ + 8)) return;
+    e.preventDefault();
+    try { disc.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    disc.classList.add('is-held');
+    const mv = (ev) => {
+      const q = at(ev);
+      if (ring) setHsv(Math.atan2(q.x - DISC / 2, -(q.y - DISC / 2)) * 180 / Math.PI, hsv[1], hsv[2]);
+      else setHsv(hsv[0], (q.x - SQ0) / SQ, 1 - (q.y - SQ0) / SQ);
+    };
+    const up = () => {
+      disc.removeEventListener('pointermove', mv); disc.removeEventListener('pointerup', up); disc.removeEventListener('pointercancel', up);
+      disc.classList.remove('is-held');
+      onCommit(hex());
+    };
+    mv(e);
+    disc.addEventListener('pointermove', mv); disc.addEventListener('pointerup', up); disc.addEventListener('pointercancel', up);
+  });
+  disc.addEventListener('keydown', (e) => {
+    const big = e.shiftKey ? 3 : 1;
+    const step = { ArrowLeft: [-5, 0], ArrowRight: [5, 0], ArrowUp: [0, 0.04], ArrowDown: [0, -0.04] }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    setHsv(hsv[0] + step[0] * big, hsv[1], hsv[2] + step[1] * big, { commit: true });
+  });
+  hexIn.addEventListener('input', () => {
+    let m = hexIn.value.trim().replace(/^#?/, '#');
+    if (/^#[0-9a-f]{3}$/i.test(m)) m = `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}`;
+    if (/^#[0-9a-f]{6}$/i.test(m)) fromHex(m.toLowerCase(), { commit: true, skipHex: true });
+    else hexIn.setAttribute('aria-invalid', 'true');
+  });
+  hexIn.addEventListener('change', () => show());
+  hexIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); show(); } });
+  was.addEventListener('click', () => fromHex(start, { commit: true }));
+  show();
+  return { el, set: (x) => { if (isHex(x)) { const n = hex2hsv(x.toLowerCase()); hsv = [n[1] && n[2] ? n[0] : hsv[0], n[1], n[2]]; show(); } }, value: hex };
+}
+
 function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
-  const custom = h('input', { type: 'color', value: isHex(value) ? value : '#4d9078', 'aria-label': 'Custom colour' });
-  const customWrap = h('label', { class: 'swatch swatch--custom', title: 'Custom colour' }, custom);
+  // The custom swatch opens the colour wheel under the swatches (and closes it again).
+  const customWrap = h('button', { class: 'swatch swatch--custom', type: 'button', title: 'Custom colour', 'aria-label': 'Custom colour', 'aria-expanded': 'false' });
+  const wheelBox = h('div', { class: 'cpick__wheel', hidden: true });
+  let wheel = null;
   const wrap = h('div', { class: 'swatches', role: 'group', 'aria-label': label },
     allowNone ? h('button', { class: 'swatch swatch--none', type: 'button', title: 'None', 'aria-label': 'No colour', dataset: { color: '' } }, icon('ban')) : null,
     PALETTE.map((p) => h('button', {
@@ -3106,6 +3244,7 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
       style: `--c:${p.hex};--on-c:${readable(p.hex)}`, dataset: { color: p.hex },
     }, icon('check'))),
     customWrap);
+  let current = isHex(value) ? value.toLowerCase() : null;
   const mark = (color) => {
     const c = isHex(color) ? color.toLowerCase() : '';
     $$('.swatch[data-color]', wrap).forEach((s) => s.setAttribute('aria-pressed', String(s.dataset.color === c)));
@@ -3117,12 +3256,25 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
     const s = e.target.closest('.swatch[data-color]');
     if (!s) return;
     const c = s.dataset.color || null;
-    mark(c);
+    current = c; mark(c);
+    if (wheel && c) wheel.set(c);
     onPick(c);
   });
-  custom.addEventListener('input', () => { const c = custom.value.toLowerCase(); mark(c); onPick(c); });
+  customWrap.addEventListener('click', () => {
+    const open = wheelBox.hidden;
+    wheelBox.hidden = !open;
+    customWrap.setAttribute('aria-expanded', String(open));
+    if (open && !wheel) {
+      // While dragging only the wheel and the swatch change; the colour is kept when the drag ends.
+      wheel = colourWheel({ value: current || '#4d9078', onInput: (c) => mark(c), onCommit: (c) => { if (c !== current) { current = c; mark(c); onPick(c); } } });
+      wheelBox.append(wheel.el);
+    }
+    // In a menu: keep it on the screen now that it's taller.
+    const pop = wrap.closest('.popover');
+    if (pop) { const r = pop.getBoundingClientRect(); if (r.bottom > innerHeight - 8) pop.style.top = `${Math.max(8, Math.round(innerHeight - 8 - r.height))}px`; }
+  });
   mark(value);
-  return wrap;
+  return h('div', { class: 'cpick' }, wrap, wheelBox);
 }
 
 /* ---------- Theme ----------
@@ -4516,14 +4668,19 @@ const SettingsPanel = (() => {
   function colorField(value, label, key, onInput) {
     const dot = h('span', { class: 'color-field__dot', style: `--c:${value}` });
     const text = h('span', { text: value.toUpperCase() });
-    const input = h('input', { type: 'color', value, 'aria-label': label, dataset: { key } });
-    input.addEventListener('input', () => {
-      const v = input.value.toLowerCase();
-      dot.style.setProperty('--c', v);
-      text.textContent = v.toUpperCase();
-      onInput(v);
+    const btn = h('button', { class: 'color-field', type: 'button', 'aria-label': `${label}: ${value.toUpperCase()}`, 'aria-expanded': 'false', dataset: { key } }, dot, text);
+    const box = h('div', { class: 'cpick__wheel', hidden: true });
+    let wheel = null; let last = value; let frame = 0;
+    const show = (v) => { dot.style.setProperty('--c', v); text.textContent = v.toUpperCase(); btn.setAttribute('aria-label', `${label}: ${v.toUpperCase()}`); };
+    // Applied as it moves (once a frame), so the theme follows the finger.
+    const apply = (v) => { show(v); if (v === last) return; last = v; cancelAnimationFrame(frame); frame = requestAnimationFrame(() => onInput(v)); };
+    btn.addEventListener('click', () => {
+      const open = box.hidden;
+      box.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      if (open && !wheel) { wheel = colourWheel({ value: last, onInput: apply, onCommit: apply }); box.append(wheel.el); }
     });
-    return h('label', { class: 'color-field' }, dot, text, input);
+    return h('div', { class: 'cpick cpick--field' }, btn, box);
   }
   /** Nav icon chips: drag (mouse, pen or touch) or ←/→ to reorder; the top bar follows live. */
   const NAV_ICONS = { home: 'home', notes: 'notes', connections: 'connections', pins: 'pin' };
@@ -4692,7 +4849,7 @@ const SettingsPanel = (() => {
       ],
     },
     {
-      id: 'graph', icon: 'connections', title: 'Graph', desc: 'Forces, sizes, labels and tags on the Connections graph',
+      id: 'graph', icon: 'connections', title: 'Connections', desc: 'The graph: forces, sizes, labels and tags',
       keys: ['graphLinkDistance', 'graphRepulsion', 'graphCentre', 'graphCluster', 'graphFriction', 'graphNodeSize', 'graphLabelFade'],
       rows(s, refresh) {
         const pct = (v) => `${v}%`;

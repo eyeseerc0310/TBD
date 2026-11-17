@@ -138,6 +138,12 @@ same function whenever an appearance setting changes. Text on coloured elements
 (accent buttons, the selected day, swatches) picks dark or light ink automatically
 for contrast.
 
+Colours you pick (a task's, note's, folder's or tag's colour, highlights, the accent, a
+Custom theme's colours) come from the palette or from the app's own colour wheel, which the
+rainbow swatch (or a colour field) opens in place: a hue ring round a square for richness and
+brightness, a hex field, and the colour it started from to go back to. A drag previews and the
+colour is kept when it ends (a Custom theme's colours follow the drag live).
+
 Default palette: Slate `#223843`, Mist `#EFF1F3`, Wine `#750D37`, Sage `#4D9078`,
 Mustard `#D7C62C`, Clay `#D77A61`.
 
@@ -288,4 +294,4 @@ page is shown or when the app is in the background.
 - Keyboard: arrows step through the dots, Enter opens one, P pins it, + / − zoom.
 - Connection tags (a note's ⋯ menu on the Notes page → Connection tag) colour a note's
   dot and group it with others of the same tag; untagged dots are grey.
-- Settings → Graph has the forces, sizes and label fade, and lists the tags.
+- Settings → Connections has the graph's forces, sizes and label fade, and lists the tags.
