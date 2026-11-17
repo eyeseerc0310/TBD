@@ -3,7 +3,9 @@
 A calm, local-first personal workspace — a place to capture, organise and revisit
 thoughts, tasks, events and ideas.
 
-Home has three columns: a clock / calendar card (swipe, or use the ‹ › at its edges, which sit
+Home has three columns by default (rearrange them in Settings → Windows: drag the cards on a
+mini-map of Home to swap them, stack two in a column, or give one a column of its own; or
+pick a preset): a clock / calendar card (swipe, or use the ‹ › at its edges, which sit
 on the divider line both views share, to switch views; the calendar's ‹ › and Today change
 the month, and its content scrolls down to the Scheduled list) above a Connections card (the graph of your notes, the same one as on
 the Connections page, with its own zoom), a task manager with weekly progress, colours and
@@ -102,9 +104,13 @@ Application state is `{ items, settings, ui, timer }`:
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
     `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons),
-    `cardSizes` (`null` for the defaults, or `{ cols: [a, b, c], split }`: the Home columns'
-    shares of the width and the Clock/Calendar card's share of the left column, as fractions
-    so they suit any screen), `notesSizes` (the Notes page's two columns, the same way)
+    `notesSizes` (the Notes page's two columns, as fractions)
+  - Windows: `homeLayout` (`null` for the default, or `{ cols: [{ cards, w, split }] }`: two or
+    three columns of `time` · `conn` · `tasks` · `notes`, at most two to a column; `w` is a
+    column's share of the width and `split` the top card's share of a stacked column, as
+    fractions so they suit any screen; on tablets in portrait three columns fold into two, and
+    on phones the cards follow the reading order), `notesSidebarRight`. Older backups'
+    `cardSizes` (`{ cols: [a, b, c], split }`) are read into the default layout
   - Graph: `graphLinkDistance` (30–300), `graphRepulsion`, `graphCentre`, `graphCluster`,
     `graphFriction` (0–100 each), `graphNodeSize` (3–16 px), `graphLabelFade` (30–200, the
     zoom ×100 below which labels fade out), `graphTags` (connection tags:
