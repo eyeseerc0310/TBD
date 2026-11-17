@@ -835,7 +835,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
   padding: var(--s3) var(--s4); border: 1px solid var(--border); border-radius: var(--r-md);
   background: var(--surface-sunken); transition: border-color var(--t-fast) var(--ease);
 }
-.notes__area.notes__editor:focus { border-color: var(--border-strong); }
+.notes__area.notes__editor:focus { border-color: var(--line-ctl); }
 /* Typed notes are selectable (with Wikipedia articles, the exceptions to the app's no-select rule). */
 .notes__editor, .notes__editor * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 .notes__editor.is-empty::before { content: attr(data-placeholder); float: left; height: 0; color: var(--text-3); pointer-events: none; }
@@ -874,7 +874,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 /* Formatting toolbar, just above Recent: one row of small nav-style
    buttons that scrolls sideways when the card is narrow. */
 .note-tools {
-  flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s0); margin-top: var(--s4);
+  flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s0); margin-top: var(--s2);
   overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
 }
 .note-tools::-webkit-scrollbar { display: none; }
@@ -1162,11 +1162,12 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
   position: relative; flex: none;
   display: flex; align-items: center; gap: var(--s3);
   min-height: 50px; padding: var(--s1) var(--s1) var(--s1) var(--s3);
-  border-radius: var(--r-md); border: 1px solid var(--border); background: var(--hover);
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease);
+  border-radius: var(--r-md); border: 1px solid transparent; background: var(--hover);
+  transition: background-color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
 }
-.mini-row:hover { border-color: var(--border-strong); }
-.mini-row.has-color { border-color: color-mix(in srgb, var(--row-c) 55%, var(--border)); background: color-mix(in srgb, var(--row-c) 15%, transparent); }
+.mini-row:hover { background: var(--fill); }
+/* A colour you chose: a calm tint and a tinted edge. */
+.mini-row.has-color { border-color: color-mix(in srgb, var(--row-c) 40%, transparent); background: color-mix(in srgb, var(--row-c) 12%, transparent); }
 .mini-row__icon { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--hover-strong); color: var(--text-2); }
 .mini-row__icon .icon { --is: 16; }
 .mini-row.has-color .mini-row__icon { background: color-mix(in srgb, var(--row-c) 30%, transparent); color: var(--text); }
@@ -1192,22 +1193,23 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s0); flex: none; }
 .cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-caption); font-weight: var(--fw-medium); color: var(--text-3); }
 .cal__day {
-  position: relative; height: var(--cal-row, var(--cal-day)); border-radius: var(--r-sm);
+  position: relative; height: var(--cal-row, var(--cal-day)); border-radius: var(--r-md);
   display: grid; place-items: center;
   font-size: var(--fs-body); font-variant-numeric: tabular-nums; color: var(--text);
-  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease), transform var(--dur-2) var(--ease-spring);
 }
-.cal__day:hover { background: var(--hover-strong); }
+.cal__day:active { transform: scale(var(--press-sm)); }
+.cal__day:hover { background: var(--fill); }
 .cal__day.is-outside { color: var(--text-3); }
-.cal__day.is-today { color: var(--accent); font-weight: var(--fw-semibold); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal__day.is-today { color: var(--accent-ink); font-weight: var(--fw-semibold); box-shadow: inset 0 0 0 1.5px var(--accent-ink); }
 .cal--weekends .cal__day.is-weekend:not([aria-pressed="true"]) { background: var(--hover); }
-.cal--weekends .cal__day.is-weekend:not([aria-pressed="true"]):hover { background: var(--hover-strong); }
+.cal--weekends .cal__day.is-weekend:not([aria-pressed="true"]):hover { background: var(--fill); }
 .cal--weekends .cal__dow.is-weekend { color: var(--text-2); }
-.cal__day[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semibold); }
+.cal__day[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semibold); box-shadow: var(--shadow-ctl); }
 /* Selected and today: the fill plus an inner ring in the contrasting ink. */
-.cal__day.is-today[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3.5px var(--on-accent); }
-.cal__dots { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); display: flex; gap: var(--s0); }
-.cal__dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); }
+.cal__day.is-today[aria-pressed="true"] { box-shadow: var(--shadow-ctl), inset 0 0 0 2px var(--accent), inset 0 0 0 3.5px var(--on-accent); }
+.cal__dots { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; }
+.cal__dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent-ink); }
 .cal__day.is-outside .cal__dot { background: var(--text-3); }
 .cal__day[aria-pressed="true"] .cal__dot { background: var(--on-accent); }
 
@@ -1217,10 +1219,10 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .week__days { flex: 1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s0); }
 .wday { display: flex; flex-direction: column; align-items: center; gap: var(--s1); padding: var(--s2) 0; border-radius: var(--r-md); transition: background var(--t-fast) var(--ease); }
 .wday:hover { background: var(--hover); }
-.wday[aria-pressed="true"] { background: var(--hover-strong); }
+.wday[aria-pressed="true"] { background: var(--fill); }
 .ring { position: relative; width: min(34px, 100%); aspect-ratio: 1; }
 .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
-.ring__track { fill: none; stroke: var(--hover-strong); stroke-width: 2.5; }
+.ring__track { fill: none; stroke: var(--fill-hover); stroke-width: 2.5; }
 .ring__fill { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; transition: stroke-dasharray var(--t-slow) var(--ease), opacity var(--t) var(--ease); }
 .ring__label { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--fs-caption); font-weight: var(--fw-semibold); color: var(--text-2); }
 .wday[aria-pressed="true"] .ring__label { color: var(--text); }
@@ -1252,12 +1254,12 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
   display: flex; align-items: center; gap: var(--s0);
   min-height: var(--row); padding: var(--s1) var(--s1) var(--s1) var(--s0);
   border-radius: var(--r-md);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   background: var(--hover);
-  transition: background var(--t) var(--ease), border-color var(--t) var(--ease), transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  transition: background-color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease), transform var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
 }
-.task:hover { border-color: var(--border-strong); }
-.task.has-color { border-color: color-mix(in srgb, var(--task-c) 55%, var(--border)); background: color-mix(in srgb, var(--task-c) 15%, transparent); }
+.task:hover { background: var(--fill); }
+.task.has-color { border-color: color-mix(in srgb, var(--task-c) 40%, transparent); background: color-mix(in srgb, var(--task-c) 12%, transparent); }
 .task.is-dragging { z-index: 3; transition: none; box-shadow: var(--shadow-2); border-color: var(--border-strong); background: var(--surface-raised); }
 .task.is-dragging.has-color { background: color-mix(in srgb, var(--task-c) 18%, var(--surface-raised)); }
 .task__handle { width: 16px; height: 30px; flex: none; display: grid; place-items: center; color: var(--text-3); cursor: grab; touch-action: none; opacity: 0; transition: opacity var(--t-fast) var(--ease); }
@@ -1269,14 +1271,16 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
   text-align: left; cursor: text; overflow-wrap: anywhere;
   transition: color var(--t) var(--ease);
 }
-.task.is-done .task__text { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-3); }
-.task.is-done .check-hit { opacity: 0.8; }
+.task.is-done, .task.is-done.has-color { background: transparent; border-color: var(--border); }
+.task.is-done:hover { background: var(--hover); }
+.task.is-done .task__text { color: var(--text-3); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--text-3) 70%, transparent); }
+.task.is-done.has-color .task__text::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: var(--s2); border-radius: 50%; background: var(--task-c); vertical-align: 0.05em; }
 .task .input--inline { flex: 1; margin-right: var(--s1); }
 .task__more { opacity: 0.35; }
 .task:hover .task__more, .task:focus-within .task__more, .task__more[aria-expanded="true"] { opacity: 1; }
 html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: none; cursor: grabbing; }
 @media (hover: none) { .task__handle { opacity: 0.55; } .task__more { opacity: 0.8; } }
-.composer { border-style: dashed; padding-left: var(--s1); background: transparent; }
+.composer { border: 1px dashed var(--line-ctl); padding-left: var(--s1); background: transparent; }
 .composer .check { border-style: dashed; cursor: default; }
 .composer .input--inline { flex: 1; }
 
