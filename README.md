@@ -17,7 +17,8 @@ keeps the analog face, which then uses the card's full width. The card can't be 
 time needs to clear the timer. Drag the pill handles in the gaps between the cards to
 resize them (double-tap one to reset it; Settings → Appearance → Reset card sizes
 resets all). Around it:
-universal Quick Capture, themeable settings, and a versioned backup system. The Notes
+universal Quick Capture, themeable settings (with a Performance mode for slower computers),
+and a versioned backup system. The Notes
 page has a sidebar and the same editor as Home (it moves there while the page is open). The
 sidebar is folders: a search field (with a filter menu) with Archive and Trash buttons beside
 it, then each folder as a rounded row that opens to list its notes ("Unsorted" first, for
@@ -56,6 +57,8 @@ Without a connection the app falls back to local fonts.
 | `/` | Go to the search bar |
 | Arrow keys, `PgUp`/`PgDn`, `Home`/`End` | Move through the calendar |
 | `Ctrl/⌘ Enter` | Save a capture |
+| `↑` / `↓` on an event's date or time | A day, or five minutes, later / earlier |
+| Arrow keys, `Home`/`End`, `Enter` in an open date picker | Move by day and week, pick the day (`Esc` closes the picker first, then the dialog) |
 
 Single-key shortcuts never fire while you are typing or while a dialog is open.
 
@@ -103,7 +106,9 @@ Application state is `{ items, settings, ui, timer }`:
   - Appearance: `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
-    `density` (`comfortable` · `compact`), `navOrder` (order of the top-bar section icons),
+    `density` (`comfortable` · `compact`), `performanceMode` (`true`: solid surfaces and
+    lighter effects, for slower computers like a Raspberry Pi; older backups don't have it
+    and load with it off), `navOrder` (order of the top-bar section icons),
     `notesSizes` (the Notes page's two columns, as fractions)
   - Windows: `homeLayout` (`null` for the default, or `{ cols: [{ cards, w, split }] }`: two or
     three columns of `time` · `conn` · `tasks` · `notes`, at most two to a column; `w` is a
@@ -135,6 +140,32 @@ for contrast.
 
 Default palette: Slate `#223843`, Mist `#EFF1F3`, Wine `#750D37`, Sage `#4D9078`,
 Mustard `#D7C62C`, Clay `#D77A61`.
+
+### Design system
+
+All sizes, spacing, radii, layers, shadows, type and motion come from the tokens at the
+top of the stylesheet (see `REDESIGN.md` for the reasoning):
+
+- **Type**: seven roles (caption 12 · footnote 13 · body 15 · headline 15/600 · title 17 ·
+  large title 28 · light display numerals); Compact density is 14/12/16/26. Tracking follows
+  the size; Mono and Playfair get their own corrections (`data-font` on `<html>`).
+- **Spacing** on a 4/8 grid; **radii** from the one Corner roundness dial (`--r-xs` … `--r-xl`,
+  `--r-pop` for popovers, concentric inside them); controls 28 · 34 · 44px; icons 16 · 20 · 24
+  (and 14 inside a line of text), drawn with one stroke weight.
+- **Three layers**: the ambient background, surfaces (cards, the top bar: `--shadow-1`) and
+  floating things (popovers, dialogs, toasts: `--shadow-2`), with named stacking levels.
+- **Contrast**: the theme engine solves secondary and faint text, the readable accent and the
+  red, green and amber to at least 4.5:1, and control edges (`--line-ctl`) to 3:1, on the page,
+  cards, raised surfaces and fields, for every theme including Custom.
+- **States**: one button family (primary, secondary, plain, destructive, icon) with hover,
+  press, focus, disabled (40%) and loading; one focus ring (2px of the readable accent).
+- **Touch** (`pointer: coarse`): controls grow a little and every one gets a 44px target.
+- **Motion**: four durations (120/200/300/450ms), a settling ease-out for things that arrive
+  and a gentle spring (CSS `linear()`, with a fallback); with reduced motion nothing moves
+  and overlays only fade.
+- **Performance mode** (Settings → Appearance): the engine makes surfaces solid (the colours
+  they'd show over the background) and turns blur off; shadows are small, the background is
+  a plain gradient and transitions are shorter. Every feature is the same.
 
 ## Backup format
 
@@ -183,8 +214,9 @@ upgraded step by step on load; newer ones are refused rather than guessed at.
    and normalisation, store (single source of truth), item/settings/UI actions,
    persistence (storage adapter), backup, search, toasts, dialogs, popover menus,
    colour picker, theme, clock face artwork, then one module per feature (clock,
-   quick notes, calendar, event editor, tasks, capture, settings, inbox, placeholder
-   pages), navigation, keyboard, drag-and-drop, the render loop and initialisation.
+   quick notes, calendar, the event editor and its date and time fields, tasks, capture,
+   settings, inbox, placeholder pages), navigation, keyboard, drag-and-drop, the render loop
+   and initialisation.
 
 Data flows one way: an action changes the store → the store notifies → the page
 redraws once per animation frame and persistence writes after a short debounce.
