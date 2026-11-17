@@ -426,9 +426,9 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .swatch[aria-pressed="true"] .icon { opacity: 1; transform: none; }
 .swatch--none { background: transparent; color: var(--text-3); }
 .swatch--none .icon { --is: 16; opacity: 1; transform: none; stroke-width: calc(33.6 / var(--is)); }
-.swatch--custom { overflow: hidden; cursor: pointer; background: conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
+.swatch--custom { cursor: pointer; background: conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
 .swatch--custom[aria-pressed="true"] { background: radial-gradient(circle, var(--c) 0 7px, transparent 7.5px), conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
-.swatch--custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: 0; padding: 0; }
+.swatch--custom input { position: absolute; inset: 0; border-radius: 50%; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: 0; padding: 0; }
 
 /* Date and time fields (the event editor): a field you tap, its picker opening inline under the row. */
 .pick { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; text-align: left; cursor: pointer; font-variant-numeric: tabular-nums; }
@@ -1123,7 +1123,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .nhandle .icon { --is: 16; }
 .nfold__head:hover > .nhandle, .nnote:hover > .nhandle, .nfold.is-dragging .nfold__head > .nhandle { opacity: 1; }
 .nhandle--none { visibility: hidden; }
-@media (hover: none) { .nhandle { opacity: 0.55; } }
+@media (hover: none) { .nhandle { opacity: 1; } }
 /* Chevrons turn as a folder opens; its notes grow and shrink smoothly. */
 .nchev { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--text-3); }
 .nchev:hover { color: var(--text); background: var(--hover-strong); }
@@ -1217,7 +1217,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .mini-row__sub:empty { display: none; }
 .row-more { opacity: 0.35; }
 .mini-row:hover .row-more, .mini-row:focus-within .row-more, .row-more[aria-expanded="true"] { opacity: 1; }
-@media (hover: none) { .row-more { opacity: 0.8; } }
+@media (hover: none) { .row-more { opacity: 1; } }
 .btn--sm .icon { --is: 16; }
 .notes__status { font-size: var(--fs-footnote); color: var(--text-3); opacity: 0; transition: opacity var(--dur-2) var(--ease); }
 .notes__status.is-visible { opacity: 1; }
@@ -1316,7 +1316,7 @@ html[data-input="key"] .panel--time:focus { outline: 2px solid var(--focus); out
 .task__more { opacity: 0.35; }
 .task:hover .task__more, .task:focus-within .task__more, .task__more[aria-expanded="true"] { opacity: 1; }
 html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: none; cursor: grabbing; }
-@media (hover: none) { .task__handle { opacity: 0.55; } .task__more { opacity: 0.8; } }
+@media (hover: none) { .task__handle, .task__more { opacity: 1; } }
 .composer { border: 1px dashed var(--line-ctl); padding-left: var(--s1); background: transparent; }
 .composer .check { border-style: dashed; cursor: default; }
 .composer .input--inline { flex: 1; }
@@ -1600,6 +1600,53 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 @media (min-width: 720px) and (max-width: 1099px) and (orientation: portrait) and (min-height: 960px),
        (min-width: 720px) and (max-width: 899px) and (min-height: 960px) {
   .app[data-page="home"] .dashboard { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ---------- Touch: every control a 44px target ----------
+   On touch screens (iPad, phones, a touch display on the Pi) controls get a little larger, and any that
+   still look smaller than 44px get an invisible hit area reaching to 44px (a ::before past their edges,
+   which never shrinks a bigger control). Rows, menu items and picker cells grow to 44px and more. */
+@media (pointer: coarse) {
+  :root { --row: 46px; --ctl-h: 40px; --ctl-h-sm: 32px; }
+  :root[data-density="compact"] { --row: 44px; --ctl-h: 36px; --ctl-h-sm: 30px; }
+  /* (Buttons, icon buttons, swatches, day cells and the view arrows are already positioned.) */
+  .tool, .chip, .link-btn, .check-hit, .nchev, .seg button, .agenda__toggle,
+  .nback, .wday, .pick-day, .pick-opt, .menu__item, .task__handle, .nhandle, .tag-chip, .conn-chip, .timer__time { position: relative; }
+  .icon-btn::before, .btn::before, .tool::before, .chip::before, .link-btn::before, .views__arrow::before, .check-hit::before,
+  .nchev::before, .seg button::before, .swatch::before, .agenda__toggle::before, .nback::before, .cal__day::before,
+  .pick-day::before, .task__handle::before, .nhandle::before, .switch input::before, .conn-chip::before {
+    content: ""; position: absolute; inset: min(0px, calc((100% - var(--hit)) / 2));
+  }
+  .menu__item, .picker .menu__item, .pick-opt, .pick-day { min-height: var(--hit); height: auto; }
+  .input, .topsearch__field, .tasks-empty__add, .navchip { height: var(--hit); }
+  .navchip { width: var(--hit); }
+  .switch { min-height: var(--hit); }
+  .app .notes__titlefield { height: var(--head-h); }
+  .timer__time { min-height: var(--hit); }
+  .card__open { position: relative; }
+  .card__open::before { content: ""; position: absolute; inset: min(0px, calc((100% - var(--hit)) / 2)) 0; }
+  .tool { width: 36px; height: 36px; }
+  .check-hit { width: var(--hit); height: var(--hit); }
+  .check { width: 22px; height: 22px; }
+  .task__handle, .nhandle { width: 24px; height: var(--hit); }
+  .nchev { width: 32px; height: 32px; }
+  .nnote { min-height: var(--hit); }
+  .views__arrow { width: var(--hit); height: var(--hit); }
+  .swatch { width: 32px; height: 32px; }
+  .switch input { width: 48px; height: 28px; }
+  .switch input::after { width: 24px; height: 24px; }
+  .switch input:checked::after { transform: translateX(20px); }
+  .range { height: var(--hit); }
+  .range::-webkit-slider-thumb { width: 28px; height: 28px; margin-top: -12px; }
+  .range::-moz-range-thumb { width: 28px; height: 28px; }
+  .tag-chip { height: 32px; }
+  .conn-chip { height: 32px; }
+  .timer__presets .chip { height: 32px; }
+  /* The notes search keeps its inset buttons in step with the taller field. */
+  .nsearch .icon-btn { width: 32px; height: 32px; }
+  .nsearch__clear { right: 38px; }
+  .nsearch__input { padding-right: 76px; }
+  .nsearch__input:placeholder-shown { padding-right: 40px; }
 }
 
 /* ---------- 10. Motion ---------- */
