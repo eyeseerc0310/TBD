@@ -308,9 +308,12 @@ the step they correct.
 
 ### Checked
 
-- **Every existing test suite passes**, about 1,200 checks, apart from these:
-  - *test12, test13, test19, test20* check exact pixel positions or layouts from builds before the redesign and earlier releases. They fail by design: the sizes they pin have changed.
-  - *test9*: one check pins Recent's old pixel position. Its nav-chip drag checks were flaky before the redesign and still are.
+- **1,092 checks pass** across the existing suites and the three new ones. The 46 that don't are all old checks that pin a size or a pixel position from an earlier design, so they change by design:
+  - *test12* (37) and *test13* (7) compare against builds from earlier releases.
+  - *test20* (1) checks the old Notes sidebar.
+  - *test9* (1) pins Recent's old pixel position.
+  - *test19* tests the three-column Notes page that was replaced earlier.
+  - Two suites needed a test-only timing fix: they scrolled to the Settings and Windows controls before those sections finished opening. With that fix, the nav-icon drag and the Windows mini-map drag pass.
 - **Three new suites:**
   - *test26*: date and time fields, 40 checks.
   - *test27*: Performance mode, 18 checks.
