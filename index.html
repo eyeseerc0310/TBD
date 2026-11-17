@@ -434,6 +434,40 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .swatch--custom[aria-pressed="true"] { background: radial-gradient(circle, var(--c) 0 7px, transparent 7.5px), conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
 .swatch--custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: 0; padding: 0; }
 
+/* Date and time fields (the event editor): a field you tap, its picker opening inline under the row. */
+.pick { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; text-align: left; cursor: pointer; font-variant-numeric: tabular-nums; }
+.pick__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick__icon { color: var(--text-3); transition: color var(--dur-1) var(--ease); }
+.pick[aria-expanded="true"] { border-color: var(--accent-ink); background: var(--accent-soft); }
+.pick[aria-expanded="true"] .pick__icon { color: var(--accent-ink); }
+.pick-panel { display: grid; grid-template-rows: 0fr; margin-top: calc(var(--s2) * -1); transition: grid-template-rows var(--dur-3) var(--ease), opacity var(--dur-2) var(--ease); opacity: 0; }
+.pick-panel.is-open { grid-template-rows: 1fr; opacity: 1; }
+.pick-panel__inner { min-height: 0; overflow: hidden; }
+.pick-panel__box { margin-top: var(--s2); padding: var(--s3); border-radius: var(--r-md); background: var(--surface-sunken); box-shadow: inset 0 0 0 1px var(--border); }
+.pick-cal__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-bottom: var(--s2); padding-left: var(--s1); }
+.pick-cal__month { font-weight: var(--fw-semibold); color: var(--text); }
+.pick-cal__nav { display: flex; gap: var(--s0); }
+.pick-cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s0); }
+.pick-cal__dow { height: 24px; display: grid; place-items: center; font-size: var(--fs-caption); font-weight: var(--fw-medium); color: var(--text-3); }
+.pick-day {
+  height: 36px; border-radius: var(--r-md); color: var(--text); font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-1) var(--ease), transform var(--dur-2) var(--ease-spring);
+}
+.pick-day:hover { background: var(--fill); }
+.pick-day:active { transform: scale(var(--press-sm)); }
+.pick-day.is-outside { color: var(--text-3); }
+.pick-day.is-today { color: var(--accent-ink); font-weight: var(--fw-semibold); }
+.pick-day[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semibold); box-shadow: var(--shadow-ctl); }
+.pick-time { display: flex; gap: var(--s2); }
+.pick-col { position: relative; flex: 1; min-width: 0; max-height: 196px; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--s0); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.pick-col--ampm { flex: 0 0 72px; }
+.pick-opt {
+  flex: none; height: 34px; border-radius: var(--r-sm); color: var(--text-2); font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.pick-opt:hover { background: var(--fill); color: var(--text); }
+.pick-opt[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: var(--fw-semibold); }
+
 /* Forms */
 .form { display: flex; flex-direction: column; gap: var(--s4); }
 .field { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
@@ -2862,7 +2896,7 @@ const Dialog = (() => {
       if (prefersReducedMotion()) finish();
       else { el.classList.add('is-closing'); setTimeout(finish, 140); }
     }
-    el.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
+    el.addEventListener('cancel', (e) => { e.preventDefault(); if (el.dispatchEvent(new Event('dialog-escape', { cancelable: true }))) close(); });
     // Close on a backdrop click (press and release both outside the content box).
     let downOnBackdrop = false;
     el.addEventListener('pointerdown', (e) => { downOnBackdrop = e.target === el && isOutside(el, e); });
@@ -3748,6 +3782,156 @@ const Calendar = (() => {
   return { build, render, shiftMonth, goToday };
 })();
 
+/* ---------- Date and time fields ----------
+   The event editor's own date and time fields, in the app's style (the browser's look different on
+   every platform and ignore the 12/24-hour setting). Each looks like a text field and behaves like the
+   input it replaces: a `value` ("YYYY-MM-DD" or "HH:MM", exactly what was stored before), `change`
+   events and `hidden`. Tapping one opens its picker inline under its row, one at a time: a month grid
+   for a date, hour and minute columns (and AM/PM) for a time. Arrow keys on the field step it by a day
+   or by five minutes; Escape closes an open picker before it closes the dialog. */
+const PickField = (() => {
+  const longDate = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  let current = null;   // the open picker: { field, close }
+
+  function field(kind, value, label, iconName, format) {
+    const text = h('span', { class: 'pick__text' });
+    const el = h('button', { class: 'input pick', type: 'button', 'aria-expanded': 'false', dataset: { pick: label } },
+      h('span', { class: 'sr-only', text: `${label}: ` }), text, icon(iconName, 'icon--sm pick__icon'));
+    let v = value;
+    Object.defineProperty(el, 'value', { get: () => v, set: (x) => { v = x; text.textContent = x ? format(x) : '—'; } });
+    el.value = value;
+    return el;
+  }
+  const emit = (el) => el.dispatchEvent(new Event('change', { bubbles: true }));
+  function close(refocus = false) { if (current) current.close(refocus); }
+
+  /** Opens `build(panelBox)` under the field's row; returns nothing. Toggles when it's already open. */
+  function openPanel(el, build) {
+    if (current && current.field === el) { close(true); return; }
+    close();
+    const row = el.closest('.field-row') || el;
+    const box = h('div', { class: 'pick-panel__box' });
+    const panel = h('div', { class: 'pick-panel', role: 'group', 'aria-label': el.dataset.pick }, h('div', { class: 'pick-panel__inner' }, box));
+    row.after(panel);
+    build(box);
+    el.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => panel.classList.add('is-open'));
+    setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' }), 320);
+    const dlg = el.closest('dialog');
+    const onEsc = (e) => { e.preventDefault(); close(true); };
+    const onDown = (e) => { if (!panel.contains(e.target) && !el.contains(e.target)) close(); };
+    if (dlg) dlg.addEventListener('dialog-escape', onEsc);
+    document.addEventListener('pointerdown', onDown, true);
+    current = {
+      field: el,
+      close(refocus) {
+        current = null;
+        if (dlg) dlg.removeEventListener('dialog-escape', onEsc);
+        document.removeEventListener('pointerdown', onDown, true);
+        el.setAttribute('aria-expanded', 'false');
+        panel.classList.remove('is-open');
+        if (prefersReducedMotion()) panel.remove(); else setTimeout(() => panel.remove(), 300);
+        if (refocus && el.isConnected) el.focus({ preventScroll: true });
+      },
+    };
+  }
+
+  function date(value, label) {
+    const el = field('date', value, label, 'calendar', (k) => longDate.format(Dates.parse(k)));
+    el.addEventListener('click', () => openPanel(el, (box) => {
+      let month = Dates.month(Dates.isKey(el.value) ? el.value : Dates.today());
+      const title = h('span', { class: 'pick-cal__month', 'aria-live': 'polite' });
+      const grid = h('div', { class: 'pick-cal__grid', role: 'group', 'aria-label': 'Days' });
+      const nav = (n, name) => h('button', { class: 'icon-btn icon-btn--sm', type: 'button', 'aria-label': name, onclick: () => { month = Dates.addMonths(month, n); paint(); } }, icon(n < 0 ? 'left' : 'right'));
+      box.append(h('div', { class: 'pick-cal__bar' }, title, h('span', { class: 'pick-cal__nav' }, nav(-1, 'Previous month'), nav(1, 'Next month'))), grid);
+      function paint(focusKey = null) {
+        const ws = Settings.get().weekStart;
+        title.textContent = Fmt.monthYear(month);
+        const first = Dates.startOfWeek(`${month}-01`, ws);
+        const today = Dates.today();
+        grid.replaceChildren(
+          ...[0, 1, 2, 3, 4, 5, 6].map((i) => h('span', { class: 'pick-cal__dow', 'aria-hidden': 'true', text: Fmt.dowNarrow((ws + i) % 7) })),
+          ...Array.from({ length: 42 }, (_, i) => {
+            const k = Dates.addDays(first, i);
+            return h('button', {
+              class: `pick-day${Dates.month(k) !== month ? ' is-outside' : ''}${k === today ? ' is-today' : ''}`,
+              type: 'button', text: String(+k.slice(8)), dataset: { day: k }, 'aria-label': longDate.format(Dates.parse(k)),
+              'aria-pressed': String(k === el.value), tabindex: k === (focusKey || el.value) ? '0' : '-1',
+              onclick: () => { el.value = k; emit(el); close(true); },
+            });
+          }));
+        if (!grid.querySelector('[tabindex="0"]')) grid.querySelector(`[data-day="${month}-01"]`).tabIndex = 0;
+        if (focusKey) { const b = grid.querySelector(`[data-day="${focusKey}"]`); if (b) b.focus(); }
+      }
+      // Arrow keys move through the days (and across months); Home/End go to the week's ends.
+      grid.addEventListener('keydown', (e) => {
+        const k = e.target.dataset && e.target.dataset.day;
+        if (!k) return;
+        const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+        let next = step ? Dates.addDays(k, step) : null;
+        if (e.key === 'Home') next = Dates.startOfWeek(k, Settings.get().weekStart);
+        if (e.key === 'End') next = Dates.addDays(Dates.startOfWeek(k, Settings.get().weekStart), 6);
+        if (!next) return;
+        e.preventDefault();
+        month = Dates.month(next);
+        paint(next);
+      });
+      paint();
+    }));
+    el.addEventListener('keydown', (e) => {
+      const n = { ArrowUp: 1, ArrowDown: -1 }[e.key];
+      if (!n || !Dates.isKey(el.value) || current) return;
+      e.preventDefault(); el.value = Dates.addDays(el.value, n); emit(el);
+    });
+    return el;
+  }
+
+  function time(value, label) {
+    const h24 = () => Settings.get().clock24;
+    const el = field('time', value, label, 'clock', (t) => Fmt.time(t, h24()));
+    el.addEventListener('click', () => openPanel(el, (box) => {
+      const cols = h('div', { class: 'pick-time' });
+      box.append(cols);
+      function set(t) { el.value = t; emit(el); paint(); }
+      function column(name, items, extra = '') {
+        return h('div', { class: `pick-col${extra}`, role: 'group', 'aria-label': name },
+          ...items.map(([text, pressed, onPick]) => h('button', { class: 'pick-opt', type: 'button', text, 'aria-pressed': String(pressed), onclick: onPick })));
+      }
+      function paint() {
+        const [hh, mm] = (Dates.isTime(el.value) ? el.value : '09:00').split(':').map(Number);
+        const pm = hh >= 12;
+        const mins = [...new Set([...Array.from({ length: 12 }, (_, i) => i * 5), mm])].sort((a, b) => a - b);
+        const hours = h24() ? Array.from({ length: 24 }, (_, i) => i) : [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        const parts = [
+          column('Hour', hours.map((x) => {
+            const to24 = h24() ? x : (x % 12) + (pm ? 12 : 0);
+            return [h24() ? pad2(x) : String(x), to24 === hh, () => set(`${pad2(to24)}:${pad2(mm)}`)];
+          })),
+          column('Minute', mins.map((x) => [pad2(x), x === mm, () => set(`${pad2(hh)}:${pad2(x)}`)])),
+        ];
+        if (!h24()) parts.push(column('AM or PM', [['AM', !pm, () => set(`${pad2(hh % 12)}:${pad2(mm)}`)], ['PM', pm, () => set(`${pad2((hh % 12) + 12)}:${pad2(mm)}`)]], ' pick-col--ampm'));
+        const keep = document.activeElement && cols.contains(document.activeElement) ? [...cols.querySelectorAll('.pick-opt')].indexOf(document.activeElement) : -1;
+        const scrolls = [...cols.children].map((c) => c.scrollTop);
+        cols.replaceChildren(...parts);
+        if (scrolls.length) [...cols.children].forEach((c, i) => { c.scrollTop = scrolls[i] || 0; });
+        else requestAnimationFrame(() => cols.querySelectorAll('.pick-opt[aria-pressed="true"]').forEach((b) => { b.parentElement.scrollTop = b.offsetTop - b.parentElement.clientHeight / 2 + b.offsetHeight / 2; }));
+        if (keep >= 0) { const b = cols.querySelectorAll('.pick-opt')[keep]; if (b) b.focus({ preventScroll: true }); }
+      }
+      paint();
+    }));
+    el.addEventListener('keydown', (e) => {
+      const n = { ArrowUp: 5, ArrowDown: -5 }[e.key];
+      if (!n || !Dates.isTime(el.value) || current) return;
+      e.preventDefault();
+      const m = Dates.minutes(el.value);
+      el.value = Dates.fromMinutes(n > 0 ? Math.floor(m / 5) * 5 + 5 : Math.ceil(m / 5) * 5 - 5);
+      emit(el);
+    });
+    return el;
+  }
+  return { date, time, close };
+})();
+
 /* ---------- Event editor ---------- */
 const EventEditor = (() => {
   function defaultTimes(day) {
@@ -3764,13 +3948,13 @@ const EventEditor = (() => {
 
     const title = h('input', { class: 'input', type: 'text', value: existing ? existing.title : '', placeholder: 'Event title', 'aria-label': 'Title', maxlength: 200, autocomplete: 'off' });
     const allDay = h('input', { type: 'checkbox', checked: m.allDay });
-    const startDate = h('input', { class: 'input', type: 'date', value: m.start, 'aria-label': 'Start date', required: true });
-    const startTime = h('input', { class: 'input', type: 'time', value: m.startTime || t1, 'aria-label': 'Start time' });
-    const endDate = h('input', { class: 'input', type: 'date', value: m.end, 'aria-label': 'End date', required: true });
-    const endTime = h('input', { class: 'input', type: 'time', value: m.endTime || t2, 'aria-label': 'End time' });
+    const startDate = PickField.date(m.start, 'Start date');
+    const startTime = PickField.time(m.startTime || t1, 'Start time');
+    const endDate = PickField.date(m.end, 'End date');
+    const endTime = PickField.time(m.endTime || t2, 'End time');
     const error = h('p', { class: 'form-error', role: 'alert' });
 
-    const syncAllDay = () => { startTime.hidden = endTime.hidden = allDay.checked; };
+    const syncAllDay = () => { if (allDay.checked) PickField.close(); startTime.hidden = endTime.hidden = allDay.checked; };
     syncAllDay();
     allDay.addEventListener('change', syncAllDay);
     // Keep the end after the start when the start moves forward.
