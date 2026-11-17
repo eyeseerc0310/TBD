@@ -44,10 +44,55 @@
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset, 0 24px 48px -24px rgba(0, 0, 0, 0.65);
   --shadow-pop: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 30px 80px -20px rgba(0, 0, 0, 0.75);
   --blur: 22px;
+  /* Status colours (the theme engine solves each one to read on this theme) */
+  --success: #6fcf97;
+  --warning: #e6c26b;
+  /* Edges that identify a control (fields, checkboxes, switches, sliders): 3:1 against the card */
+  --line-ctl: #62666e;
+  /* Keyboard focus ring */
+  --focus: var(--accent-ink);
 
-  /* Typography */
+  /* Elevation: three layers, one recipe each (fill, hairline, top highlight, shadow).
+     1 = cards and the top bar · 2 = everything that floats (popovers, dialogs, toasts) ·
+     ctl = small raised controls (a selected segment, a switch knob, a primary button). */
+  --shadow-1: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6);
+  --shadow-2: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75);
+  --shadow-ctl: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px);
+  /* Stacking order: five named levels (plus small local ones inside a component) */
+  --z-raised: 5;      /* grabbers, an expanded card */
+  --z-sticky: 20;     /* top bar */
+  --z-nav: 30;        /* phone tab bar, search results */
+  --z-drawer: 60;     /* the Notes drawer and its scrim */
+  --z-pop: 70;        /* popovers */
+  --z-float: 80;      /* drag ghosts, floating tooltips */
+  --z-overlay: 90;    /* the drop zone */
+  --z-toast: 100;
+
+  /* Typography: seven roles, nothing in between.
+     caption 12 · footnote 13 · body 15 · headline 15/600 · title 17 · large title 28 · display (light). */
   --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-head: var(--font);
+  --fs-caption: 12px;
+  --fs-footnote: 13px;
+  --fs-body: 15px;
+  --fs-title: 17px;
+  --fs-title-lg: 28px;
+  --lh-tight: 1.2;
+  --lh: 1.45;
+  /* Tracking tightens as sizes grow (Inter's own curve); Mono and Playfair reset it below. */
+  --ls-caption: 0.005em;
+  --ls-footnote: -0.003em;
+  --ls-body: -0.009em;
+  --ls-title: -0.013em;
+  --ls-title-lg: -0.021em;
+  --ls-display: -0.025em;
+  --ls-caps: 0.08em;
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  /* Older names, still used until each component moves to the roles above */
   --fs-xs: 11px;
   --fs-sm: 12.5px;
   --fs-base: 14px;
@@ -56,30 +101,58 @@
   --fs-xl: 26px;
   --fs-display: 46px;
 
-  /* Spacing (4px scale) */
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px;
+  /* Spacing: a 4/8 grid */
+  --s0: 2px; --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px; --s16: 64px;
   --gutter: var(--s8);
   --pad: var(--s5);       /* panel padding */
   --gap: var(--s5);       /* space between panels */
   --row: 42px;            /* task row height */
   --cal-day: clamp(28px, 4.2vh, 36px);
 
-  /* Shape */
+  /* Shape: every radius comes from one dial (Settings → Corner roundness, default 16).
+     xs · sm · md (controls, rows) · lg (cards) · xl (dialogs) · pop (popovers) · pill.
+     Inside a padded box the inner radius is the outer one minus the padding (concentric). */
+  --r-xs: 4px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pop: 14px;
+  --r-pill: 999px;
   --r-panel: 16px;
   --r-ctl: 9px;
   --r-sm: 6px;
+  /* Sizes: controls 28 · 34 · 44; icons 16 · 20 · 24; every tap target 44 on touch screens */
+  --ctl-h-lg: 44px;
   --ctl-h: 34px;
   --ctl-h-sm: 28px;
+  --hit: 44px;
+  --i-sm: 16px;
+  --i-md: 20px;
+  --i-lg: 24px;
   --icon: 18px;
   --icon-sm: 16px;
   --topbar-h: 56px;
 
-  /* Motion: slow-fast-slow */
+  /* Motion: calm, then precise. Four durations; the slow-fast-slow curve for things that move on
+     their own, a quick settle for things that arrive, a gentle spring for things under a finger. */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 300ms;
+  --dur-4: 450ms;
   --ease: cubic-bezier(0.45, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-spring: cubic-bezier(0.3, 1.2, 0.5, 1);
+  --press: 0.97;          /* how far a pressed control dips */
+  --press-sm: 0.92;       /* small controls dip a little more */
   --t-fast: 120ms;
   --t: 200ms;
   --t-slow: 320ms;
   --t-theme: 360ms;
+}
+/* A real spring where the browser can draw one (a 2% overshoot, settled by 80%). */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root { --ease-spring: linear(0, 0.113 5%, 0.337 10%, 0.563 15%, 0.745 20%, 0.873 25%, 0.953 30%, 0.996 35%, 1.015 40%, 1.02 45%, 1.018 50%, 1.009 60%, 1.003 70%, 1 80%, 1); }
 }
 :root[data-density="compact"] {
   --pad: var(--s4);
@@ -1546,10 +1619,24 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
                           : '0 1px 0 rgba(255, 255, 255, 0.035) inset, 0 24px 48px -24px rgba(0, 0, 0, 0.65)',
         '--shadow-pop': light ? '0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 30px 70px -24px rgba(25, 35, 50, 0.38)'
                               : '0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 30px 80px -20px rgba(0, 0, 0, 0.75)',
+        '--shadow-1': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(25, 35, 50, 0.06), 0 16px 40px -22px rgba(25, 35, 50, 0.25)'
+                            : 'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6)',
+        '--shadow-2': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(25, 35, 50, 0.08), 0 32px 72px -24px rgba(25, 35, 50, 0.35)'
+                            : 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75)',
+        '--shadow-ctl': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
+                              : 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3)',
+        '--sheen': light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
+                         : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
         '--blur': num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
+        /* One dial: cards take it as set, everything else follows from it. */
+        '--r-xs': Math.round(radius * 0.25) + 'px',
+        '--r-sm': Math.round(radius * 0.38) + 'px',
+        '--r-md': Math.round(radius * 0.625) + 'px',
+        '--r-lg': radius + 'px',
+        '--r-xl': Math.min(32, radius + 4) + 'px',
+        '--r-pop': (Math.round(radius * 0.625) + 4) + 'px',
         '--r-panel': radius + 'px',
         '--r-ctl': Math.round(radius * 0.56) + 'px',
-        '--r-sm': Math.round(radius * 0.38) + 'px',
         '--font': font.body,
         '--font-head': font.head || font.body,
       },
