@@ -268,6 +268,7 @@ the step they correct.
 | 12 | Motion | Four durations, settling entrances, press feedback, calm reduced motion |
 | — | Fix | Header rows start level with the week strip |
 | 13 | Touch | Every control a 44px target on touch screens |
+| — | Fix | The view arrows keep their 32px boxes; their hit area reaches 44px |
 | 14 | Performance mode | Solid surfaces and lighter effects for slower computers |
 | — | Fix | On touch screens the toolbar's tools share its width |
 | 15 | Responsive | A smaller clock card on phones; every screen size checked |
