@@ -103,7 +103,8 @@ Application state is `{ items, settings, ui, timer }`:
   - Clock: `clock24`, `location`, `clockFace` (`minimal` · `classic` · `modern` · `digital`),
     `clockShape` (`circle` · `rounded` · `squircle` · `hexagon`), `showTime` (digital time under the face; off = larger face), `showSeconds`, `showDate`
   - Calendar: `weekStart` (`1` Monday, `0` Sunday), `highlightWeekends`
-  - Appearance: `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
+  - Appearance: `style` (`glass` · `paper` · `terminal` · `soft` · `ink`; older backups don't
+    have it and load as `glass`), `theme` (`graphite` · `midnight` · `forest` · `mocha` · `light` · `custom`),
     `customTheme` (`bg`, `panel`, `line`, `text`), `accent`, `font` (`inter` · `system` ·
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
     `density` (`comfortable` · `compact`), `performanceMode` (`true`: solid surfaces and
@@ -153,6 +154,29 @@ keys move the handles (Shift for bigger steps). The history and saved colours ar
 
 Default palette: Slate `#223843`, Mist `#EFF1F3`, Wine `#750D37`, Sage `#4D9078`,
 Mustard `#D7C62C`, Clay `#D77A61`.
+
+### Styles
+
+Settings → Appearance → Style changes what the app is made of, separately from its colours
+(the Theme). Every feature works the same in each; the theme, accent, Custom theme, font,
+corner roundness, density and Performance mode all still apply on top.
+
+- **Glass** (the default): frosted, see-through cards and soft light.
+- **Paper**: a warm off-white sheet (or dark "ink" paper in a dark theme) with a faint grain.
+  Cards are sections, rows are ruled lines, headings are set in a serif, labels in small capitals,
+  fields are underlines and a note is ruled paper. Nearly square corners.
+- **Terminal**: phosphor on black (green, cyan or amber with the dark themes; a pale LCD with
+  Light). Monospace everywhere, sharp corners, outlines instead of shadows, dashed rows, square
+  checkboxes, inverse video for what's chosen, a blinking cursor after the name and faint scanlines.
+- **Soft**: pastel and very round. Cards and rows are raised out of the page, fields and finished
+  tasks pressed into it, rounded type, and a bouncier spring when things move.
+- **Ink**: black and white with only your accent for colour, at the highest contrast. Hard lines,
+  bold type, no glass or gradients; what's chosen is inverted, and menus and dialogs cast a hard shadow.
+
+The theme engine reshapes each style's colours, surfaces, borders, shadows, corners and type
+(`data-style` on `<html>`), and still holds every text colour to 4.5:1 on everything it sits
+on, with control edges at 3:1. The stylesheet adds the details (its `Styles` section). Glass
+transparency and blur only apply to Glass, and Terminal always uses monospace; Settings says so.
 
 ### Design system
 
