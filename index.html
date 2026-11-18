@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter" data-perf="off">
+<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter" data-perf="off" data-style="glass">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1575,6 +1575,13 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 .theme-prev::after { content: ""; position: absolute; right: 6px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--pv-accent); }
 .theme-prev--custom { background: conic-gradient(from 200deg, #223843, #750d37, #d77a61, #d7c62c, #4d9078, #223843); }
 .theme-prev--custom::before, .theme-prev--custom::after { display: none; }
+/* Style tiles: a little card in each style, with the theme's colours. */
+.tiles--styles { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }   /* the same columns as the Theme tiles below */
+.style-prev { position: relative; display: block; width: 100%; height: 58px; overflow: hidden; border-radius: max(var(--r-xs), calc(var(--r-md) - 6px)); background: var(--pv-bg); box-shadow: inset 0 0 0 1px var(--border); }
+.style-prev__card { position: absolute; inset: 9px 10px -10px; display: flex; flex-direction: column; gap: 5px; padding: 7px 9px; border-radius: var(--pv-r); background: var(--pv-surface); box-shadow: var(--pv-shadow), inset 0 0 0 var(--pv-bw, 1px) var(--pv-border); }
+.style-prev__aa { font: 600 16px/1 var(--pv-font); color: var(--pv-text); text-align: left; }
+.style-prev__line { width: 70%; height: 3px; border-radius: 2px; background: var(--pv-text3); }
+.style-prev__dot { position: absolute; right: 8px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--pv-accent); }
 
 .range-wrap { display: flex; align-items: center; gap: var(--s3); flex: none; }
 .range { -webkit-appearance: none; appearance: none; width: 168px; height: 28px; margin: 0; background: transparent; cursor: pointer; }
@@ -1748,6 +1755,123 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nsearch__input:placeholder-shown { padding-right: 40px; }
 }
 
+/* ---------- Styles (Settings → Appearance → Style) ----------
+   Glass is everything above. The other styles change the app's material: the theme engine reshapes
+   their colours, surfaces, borders, shadows, corners and type (data-style on <html>); these are the
+   details only the stylesheet can do. Every feature works the same in each. */
+:root:not([data-style="glass"]) .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+
+/* Paper: a warm sheet. Cards are sections on it, rows are ruled lines, headings are set in a serif,
+   labels in small capitals, fields are underlines and a note is ruled paper. */
+:root[data-style="paper"] { --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.24 0 0 0 0 0.17 0 0 0 0 0.09 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+:root[data-style="paper"][data-scheme="dark"] { --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.88 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+:root[data-style="paper"] .ambient { background: var(--grain), linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+:root[data-style="paper"] .task, :root[data-style="paper"] .mini-row, :root[data-style="paper"] .nfold {
+  background: transparent; border: 0; border-bottom: 1px solid var(--border-strong); border-radius: 0; box-shadow: none;
+}
+:root[data-style="paper"] .task:hover, :root[data-style="paper"] .mini-row:hover, :root[data-style="paper"] .nfold:hover { background: var(--hover); }
+:root[data-style="paper"] .task.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--task-c); }
+:root[data-style="paper"] .nfold.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--task-c); }
+:root[data-style="paper"] .mini-row.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--row-c); }
+:root[data-style="paper"] .task.is-done { background: transparent; border-color: var(--border); }
+:root[data-style="paper"] .panel__section { border-top: 3px double var(--border-strong); }
+:root[data-style="paper"] .subhead, :root[data-style="paper"] .acc__title, :root[data-style="paper"] .card__title,
+:root[data-style="paper"] .agenda__toggle, :root[data-style="paper"] .nfold__label { font-family: var(--font-head); letter-spacing: 0; }
+:root[data-style="paper"] .eyebrow, :root[data-style="paper"] .panel__title, :root[data-style="paper"] .agenda-group,
+:root[data-style="paper"] .nlist__title, :root[data-style="paper"] .cpk-h, :root[data-style="paper"] .clock__zone {
+  text-transform: lowercase; font-variant: small-caps; letter-spacing: 0.06em; font-size: var(--fs-footnote);
+}
+:root[data-style="paper"] .input, :root[data-style="paper"] .topsearch__field {
+  background: transparent; border: 0; border-bottom: 1px solid var(--line-ctl); border-radius: 0;
+}
+:root[data-style="paper"] .input:focus-visible { outline: none; border-bottom: 2px solid var(--focus); }
+:root[data-style="paper"] .topsearch__field:focus-within { outline: none; border-bottom: 2px solid var(--focus); }
+:root[data-style="paper"] .notes__area.notes__editor {
+  background: transparent repeating-linear-gradient(180deg, transparent 0 calc(1.6em - 1px), var(--border-strong) calc(1.6em - 1px) 1.6em);
+  background-attachment: local; background-origin: content-box; border: 0; border-radius: 0; box-shadow: inset 2px 0 0 color-mix(in srgb, var(--danger) 45%, transparent);
+}
+:root[data-style="paper"] .check { border-radius: var(--r-xs); }
+:root[data-style="paper"] .btn:not(.btn--primary):not(.btn--danger):not(.btn--ghost) { background: transparent; box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+/* Terminal: phosphor on black (or dark ink on a pale LCD in Light). Monospace, outlines instead of
+   shadows, dashed rows, square checkboxes, inverse video for what's chosen, a blinking cursor, and
+   faint scanlines. */
+:root[data-style="terminal"] .ambient { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.22) 2px 3px), radial-gradient(120% 90% at 50% 40%, var(--bg) 60%, var(--bg-deep)); }
+:root[data-style="terminal"][data-scheme="light"] .ambient { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.04) 2px 3px), var(--bg); }
+:root[data-style="terminal"] .glass, :root[data-style="terminal"] .topbar::before { border-color: var(--border-strong); }
+:root[data-style="terminal"] .task, :root[data-style="terminal"] .mini-row, :root[data-style="terminal"] .nfold { background: transparent; border: 1px dashed var(--border-strong); }
+:root[data-style="terminal"] .task:hover, :root[data-style="terminal"] .mini-row:hover, :root[data-style="terminal"] .nfold:hover { background: var(--hover); border-style: solid; }
+:root[data-style="terminal"] .task.has-color, :root[data-style="terminal"] .nfold.has-color { background: transparent; border-color: var(--task-c); }
+:root[data-style="terminal"] .mini-row.has-color { background: transparent; border-color: var(--row-c); }
+:root[data-style="terminal"] .subhead, :root[data-style="terminal"] .acc__title, :root[data-style="terminal"] .card__title,
+:root[data-style="terminal"] .page-head__title, :root[data-style="terminal"] .dialog__title, :root[data-style="terminal"] .cal__month { text-transform: uppercase; }
+:root[data-style="terminal"] .page-head__title::before { content: "> "; color: var(--accent-ink); }
+:root[data-style="terminal"] .check { border-radius: 0; border-color: var(--text-2); }
+:root[data-style="terminal"] .check:checked { background: transparent; border-color: var(--accent-ink); }
+:root[data-style="terminal"] .check::after { border-color: var(--accent-ink); }
+:root[data-style="terminal"] .btn--primary { background: transparent; color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent-ink); }
+:root[data-style="terminal"] .btn--primary:hover { background: var(--accent-soft); }
+:root[data-style="terminal"] .nav__btn[aria-current="page"], :root[data-style="terminal"] .seg button[aria-pressed="true"],
+:root[data-style="terminal"] .cal__day[aria-pressed="true"], :root[data-style="terminal"] .wday[aria-pressed="true"],
+:root[data-style="terminal"] .tile[aria-pressed="true"], :root[data-style="terminal"] .chip[aria-pressed="true"],
+:root[data-style="terminal"] .menu__item:hover, :root[data-style="terminal"] .menu__item:focus-visible, :root[data-style="terminal"] .nnote.is-selected {
+  background: var(--text); color: var(--bg); box-shadow: none;
+}
+:root[data-style="terminal"] .nav__btn[aria-current="page"] .icon, :root[data-style="terminal"] .nav__btn[aria-current="page"] .nav__label, :root[data-style="terminal"] .menu__item:hover .icon, :root[data-style="terminal"] .menu__item:focus-visible .icon,
+:root[data-style="terminal"] .nnote.is-selected .nnote__title, :root[data-style="terminal"] .nnote.is-selected .nnote__time, :root[data-style="terminal"] .tile[aria-pressed="true"] .tile__font,
+:root[data-style="terminal"] .wday[aria-pressed="true"] .ring__label, :root[data-style="terminal"] .wday[aria-pressed="true"] .wday__num { color: var(--bg); }
+:root[data-style="terminal"] .brand > span::after { content: "_"; animation: term-blink 1.1s steps(1) infinite; }
+@keyframes term-blink { 50% { opacity: 0; } }
+:root[data-style="terminal"] .clock__digital, :root[data-style="terminal"] .clock__auto-inner, :root[data-style="terminal"] .timer.is-running .timer__time {
+  text-shadow: 0 0 14px color-mix(in srgb, var(--text) 40%, transparent);
+}
+
+/* Soft: pastel and round. Cards and rows are raised out of the page, fields and finished tasks
+   pressed into it; presses sink in, and everything moves with a bouncier spring. */
+:root[data-style="soft"] { --press: 0.95; --press-sm: 0.88; }
+@supports (transition-timing-function: linear(0, 1)) {
+  :root[data-style="soft"] { --ease-spring: linear(0, 0.22 8%, 0.6 16%, 0.9 24%, 1.06 32%, 1.1 38%, 1.08 44%, 1.02 54%, 0.99 64%, 1 76%, 1); }
+}
+:root[data-style="soft"] .glass, :root[data-style="soft"] .topbar::before { border-color: transparent; }
+:root[data-style="soft"] .task, :root[data-style="soft"] .mini-row, :root[data-style="soft"] .nfold { background: var(--bg); border-color: transparent; box-shadow: var(--shadow-ctl); }
+:root[data-style="soft"] .task:hover, :root[data-style="soft"] .mini-row:hover, :root[data-style="soft"] .nfold:hover { background: var(--bg); }
+:root[data-style="soft"] .task.has-color { background: color-mix(in srgb, var(--task-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .nfold.has-color { background: color-mix(in srgb, var(--task-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .mini-row.has-color { background: color-mix(in srgb, var(--row-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .task.is-done { background: var(--bg); border-color: transparent; box-shadow: var(--soft-in); }
+:root[data-style="soft"] .input, :root[data-style="soft"] .topsearch__field, :root[data-style="soft"] .notes__area.notes__editor,
+:root[data-style="soft"] .cpk-field, :root[data-style="soft"] .seg {
+  background: var(--bg); border-color: transparent; box-shadow: var(--soft-in);
+}
+/* Checkboxes and switches are pressed in too, but keep their edge so they stay easy to see. */
+:root[data-style="soft"] .check:not(:checked), :root[data-style="soft"] .switch input:not(:checked) { background: var(--bg); box-shadow: var(--soft-in); }
+:root[data-style="soft"] .btn:not(.btn--ghost), :root[data-style="soft"] .tasks-empty__add, :root[data-style="soft"] .swatch,
+:root[data-style="soft"] .seg button[aria-pressed="true"], :root[data-style="soft"] .wday[aria-pressed="true"], :root[data-style="soft"] .tile { box-shadow: var(--shadow-ctl); border-color: transparent; }
+:root[data-style="soft"] .btn:not(.btn--primary):not(.btn--danger):not(.btn--ghost) { background: var(--bg); }
+:root[data-style="soft"] .btn:active, :root[data-style="soft"] .icon-btn:active, :root[data-style="soft"] .tool:active, :root[data-style="soft"] .tile:active { box-shadow: var(--soft-in); }
+:root[data-style="soft"] .tile[aria-pressed="true"] { box-shadow: var(--soft-in), inset 0 0 0 1px var(--accent-ink); }
+:root[data-style="soft"] .cal__day[aria-pressed="true"] { box-shadow: var(--shadow-ctl); }
+
+/* Ink: black and white, with only your accent for colour. Hard lines, bold type, no glass or
+   gradients; what's chosen is inverted, and things that float cast a hard shadow. */
+:root[data-style="ink"] { --fw-regular: 500; --fw-medium: 600; --fw-semibold: 700; }
+:root[data-style="ink"] .glass, :root[data-style="ink"] .topbar::before, :root[data-style="ink"] .popover, :root[data-style="ink"] .dialog,
+:root[data-style="ink"] .toast, :root[data-style="ink"] .cpk, :root[data-style="ink"] .topsearch__results { border: 1.5px solid var(--text); }
+:root[data-style="ink"] .task, :root[data-style="ink"] .mini-row, :root[data-style="ink"] .nfold { background: transparent; border-color: var(--border-strong); }
+:root[data-style="ink"] .task:hover, :root[data-style="ink"] .mini-row:hover, :root[data-style="ink"] .nfold:hover { border-color: var(--text); background: transparent; }
+:root[data-style="ink"] .task.has-color, :root[data-style="ink"] .nfold.has-color { background: transparent; border-color: var(--border-strong); box-shadow: inset 4px 0 0 var(--task-c); }
+:root[data-style="ink"] .mini-row.has-color { background: transparent; border-color: var(--border-strong); box-shadow: inset 4px 0 0 var(--row-c); }
+:root[data-style="ink"] .nav__btn[aria-current="page"], :root[data-style="ink"] .seg button[aria-pressed="true"],
+:root[data-style="ink"] .cal__day[aria-pressed="true"], :root[data-style="ink"] .wday[aria-pressed="true"],
+:root[data-style="ink"] .tile[aria-pressed="true"], :root[data-style="ink"] .chip[aria-pressed="true"],
+:root[data-style="ink"] .menu__item:hover, :root[data-style="ink"] .menu__item:focus-visible, :root[data-style="ink"] .nnote.is-selected {
+  background: var(--text); color: var(--bg); box-shadow: none;
+}
+:root[data-style="ink"] .nav__btn[aria-current="page"] .icon, :root[data-style="ink"] .nav__btn[aria-current="page"] .nav__label, :root[data-style="ink"] .menu__item:hover .icon, :root[data-style="ink"] .menu__item:focus-visible .icon,
+:root[data-style="ink"] .nnote.is-selected .nnote__title, :root[data-style="ink"] .nnote.is-selected .nnote__time, :root[data-style="ink"] .tile[aria-pressed="true"] .tile__font,
+:root[data-style="ink"] .wday[aria-pressed="true"] .ring__label, :root[data-style="ink"] .wday[aria-pressed="true"] .wday__num { color: var(--bg); }
+:root[data-style="ink"] .input, :root[data-style="ink"] .topsearch__field { border-width: 1.5px; border-color: var(--text); }
+
 /* ---------- Performance mode (Settings → Appearance) ----------
    For slower computers like a Raspberry Pi. The theme engine makes surfaces solid (the same colours they
    show over the background), turns blur off and uses small shadows; here nothing blurs at all (the
@@ -1755,7 +1879,10 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
    transitions are shorter with no spring. Every feature stays the same. */
 :root[data-perf="on"] { --blur-scrim: 0px; --dur-1: 80ms; --dur-2: 120ms; --dur-3: 180ms; --dur-4: 240ms; --ease-spring: var(--ease-out); }
 :root[data-perf="on"] *, :root[data-perf="on"] *::before, :root[data-perf="on"] *::after, :root[data-perf="on"] dialog::backdrop { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-:root[data-perf="on"] .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+/* The other styles are opaque: nothing to see through, so no backdrop filter to pay for (the dialog scrim keeps its blur). */
+:root:not([data-style="glass"]) *, :root:not([data-style="glass"]) *::before, :root:not([data-style="glass"]) *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-perf="on"] .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)) !important; }
+:root[data-perf="on"] .clock__digital, :root[data-perf="on"] .clock__auto-inner, :root[data-perf="on"] .timer__time { text-shadow: none !important; }
 :root[data-perf="on"] .list { -webkit-mask-image: none !important; mask-image: none !important; }
 
 /* ---------- 10. Motion ---------- */
@@ -1782,6 +1909,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   @keyframes toast-in { from { opacity: 0; } }
   @keyframes toast-out { to { opacity: 0; } }
   .skel { animation: none; }
+  .brand > span::after { animation: none !important; }
   .btn.is-loading::after { animation-duration: 1.6s; }
 }
 </style>
@@ -1813,12 +1941,26 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   var SANS = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
   var GF = 'https://fonts.googleapis.com/css2?display=swap&family=';
   var FONTS = {
-    inter: { label: 'Inter', body: SANS, href: GF + 'Inter:wght@300;400;500;600' },
+    inter: { label: 'Inter', body: SANS, href: GF + 'Inter:wght@300;400;500;600;700' },
     system: { label: 'System', body: 'system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif' },
     mono: { label: 'Mono', body: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace', href: GF + 'JetBrains+Mono:wght@300;400;500;600' },
     serif: { label: 'Playfair', body: SANS, head: '"Playfair Display", Georgia, "Times New Roman", serif', href: GF + 'Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600' },
   };
-  var DEFAULTS = { theme: 'graphite', font: 'inter', transparency: 42, blur: 22, radius: 16, density: 'comfortable' };
+  var DEFAULTS = { theme: 'graphite', font: 'inter', transparency: 42, blur: 22, radius: 16, density: 'comfortable', style: 'glass' };
+  /* Styles change the app's material; themes still choose the colours within one. Glass is the
+     default. Each other style reshapes the theme's colours its own way (a Custom theme keeps its
+     colours and takes only the material), scales the corners, and may set its own type. */
+  var STYLES = {
+    glass: { label: 'Glass', desc: 'Frosted glass, soft light', radius: 1 },
+    paper: { label: 'Paper', desc: 'A warm sheet, ruled lines, serif headings', radius: 0.3 },
+    terminal: { label: 'Terminal', desc: 'Phosphor on black, monospace, outlines', radius: 0.12 },
+    soft: { label: 'Soft', desc: 'Pastel and round, raised and pressed shapes', radius: 1.6 },
+    ink: { label: 'Ink', desc: 'Black and white, your accent, bold type', radius: 0.5 },
+  };
+  /* Terminal's phosphor for each theme (Light is an LCD: dark ink on pale green). */
+  var PHOSPHOR = { graphite: '#3dfc8a', midnight: '#7cd7ff', forest: '#55ff6e', mocha: '#ffb43a' };
+  var SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif';
+  var ROUNDED = 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", ';
 
   function isHex(v) { return typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v); }
   function rgb(hex) { return [1, 3, 5].map(function (i) { return parseInt(hex.slice(i, i + 2), 16); }); }
@@ -1852,11 +1994,19 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var card = mix(b.bg, b.panel, alpha);
     var raised = mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92));
     var sunken = light ? mix(card, b.line, 0.05) : mix(card, '#000000', 0.22);
-    return { text: [b.bg, card, raised, sunken], ctl: [card, raised, sunken] };
+    /* Rows (tasks, folders, recent notes) rest on a faint wash of the line colour (--hover): text must read there too. */
+    return { text: [b.bg, card, raised, sunken, mix(card, b.line, 0.05), mix(raised, b.line, 0.05)], ctl: [card, raised, sunken] };
   }
   /** The accent as text: itself when it reads (4.5:1 everywhere text sits), otherwise moved towards
       the text colour just until it does. */
-  function accentInk(accent, b, g) { return solve(accent, b.text, g.text, 4.5); }
+  function accentInk(accent, b, g) { return solve(accent, b.text, g.text, 4.55); }   // a hair over 4.5, for rounding
+  /** The red for destructive actions: 4.5:1 on every surface, and on its own tint too (a Delete or
+      Reset button is red text on a faint red fill, up to 22% on hover). */
+  function dangerInk(start, b, g) {
+    var d = solve(start, b.text, g.text, 4.6);
+    for (var i = 0; i < 3; i++) d = solve(d, b.text, g.text.concat(g.text.map(function (x) { return mix(x, d, 0.22); })), 4.6);
+    return d;
+  }
   function num(v, d, lo, hi) { v = typeof v === 'number' && isFinite(v) ? v : d; return Math.min(hi, Math.max(lo, v)); }
 
   function baseOf(s) {
@@ -1868,15 +2018,43 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     return THEMES[s.theme] || THEMES.graphite;
   }
 
+  /** The theme's colours as this style has them. */
+  function styleBase(b, style, s) {
+    if (style === 'glass' || s.theme === 'custom') return b;
+    var light = luminance(b.bg) > 0.35;
+    var o = Object.assign({}, b);
+    if (style === 'paper') {
+      if (light) { o.bg = '#ece5d8'; o.panel = '#f8f3ea'; o.line = '#3a2f24'; o.text = '#2a2119'; }
+      else { o.bg = mix(b.bg, '#1b1712', 0.7); o.panel = mix(b.panel, '#28221b', 0.7); o.line = '#f1e7d6'; o.text = mix(b.text, '#efe5d4', 0.7); }
+    } else if (style === 'terminal') {
+      if (light) { o.bg = '#d8e1cb'; o.panel = '#e2e9d7'; o.line = '#24321d'; o.text = '#1f2b19'; }
+      else { var ph = PHOSPHOR[s.theme] || PHOSPHOR.graphite; o.bg = mix('#030503', ph, 0.025); o.panel = mix('#030503', ph, 0.055); o.line = ph; o.text = ph; }
+    } else if (style === 'soft') {
+      if (light) { o.bg = '#e7e8ef'; o.panel = '#e7e8ef'; o.line = '#4a5063'; o.text = '#272c3a'; }
+      else { o.bg = mix(b.bg, '#272a33', 0.6); o.panel = o.bg; }
+    } else if (style === 'ink') {
+      if (light) { o.bg = '#ffffff'; o.panel = '#ffffff'; o.line = '#000000'; o.text = '#000000'; }
+      else { o.bg = '#000000'; o.panel = '#000000'; o.line = '#ffffff'; o.text = '#ffffff'; }
+    }
+    return o;
+  }
+
   function compute(settings) {
     var s = settings || {};
-    var b = baseOf(s);
+    var style = STYLES[s.style] ? s.style : 'glass';
+    var b = styleBase(baseOf(s), style, s);
+    var glass = style === 'glass';
     var accent = isHex(s.accent) ? s.accent : b.accent;
     var light = luminance(b.bg) > 0.35;
-    var alpha = 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100;
+    var alpha = glass ? 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100 : 1;
     var perf = s.performanceMode === true;
-    var radius = num(s.radius, DEFAULTS.radius, 4, 28);
-    var font = FONTS[s.font] || FONTS.inter;
+    var radius = num(s.radius, DEFAULTS.radius, 4, 28) * STYLES[style].radius;
+    var fontId = FONTS[s.font] ? s.font : 'inter';
+    var font = FONTS[fontId];
+    var body = font.body; var head = font.head || font.body;
+    if (style === 'terminal') { fontId = 'mono'; body = head = FONTS.mono.body; }
+    else if (style === 'paper' && fontId !== 'mono' && fontId !== 'serif') head = SERIF;
+    else if (style === 'soft' && fontId !== 'mono' && fontId !== 'serif') { body = ROUNDED + body; head = ROUNDED + head; }
     var g = groundsOf(b, alpha, light);
     /* Secondary and faint text keep their place between the text and the background, but never
        drop below 4.5:1 (WCAG AA) on anything they can sit on, in any theme, Custom included. */
@@ -1884,24 +2062,27 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var low = Math.min.apply(null, g.text.map(function (x) { return contrast(text3, x); }));
     /* Secondary text stays a clear step above faint text: at least 6:1, and 1.2× faint's contrast. */
     var text2 = solve(mix(b.text, b.bg, 0.32), b.text, g.text, Math.max(6, low * 1.2));
+    if (style === 'ink') { text2 = b.text; text3 = solve(mix(b.text, b.bg, 0.3), b.text, g.text, 7); }   // Ink: no greys to speak of
+    var sv = styleVars(style, b, light, perf);
     return {
       scheme: light ? 'light' : 'dark',
       density: s.density === 'compact' ? 'compact' : 'comfortable',
-      font: FONTS[s.font] ? s.font : 'inter',
+      font: fontId,
+      style: style,
       perf: perf,
       bg: b.bg,
       vars: {
         '--bg': b.bg,
         '--bg-deep': mix(b.bg, light ? '#ffffff' : '#000000', light ? 0.35 : 0.3),
-        '--surface': perf ? mix(b.bg, b.panel, alpha) : rgba(b.panel, alpha.toFixed(2)),
-        '--surface-raised': perf ? mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92)) : rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
+        '--surface': !glass ? b.panel : perf ? mix(b.bg, b.panel, alpha) : rgba(b.panel, alpha.toFixed(2)),
+        '--surface-raised': !glass ? (style === 'paper' && light ? mix(b.panel, '#ffffff', 0.4) : b.panel) : perf ? mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92)) : rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
         '--surface-sunken': light ? rgba(b.line, 0.05) : 'rgba(0, 0, 0, 0.22)',
         '--hover': rgba(b.line, light ? 0.05 : 0.05),
         '--hover-strong': rgba(b.line, light ? 0.085 : 0.08),
         '--fill': rgba(b.line, light ? 0.07 : 0.09),
         '--fill-hover': rgba(b.line, light ? 0.11 : 0.14),
-        '--border': rgba(b.line, light ? 0.11 : 0.07),
-        '--border-strong': rgba(b.line, light ? 0.19 : 0.12),
+        '--border': sv.border || rgba(b.line, light ? 0.11 : 0.07),
+        '--border-strong': sv.borderStrong || rgba(b.line, light ? 0.19 : 0.12),
         '--text': b.text,
         '--text-2': text2,
         '--text-3': text3,
@@ -1909,35 +2090,66 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
         '--on-accent': readable(accent),
         '--accent-ink': accentInk(accent, b, g),
         /* Status colours: a red, green and amber that read (4.5:1) on this theme. */
-        '--danger': solve(light ? '#e5484d' : '#ef7a7a', b.text, g.text, 4.6),
+        '--danger': dangerInk(light ? '#e5484d' : '#ef7a7a', b, g),
         '--success': solve(light ? '#30a46c' : '#6fcf97', b.text, g.text, 4.6),
         '--warning': solve(light ? '#d39a1f' : '#e6c26b', b.text, g.text, 4.6),
         /* Edges that identify a control: 3:1 against the card, a raised surface and a field. */
         '--line-ctl': solve(mix(b.text, b.bg, 0.8), b.text, g.ctl, 3.1),
         '--backdrop': light ? 'rgba(40, 50, 60, 0.28)' : 'rgba(6, 7, 9, 0.55)',
-        '--shadow-1': perf ? (light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(25, 35, 50, 0.12)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3)')
+        '--shadow-1': sv.s1 ? sv.s1 : perf ? (light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(25, 35, 50, 0.12)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3)')
                     : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(25, 35, 50, 0.06), 0 16px 40px -22px rgba(25, 35, 50, 0.25)'
                     : 'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6)',
-        '--shadow-2': perf ? (light ? '0 4px 14px rgba(25, 35, 50, 0.18)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45)')
+        '--shadow-2': sv.s2 ? sv.s2 : perf ? (light ? '0 4px 14px rgba(25, 35, 50, 0.18)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45)')
                     : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(25, 35, 50, 0.08), 0 32px 72px -24px rgba(25, 35, 50, 0.35)'
                     : 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75)',
-        '--shadow-ctl': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
+        '--shadow-ctl': sv.ctl ? sv.ctl : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
                               : 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3)',
-        '--sheen': perf ? 'none' : light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
+        '--soft-in': sv.inset || 'none',
+        '--sheen': perf || !glass ? 'none' : light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
                                          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
-        '--glow': light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
-        '--blur': perf ? '0px' : num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
+        '--glow': !glass ? 'transparent' : light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
+        '--blur': perf || !glass ? '0px' : num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
         /* One dial: cards take it as set, everything else follows from it. */
         '--r-xs': Math.round(radius * 0.25) + 'px',
         '--r-sm': Math.round(radius * 0.38) + 'px',
         '--r-md': Math.round(radius * 0.625) + 'px',
-        '--r-lg': radius + 'px',
-        '--r-xl': Math.min(32, radius + 4) + 'px',
-        '--r-pop': (Math.round(radius * 0.625) + 4) + 'px',
-        '--font': font.body,
-        '--font-head': font.head || font.body,
+        '--r-lg': Math.round(radius) + 'px',
+        '--r-xl': Math.min(36, Math.round(radius) + 4) + 'px',
+        '--r-pop': (Math.round(radius * 0.625) + (style === 'terminal' ? 1 : 4)) + 'px',
+        '--font': body,
+        '--font-head': head,
       },
     };
+  }
+
+  /** Borders and shadows that make each style's material (null: Glass's own). */
+  function styleVars(style, b, light, perf) {
+    var o = {};
+    if (style === 'paper') {
+      o.border = rgba(b.line, light ? 0.14 : 0.13); o.borderStrong = rgba(b.line, light ? 0.3 : 0.26);
+      o.s1 = light ? '0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 3px rgba(60, 45, 30, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.45)';
+      o.s2 = light ? '0 2px 6px rgba(60, 45, 30, 0.1), 0 14px 34px -10px rgba(60, 45, 30, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.4), 0 14px 34px -10px rgba(0, 0, 0, 0.7)';
+      o.ctl = '0 1px 1px rgba(0, 0, 0, 0.12)';
+    } else if (style === 'terminal') {
+      o.border = rgba(b.line, 0.22); o.borderStrong = rgba(b.line, 0.5);
+      o.s1 = 'none';
+      o.s2 = perf ? 'none' : '0 0 0 1px ' + rgba(b.line, 0.25) + ', 0 0 28px ' + rgba(b.line, light ? 0.08 : 0.12);
+      o.ctl = 'none';
+    } else if (style === 'soft') {
+      var hi = light ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.05)';
+      var lo = light ? 'rgba(70, 80, 110, 0.24)' : 'rgba(0, 0, 0, 0.55)';
+      o.border = rgba(b.line, light ? 0.06 : 0.05); o.borderStrong = rgba(b.line, light ? 0.12 : 0.1);
+      o.s1 = perf ? '-3px -3px 6px ' + hi + ', 3px 3px 6px ' + lo : '-7px -7px 16px ' + hi + ', 7px 7px 16px ' + lo;
+      o.s2 = perf ? '0 6px 16px ' + lo : '-10px -10px 24px ' + hi + ', 12px 12px 28px ' + lo;
+      o.ctl = '-3px -3px 6px ' + hi + ', 3px 3px 7px ' + lo;
+      o.inset = 'inset 3px 3px 6px ' + lo + ', inset -3px -3px 6px ' + hi;
+    } else if (style === 'ink') {
+      o.border = rgba(b.line, 0.28); o.borderStrong = rgba(b.line, 0.7);
+      o.s1 = 'none';
+      o.s2 = '5px 5px 0 ' + b.text;
+      o.ctl = 'none';
+    }
+    return o;
   }
 
   /** Adds the web font for `id` once (falls back to local fonts offline). */
@@ -1959,13 +2171,14 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     root.setAttribute('data-density', t.density);
     root.setAttribute('data-font', t.font);
     root.setAttribute('data-perf', t.perf ? 'on' : 'off');
+    root.setAttribute('data-style', t.style);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t.bg);
     loadFont(t.font);
     return t;
   }
 
-  window.StillTheme = { PALETTE: PALETTE, THEMES: THEMES, FONTS: FONTS, DEFAULTS: DEFAULTS, compute: compute, apply: apply, readable: readable, loadFont: loadFont, isHex: isHex };
+  window.StillTheme = { PALETTE: PALETTE, THEMES: THEMES, FONTS: FONTS, STYLES: STYLES, DEFAULTS: DEFAULTS, compute: compute, apply: apply, readable: readable, loadFont: loadFont, isHex: isHex };
 
   // Apply saved settings now, before first paint.
   var saved = {};
@@ -2398,6 +2611,7 @@ const CLOCK_FACES = ['minimal', 'classic', 'modern', 'digital'];
 const CLOCK_SHAPES = ['circle', 'rounded', 'squircle', 'hexagon'];
 const THEME_IDS = [...Object.keys(THEMES), 'custom'];
 const FONT_IDS = Object.keys(FONTS);
+const STYLE_IDS = Object.keys(window.StillTheme.STYLES);
 const SETTINGS_SECTIONS = ['clock', 'calendar', 'appearance', 'windows', 'graph', 'shortcuts', 'data'];
 
 function detect24h() {
@@ -2414,6 +2628,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
   performanceMode: false, // solid surfaces and lighter effects, for slower computers (Settings → Appearance)
+  style: 'glass', // the app's material: glass · paper · terminal · soft · ink (Settings → Appearance → Style)
   colourHistory: [], // the colour picker's last six colours applied, newest first (#rrggbb)
   colourSaved: [], // colours saved in the colour picker: [{ hex, name }]
   cardSizes: null, // older Home card sizes ({ cols: [a, b, c], split }); read into homeLayout when that's missing
@@ -2601,6 +2816,7 @@ function normaliseSettings(raw) {
     radius: clampNum(s.radius, 4, 28, d.radius),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
     performanceMode: bool(s.performanceMode, d.performanceMode),
+    style: oneOf(s.style, STYLE_IDS, d.style),
     colourHistory: (Array.isArray(s.colourHistory) ? s.colourHistory : []).filter((c, i, a) => isHex(c) && a.findIndex((x) => isHex(x) && x.toLowerCase() === c.toLowerCase()) === i).map((c) => c.toLowerCase()).slice(0, 6),
     colourSaved: (Array.isArray(s.colourSaved) ? s.colourSaved : []).filter((c) => isObj(c) && isHex(c.hex))
       .map((c) => ({ hex: c.hex.toLowerCase(), name: typeof c.name === 'string' && c.name.trim() ? c.name.slice(0, 40) : c.hex.toUpperCase() }))
@@ -3569,7 +3785,7 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour', live
    the relevant settings change. */
 const Theme = (() => {
   let applied = '';
-  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'performanceMode'];
+  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'performanceMode', 'style'];
   function apply() {
     const s = Settings.get();
     const key = JSON.stringify(KEYS.map((k) => s[k]));
@@ -4912,9 +5128,9 @@ const SettingsPanel = (() => {
       h('div', { class: 'srow__label' }, h('span', { text: label }), hint ? h('span', { class: 'srow__hint', text: hint }) : null),
       control);
   }
-  function stackRow(label, control, { keywords = '' } = {}) {
+  function stackRow(label, control, { keywords = '', hint = '' } = {}) {
     return h('div', { class: 'srow srow--stack', dataset: { search: `${label} ${keywords}`.toLowerCase() } },
-      h('div', { class: 'srow__label' }, h('span', { text: label })), control);
+      h('div', { class: 'srow__label' }, h('span', { text: label }), hint ? h('span', { class: 'srow__hint', text: hint }) : null), control);
   }
   function seg(key, options, value, label) {
     const group = h('div', { class: 'seg', role: 'group', 'aria-label': label },
@@ -5040,8 +5256,16 @@ const SettingsPanel = (() => {
   }
   function themePreview(id, s) {
     if (id === 'custom') return h('span', { class: 'theme-prev theme-prev--custom', 'aria-hidden': 'true' });
-    const t = THEMES[id];
-    return h('span', { class: 'theme-prev', 'aria-hidden': 'true', style: `--pv-bg:${t.bg};--pv-panel:${t.panel};--pv-line:${t.line}33;--pv-accent:${id === s.theme ? s.accent : t.accent}` });
+    // The theme as the chosen style shows it.
+    const v = window.StillTheme.compute({ ...s, theme: id, accent: id === s.theme ? s.accent : THEMES[id].accent }).vars;
+    return h('span', { class: 'theme-prev', 'aria-hidden': 'true', style: `--pv-bg:${v['--bg']};--pv-panel:${v['--surface']};--pv-line:${v['--border-strong']};--pv-accent:${v['--accent']}` });
+  }
+  const STYLES = window.StillTheme.STYLES;
+  function stylePreview(id, s) {
+    const v = window.StillTheme.compute({ ...s, style: id }).vars;
+    const shadow = id === 'soft' ? v['--shadow-ctl'] : 'none';
+    return h('span', { class: 'style-prev', 'aria-hidden': 'true', style: `--pv-bg:${v['--bg']};--pv-surface:${v['--surface']};--pv-border:${id === 'ink' ? v['--text'] : v['--border-strong']};--pv-bw:${id === 'ink' ? '1.5px' : '1px'};--pv-text:${v['--text']};--pv-text3:${v['--text-3']};--pv-accent:${v['--accent']};--pv-r:${v['--r-md']};--pv-shadow:${shadow};--pv-font:${v['--font-head']}` },
+      h('span', { class: 'style-prev__card' }, h('span', { class: 'style-prev__aa', text: 'Aa' }), h('span', { class: 'style-prev__line' })), h('span', { class: 'style-prev__dot' }));
   }
 
   /* --- Categories --- */
@@ -5080,8 +5304,8 @@ const SettingsPanel = (() => {
       ],
     },
     {
-      id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Theme, accent, font, glass and density',
-      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes', 'notesSizes'],
+      id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Style, theme, accent, font, glass and density',
+      keys: ['style', 'theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes', 'notesSizes'],
       onReset: () => HomeLayout.reset(), // card sizes (the arrangement stays: that's Windows)
       rows(s, refresh) {
         Object.keys(FONTS).forEach((id) => window.StillTheme.loadFont(id)); // for the "Aa" previews
@@ -5091,6 +5315,8 @@ const SettingsPanel = (() => {
           refresh();
         };
         return [
+          stackRow('Style', tiles('style', Object.keys(STYLES).map((id) => ({ id, label: STYLES[id].label, preview: stylePreview(id, s) })), s.style, 'Style', (v) => { set({ style: v }); refresh(); }, 'tiles--styles'),
+            { keywords: 'style look material glass paper terminal soft ink retro mono pastel black white' }),
           stackRow('Theme', tiles('theme', [...Object.keys(THEMES), 'custom'].map((id) => ({ id, label: id === 'custom' ? 'Custom' : THEMES[id].label, preview: themePreview(id, s) })), s.theme, 'Theme', pickTheme, 'tiles--themes'),
             { keywords: 'graphite midnight forest mocha light dark custom colours' }),
           s.theme === 'custom' ? CUSTOM_FIELDS.map(([k, label]) => row(label, colorField(s.customTheme[k], label, `custom:${k}`, (v) => set({ customTheme: { ...Settings.get().customTheme, [k]: v } })), { keywords: 'custom theme colour' })) : null,
@@ -5099,12 +5325,16 @@ const SettingsPanel = (() => {
           stackRow('Font', tiles('font', Object.keys(FONTS).map((id) => ({
             id, label: id === 'system' ? 'SF Pro / System' : id === 'mono' ? 'JetBrains Mono' : id === 'serif' ? 'Playfair Display' : 'Inter',
             preview: h('span', { class: 'tile__font', style: `font-family:${FONTS[id].head || FONTS[id].body}`, text: 'Aa' }),
-          })), s.font, 'Font', (v) => set({ font: v })), { keywords: 'typeface inter system sf pro jetbrains mono playfair serif' }),
-          row('Glass transparency', range('transparency', s.transparency, 0, 80, 'Glass transparency', (v) => `${v}%`), { keywords: 'opacity glass' }),
+          })), s.font, 'Font', (v) => set({ font: v })), { keywords: 'typeface inter system sf pro jetbrains mono playfair serif', hint: s.style === 'terminal' ? 'Terminal style always uses monospace' : '' }),
+          (() => {
+            const ctl = range('transparency', s.transparency, 0, 80, 'Glass transparency', (v) => `${v}%`);
+            if (s.style !== 'glass') $('input', ctl).disabled = true;
+            return row('Glass transparency', ctl, { keywords: 'opacity glass', hint: s.style !== 'glass' ? 'Glass style only' : '' });
+          })(),
           (() => {
             const ctl = range('blur', s.blur, 0, 40, 'Blur strength', (v) => `${v}px`);
-            if (s.performanceMode) $('input', ctl).disabled = true;
-            return row('Blur strength', ctl, { keywords: 'frosted glass', hint: s.performanceMode ? 'Off in Performance mode' : '' });
+            if (s.performanceMode || s.style !== 'glass') $('input', ctl).disabled = true;
+            return row('Blur strength', ctl, { keywords: 'frosted glass', hint: s.style !== 'glass' ? 'Glass style only' : s.performanceMode ? 'Off in Performance mode' : '' });
           })(),
           (() => {
             const ctl = toggle('performanceMode', s.performanceMode, 'Performance mode');
