@@ -145,11 +145,12 @@ Custom theme's colours) come from the palette or from the app's own colour picke
 rainbow swatch (or a colour field) opens: a glass panel by its button (a sheet along the bottom
 on narrow screens) with the colour split into the original and the new one (tap the original to
 go back; tap the new one, or ⌄, for the palette and your saved colours: long-press or right-click
-one to rename or delete it), a readability badge, the eyedropper (where the browser has one),
+one to rename or delete it), the eyedropper (where the browser has one),
 Copy and Close; a saturation/brightness square and a hue slider; a HEX / RGB / HSL field (tap
 its label to switch); the last six colours applied, and + to save the colour. What's being
 coloured follows live; ×, Enter or a tap outside keeps it, Esc puts the original back. Arrow
-keys move the handles (Shift for bigger steps). The history and saved colours are settings
+keys move the handles (Shift for bigger steps). It moves like a window: drag the empty part of its top row (or the pill above it); it stays
+on the screen, and opens where you left it until the page is reloaded. The history and saved colours are settings
 (`colourHistory`, `colourSaved`), so they're kept and go into backups.
 
 Default palette: Slate `#223843`, Mist `#EFF1F3`, Wine `#750D37`, Sage `#4D9078`,
