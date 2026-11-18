@@ -11,7 +11,8 @@ the month, and its content scrolls down to the Scheduled list) above a Connectio
 the Connections page, with its own zoom), a task manager with weekly progress, colours and
 drag-to-reorder, and a Notes card with a Title field and body, and the three most recently touched
 notes pinned below (tap one to edit it in place). The clock view includes a
-stopwatch / countdown timer; when the card is squashed vertically (the face under
+stopwatch / countdown timer (tap a countdown's time to set it: its hours, minutes and seconds
+become fields in place; type, Enter or tap away to set, Esc to leave it); when the card is squashed vertically (the face under
 about 170px tall; analog again from 185px), the clock crossfades to a large digital time and back; a narrow card
 keeps the analog face, which then uses the card's full width. The card can't be made shorter than the digital
 time needs to clear the timer. Drag the pill handles in the gaps between the cards to
