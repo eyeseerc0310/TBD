@@ -429,27 +429,99 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .swatch--custom { cursor: pointer; background: conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
 .swatch--custom[aria-pressed="true"] { background: radial-gradient(circle, var(--c) 0 7px, transparent 7.5px), conic-gradient(#ef7a7a, #e6c26b, #7fd1a4, #6fb7f0, #a78bfa, #ef7a7a); }
 .swatch--custom[aria-expanded="true"] { box-shadow: 0 0 0 1px var(--border-strong) inset, 0 0 0 2px var(--surface-raised), 0 0 0 4px var(--accent-ink); }
-/* A colour picker: the swatches, and the colour wheel that opens under them. */
-.cpick { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
-.srow .cpick { align-items: flex-end; }
-.cpick__wheel[hidden] { display: none; }
-.cpick__wheel { animation: pop-in var(--dur-2) var(--ease-out); transform-origin: top center; }
-/* The colour wheel: a hue ring round a square (richness across, brightness down), a hex field and before / now. */
-.cw { display: flex; flex-direction: column; align-items: center; gap: var(--s3); width: 200px; }
-.cw-disc { position: relative; width: 200px; height: 200px; flex: none; border-radius: 50%; touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; }
-.cw-disc canvas { width: 200px; height: 200px; display: block; }
-.cw-disc:focus-visible { outline-offset: 4px; }
-.cw-knob {
-  position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; pointer-events: none;
-  box-shadow: 0 0 0 2.5px #fff, 0 0 0 3.5px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: width var(--dur-1) var(--ease), height var(--dur-1) var(--ease), margin var(--dur-1) var(--ease);
+/* ---------- The colour picker (one floating glass panel; see ColourPicker) ---------- */
+.cpk {
+  position: fixed; inset: auto; margin: 0; z-index: var(--z-pop); width: 304px; max-width: calc(100vw - 16px); height: auto; overflow: visible;
+  display: flex; flex-direction: column; gap: var(--s3); padding: var(--s4);
+  border-radius: var(--r-xl); color: var(--text); font: inherit;
+  background: var(--surface-raised); border: 1px solid var(--border-strong); box-shadow: var(--shadow-2);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(160%); backdrop-filter: blur(var(--blur)) saturate(160%);
+  animation: pop-in var(--dur-2) var(--ease-out); transform-origin: top left;
 }
-.cw-disc.is-held .cw-knob { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
-.cw-foot { display: flex; align-items: center; gap: var(--s2); width: 100%; }
-.cw-compare { display: flex; flex: none; border-radius: var(--r-sm); overflow: hidden; box-shadow: 0 0 0 1px var(--border-strong); }
-.cw-was, .cw-now { width: 32px; height: var(--ctl-h); background: var(--c, transparent); }
-.cw-was { cursor: pointer; }
-.cw-hex { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.04em; }
+.cpk.is-closing { animation: pop-out var(--dur-1) var(--ease-in) forwards; }
+.cpk:focus { outline: none; }
+.cpk-top { display: flex; align-items: center; gap: var(--s1); }
+.cpk-spacer { flex: 1; }
+/* The colour: split diagonally, the original (tap to go back) and the new one (tap for presets). */
+.cpk-swatch { position: relative; width: 44px; height: 44px; flex: none; border-radius: 50%; }
+.cpk-swatch::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--border-strong); pointer-events: none; }
+.cpk-orig, .cpk-now { position: absolute; inset: 0; border-radius: 50%; transition: transform var(--dur-2) var(--ease-spring); }
+.cpk-orig { z-index: 1; background: var(--orig); clip-path: polygon(0 0, 100% 0, 0 100%); }
+.cpk.is-none .cpk-orig { background: repeating-linear-gradient(45deg, var(--fill) 0 4px, transparent 4px 8px); }
+.cpk-now { background: var(--now); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.cpk-orig:active, .cpk-now:active { transform: scale(var(--press-sm)); }
+.cpk-chev { width: 24px; height: 32px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--text-2); transition: background-color var(--dur-1) var(--ease), transform var(--dur-2) var(--ease-spring); }
+.cpk-chev:hover { background: var(--fill); color: var(--text); }
+.cpk-chev[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.cpk-chev .icon { transition: transform var(--dur-2) var(--ease); }
+.cpk-contrast {
+  height: 24px; display: inline-flex; align-items: center; padding: 0 var(--s2); margin-left: var(--s1); border-radius: var(--r-pill);
+  background: var(--now); color: var(--ink); box-shadow: inset 0 0 0 1px var(--border-strong);
+  font-size: var(--fs-caption); font-weight: var(--fw-semibold); white-space: nowrap;
+}
+.cpk-contrast.is-low { background: color-mix(in srgb, var(--warning) 18%, transparent); color: var(--warning); box-shadow: none; }
+/* The square (saturation across, brightness down) and the hue slider (red at both ends). */
+.cpk-main { display: flex; gap: var(--s3); height: 184px; }
+.cpk-sv {
+  --h: 0; position: relative; flex: 1; min-width: 0; border-radius: var(--r-md); cursor: crosshair; touch-action: none;
+  background: linear-gradient(to top, #000, rgba(0, 0, 0, 0)), linear-gradient(to right, #fff, hsl(var(--h) 100% 50%));
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.cpk-hue {
+  position: relative; width: 24px; flex: none; border-radius: var(--r-pill); cursor: ns-resize; touch-action: none;
+  background: linear-gradient(to bottom, hsl(360 100% 50%), hsl(300 100% 50%), hsl(240 100% 50%), hsl(180 100% 50%), hsl(120 100% 50%), hsl(60 100% 50%), hsl(0 100% 50%));
+}
+.cpk-hue::before { content: ""; position: absolute; inset: 0 -10px; }   /* a 44px target */
+.cpk-hue .cpk-knob { left: 50%; }
+.cpk-knob {
+  position: absolute; left: 0; top: 0; width: 22px; height: 22px; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+  background: var(--now); box-shadow: 0 0 0 3px #fff, 0 0 0 4px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: width var(--dur-1) var(--ease), height var(--dur-1) var(--ease);
+}
+.cpk-sv.is-held .cpk-knob, .cpk-hue.is-held .cpk-knob { width: 26px; height: 26px; }
+.cpk-sv:focus-visible, .cpk-hue:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* HEX / RGB / HSL, the recent colours and "+". */
+.cpk-bottom { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.cpk-field {
+  display: flex; align-items: center; flex: 0 1 132px; min-width: 0; height: var(--ctl-h); padding-right: var(--s2);
+  border-radius: var(--r-pill); border: 1px solid var(--line-ctl); background: var(--surface-sunken);
+}
+.cpk-field:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cpk-field.is-invalid { border-color: var(--danger); }
+.cpk-field.is-invalid:focus-within { outline-color: var(--danger); }
+.cpk-fmt { flex: none; height: 100%; padding: 0 var(--s1) 0 var(--s3); font-size: var(--fs-caption); font-weight: var(--fw-semibold); letter-spacing: var(--ls-caps); color: var(--text-3); }
+.cpk-fmt:hover { color: var(--text); }
+.cpk-inputs { display: flex; flex: 1; min-width: 0; gap: var(--s1); }
+.cpk-in { width: 100%; min-width: 0; height: 100%; padding: 0 var(--s1); border: 0; outline: none; background: transparent; color: var(--text); font-size: var(--fs-footnote); font-variant-numeric: tabular-nums; }
+.cpk-inputs[data-fmt="hex"] .cpk-in { font-size: var(--fs-body); letter-spacing: 0.02em; }
+.cpk-field.is-invalid .cpk-in { color: var(--danger); }
+.cpk-history { display: flex; align-items: center; justify-content: flex-end; gap: var(--s1); flex: 1; min-width: 0; overflow: hidden; }
+.cpk-dot, .cpk-add, .cpk-big { position: relative; flex: none; border-radius: 50%; transition: transform var(--dur-2) var(--ease-spring); }
+.cpk-dot { width: 22px; height: 22px; background: var(--c); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.cpk-dot[aria-pressed="true"], .cpk-big[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--border-strong), 0 0 0 2px var(--surface-raised), 0 0 0 4px var(--text); }
+.cpk-dot:active, .cpk-big:active, .cpk-add:active { transform: scale(var(--press-sm)); }
+.cpk-add { width: 24px; height: 24px; display: grid; place-items: center; background: var(--fill); color: var(--text-2); }
+.cpk-add:hover { background: var(--fill-hover); color: var(--text); }
+.cpk-add.is-pop { animation: cpk-pop var(--dur-3) var(--ease-spring); }
+@keyframes cpk-pop { 40% { transform: scale(1.3); background: var(--accent-soft); color: var(--accent-ink); } }
+/* Presets: the palette and saved colours. */
+.cpk-presets { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); border-radius: var(--r-md); background: var(--surface-sunken); box-shadow: inset 0 0 0 1px var(--border); animation: pop-in var(--dur-2) var(--ease-out); transform-origin: top left; }
+.cpk-presets[hidden] { display: none; }
+.cpk-h { font-size: var(--fs-caption); font-weight: var(--fw-semibold); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--text-3); }
+.cpk-grid { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.cpk-big { width: 34px; height: 34px; background: var(--c); box-shadow: inset 0 0 0 1px var(--border-strong); -webkit-touch-callout: none; }
+.cpk-empty { font-size: var(--fs-footnote); color: var(--text-2); }
+.cpk-edit { display: flex; align-items: center; gap: var(--s2); }
+.cpk-edit__dot { width: 22px; height: 22px; flex: none; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.cpk-name { flex: 1; min-width: 0; }
+/* Narrow screens: a sheet along the bottom. */
+.cpk.is-sheet {
+  left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto; max-width: none;
+  border-radius: var(--r-xl) var(--r-xl) 0 0; padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom));
+  animation-name: cpk-sheet-in; transform-origin: bottom center;
+}
+@keyframes cpk-sheet-in { from { transform: translateY(24px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { @keyframes cpk-sheet-in { from { opacity: 0; } } }
 
 /* Date and time fields (the event editor): a field you tap, its picker opening inline under the row. */
 .pick { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; text-align: left; cursor: pointer; font-variant-numeric: tabular-nums; }
@@ -1525,6 +1597,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 
 .color-field__dot { width: 22px; height: 22px; border-radius: var(--r-xs); background: var(--c); box-shadow: 0 0 0 1px var(--border-strong) inset; }
 .color-field[aria-expanded="true"] { border-color: var(--accent-ink); }
+.color-field:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* ---------- 9. Responsive ---------- */
 @media (max-width: 1099px) {
@@ -1637,7 +1710,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nback, .wday, .pick-day, .pick-opt, .menu__item, .task__handle, .nhandle, .tag-chip, .conn-chip, .timer__time { position: relative; }
   .icon-btn::before, .btn::before, .tool::before, .chip::before, .link-btn::before, .views__arrow::before, .check-hit::before,
   .nchev::before, .seg button::before, .swatch::before, .agenda__toggle::before, .nback::before, .cal__day::before,
-  .pick-day::before, .task__handle::before, .nhandle::before, .switch input::before, .conn-chip::before {
+  .pick-day::before, .task__handle::before, .nhandle::before, .switch input::before, .conn-chip::before,
+  .cpk-dot::before, .cpk-add::before, .cpk-big::before, .cpk-chev::before {
     content: ""; position: absolute; inset: min(0px, calc((100% - var(--hit)) / 2));
   }
   .menu__item, .picker .menu__item, .pick-opt, .pick-day { min-height: var(--hit); height: auto; }
@@ -1961,6 +2035,8 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="3.75" y="4.75" width="16.5" height="14.5" rx="2.5"/><path d="M9.5 4.75v14.5"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
   <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4.5 9V5.5a1 1 0 0 1 1-1H9M15 4.5h3.5a1 1 0 0 1 1 1V9M19.5 15v3.5a1 1 0 0 1-1 1H15M9 19.5H5.5a1 1 0 0 1-1-1V15"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.25" y="8.25" width="11" height="11" rx="2.25"/><path d="M15.75 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v7.5A2.25 2.25 0 0 0 6 15.75h2.25"/></symbol>
+  <symbol id="i-eyedropper" viewBox="0 0 24 24"><path d="m13.5 6.5 4 4M15.5 4.5a2.12 2.12 0 0 1 3 0l1 1a2.12 2.12 0 0 1 0 3L17.5 10.5l-4-4Z"/><path d="M14.5 9.5 6.75 17.25 4.5 19.5l2.25-2.25M14.5 9.5l-8.75 8.75L4.5 19.5"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.75 12a7.25 7.25 0 1 0 2.1-5.1M4.75 4.75v3.5h3.5"/></symbol>
 </svg>
 
@@ -2338,6 +2414,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
   performanceMode: false, // solid surfaces and lighter effects, for slower computers (Settings → Appearance)
+  colourHistory: [], // the colour picker's last six colours applied, newest first (#rrggbb)
+  colourSaved: [], // colours saved in the colour picker: [{ hex, name }]
   cardSizes: null, // older Home card sizes ({ cols: [a, b, c], split }); read into homeLayout when that's missing
   notesSizes: null, // the Notes page's two columns, the same way ({ cols: [sidebar, editor] })
   homeLayout: null, // Home's arrangement and sizes: { cols: [{ cards, w, split }] } (see HomeLayout), or null for the default
@@ -2523,6 +2601,10 @@ function normaliseSettings(raw) {
     radius: clampNum(s.radius, 4, 28, d.radius),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
     performanceMode: bool(s.performanceMode, d.performanceMode),
+    colourHistory: (Array.isArray(s.colourHistory) ? s.colourHistory : []).filter((c, i, a) => isHex(c) && a.findIndex((x) => isHex(x) && x.toLowerCase() === c.toLowerCase()) === i).map((c) => c.toLowerCase()).slice(0, 6),
+    colourSaved: (Array.isArray(s.colourSaved) ? s.colourSaved : []).filter((c) => isObj(c) && isHex(c.hex))
+      .map((c) => ({ hex: c.hex.toLowerCase(), name: typeof c.name === 'string' && c.name.trim() ? c.name.slice(0, 40) : c.hex.toUpperCase() }))
+      .filter((c, i, a) => a.findIndex((x) => x.hex === c.hex) === i).slice(0, 24),
     navOrder: (() => {
       const v = Array.isArray(s.navOrder) ? s.navOrder.filter((x, i, a) => PAGE_IDS.includes(x) && a.indexOf(x) === i) : [];
       return [...v, ...PAGE_IDS.filter((x) => !v.includes(x))];
@@ -3117,13 +3199,17 @@ const Popover = (() => {
 })();
 
 /** Colour picker: palette swatches, optional "None", and a custom colour wheel. */
-/* ---------- Colour wheel ----------
-   The app's own colour picker (the system one, on an iPad, closed as soon as a drag changed the
-   colour). A hue ring round a square: across it how rich the colour is, down it how bright.
-   A hex field to type into, and the colour it started from beside the new one (tap it to go
-   back). `onInput(hex)` as it moves (optional), `onCommit(hex)` when a drag ends, a hex is
-   typed or the old colour is tapped. Arrow keys on the wheel: ←/→ turn the hue, ↑/↓ the
-   brightness (Shift: bigger steps). */
+/* ---------- Colour picker ----------
+   One floating glass picker for every custom colour: the accent, a Custom theme's colours, tasks',
+   events', notes' and folders' colours, connection tags and highlights. It opens in the top layer
+   (above dialogs), by the button that opened it, or as a sheet along the bottom on narrow screens.
+   Top: the colour (split: the original and the new one; tap the original to go back) with the
+   presets (the palette and your saved colours), a readability badge, the eyedropper where the
+   browser has one, Copy and Close. A saturation/brightness square and a hue slider; a HEX / RGB /
+   HSL field; the last six colours applied and "+" to save one. Changes preview live (once a frame)
+   on whatever is being coloured; ×, Enter or a tap outside keeps the colour, Esc puts the original
+   back. History and saved colours are settings (colourHistory, colourSaved), so they're kept and
+   go into backups. */
 function hsv2hex(h0, s, v) {
   const f = (n) => { const k = (n + h0 / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); };
   return `#${[f(5), f(3), f(1)].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
@@ -3135,108 +3221,313 @@ function hex2hsv(hex) {
   if (d) hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
   return [(hh * 60 + 360) % 360, mx ? d / mx : 0, mx];
 }
-function colourWheel({ value, onInput = null, onCommit }) {
-  const DISC = 200; const RING = 18; const SQ = Math.floor((DISC / 2 - RING - 6) * Math.SQRT2); const SQ0 = (DISC - SQ) / 2;
-  const start = isHex(value) ? value.toLowerCase() : '#4d9078';
-  let hsv = hex2hsv(start);
-  let ringImg = null;
-  const canvas = h('canvas', { 'aria-hidden': 'true' });
-  const hk = h('span', { class: 'cw-knob cw-knob--hue', 'aria-hidden': 'true' });
-  const sk = h('span', { class: 'cw-knob', 'aria-hidden': 'true' });
-  const disc = h('div', { class: 'cw-disc', tabindex: '0', role: 'group', 'aria-label': 'Colour wheel: arrow keys change the hue and brightness' }, canvas, hk, sk);
-  const was = h('button', { class: 'cw-was', type: 'button', title: 'Back to the colour before', 'aria-label': 'Back to the colour before', style: `--c:${start}` });
-  const now = h('span', { class: 'cw-now', 'aria-hidden': 'true' });
-  const hexIn = h('input', { class: 'input cw-hex', type: 'text', maxlength: 7, spellcheck: 'false', autocomplete: 'off', autocapitalize: 'off', 'aria-label': 'Hex colour' });
-  const el = h('div', { class: 'cw' }, disc, h('div', { class: 'cw-foot' }, h('span', { class: 'cw-compare' }, was, now), hexIn));
-  const hex = () => hsv2hex(hsv[0], hsv[1], hsv[2]);
-  function draw() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2); const m = DISC / 2;
-    if (canvas.width !== DISC * dpr) { canvas.width = canvas.height = DISC * dpr; ringImg = null; }
-    const c = canvas.getContext('2d');
-    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, DISC, DISC);
-    if (!ringImg) {   // the hue ring, in fine slices, drawn once
-      ringImg = document.createElement('canvas'); ringImg.width = ringImg.height = DISC * dpr;
-      const r = ringImg.getContext('2d'); r.setTransform(dpr, 0, 0, dpr, 0, 0);
-      for (let a = 0; a < 360; a += 0.5) {
-        r.beginPath(); r.moveTo(m, m); r.arc(m, m, m, (a - 90.4) * Math.PI / 180, (a - 89.4) * Math.PI / 180); r.closePath();
-        r.fillStyle = `hsl(${a},100%,50%)`; r.fill();
-      }
-      r.globalCompositeOperation = 'destination-out'; r.beginPath(); r.arc(m, m, m - RING, 0, Math.PI * 2); r.fill();
-    }
-    c.drawImage(ringImg, 0, 0, DISC, DISC);
-    c.save(); c.beginPath(); if (c.roundRect) c.roundRect(SQ0, SQ0, SQ, SQ, 8); else c.rect(SQ0, SQ0, SQ, SQ); c.clip();
-    c.fillStyle = `hsl(${hsv[0]},100%,50%)`; c.fillRect(SQ0, SQ0, SQ, SQ);
-    let g = c.createLinearGradient(SQ0, 0, SQ0 + SQ, 0); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(SQ0, SQ0, SQ, SQ);
-    g = c.createLinearGradient(0, SQ0, 0, SQ0 + SQ); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, '#000'); c.fillStyle = g; c.fillRect(SQ0, SQ0, SQ, SQ);
-    c.restore();
+const ColourPicker = (() => {
+  const HIST = 6; const SAVED = 24;
+  let cur = null;
+  /** "#abc", "abc", "#aabbcc" or "aabbcc" → "#aabbcc"; anything else → null. */
+  const norm = (str) => {
+    let m = String(str || '').trim().replace(/^#?/, '#').toLowerCase();
+    if (/^#[0-9a-f]{3}$/.test(m)) m = `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}`;
+    return /^#[0-9a-f]{6}$/.test(m) ? m : null;
+  };
+  const rgbOf = (x) => [1, 3, 5].map((i) => parseInt(x.slice(i, i + 2), 16));
+  const hexOf = (r, g, b) => `#${[r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('')}`;
+  function rgb2hsl([r, g, b]) {
+    r /= 255; g /= 255; b /= 255;
+    const mx = Math.max(r, g, b); const mn = Math.min(r, g, b); const l = (mx + mn) / 2; const d = mx - mn;
+    let hh = 0; let sat = 0;
+    if (d) { sat = d / (1 - Math.abs(2 * l - 1)); hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; hh = (hh * 60 + 360) % 360; }
+    return [hh, sat * 100, l * 100];
   }
-  function show(skipHex = false) {
-    const x = hex(); const a = (hsv[0] - 90) * Math.PI / 180; const mr = DISC / 2 - RING / 2;
-    draw();
-    hk.style.transform = `translate(${DISC / 2 + Math.cos(a) * mr}px, ${DISC / 2 + Math.sin(a) * mr}px)`;
-    hk.style.background = `hsl(${hsv[0]},100%,50%)`;
-    sk.style.transform = `translate(${SQ0 + hsv[1] * SQ}px, ${SQ0 + (1 - hsv[2]) * SQ}px)`;
-    sk.style.background = x;
-    now.style.setProperty('--c', x);
-    if (!skipHex) hexIn.value = x.toUpperCase();
-    hexIn.removeAttribute('aria-invalid');
+  function hsl2rgb(hh, sat, l) {
+    sat /= 100; l /= 100;
+    const k = (n) => (n + hh / 30) % 12; const a = sat * Math.min(l, 1 - l);
+    const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return [f(0) * 255, f(8) * 255, f(4) * 255];
   }
-  function setHsv(hh, s, v, { commit = false, skipHex = false } = {}) {
-    hsv = [((hh % 360) + 360) % 360, Math.max(0, Math.min(1, s)), Math.max(0, Math.min(1, v))];
-    show(skipHex);
-    if (onInput) onInput(hex());
-    if (commit) onCommit(hex());
-  }
-  function fromHex(x, opts) { const n = hex2hsv(x); setHsv(n[1] && n[2] ? n[0] : hsv[0], n[1], n[2], opts); }  // a grey keeps its hue
-  disc.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    const r0 = disc.getBoundingClientRect(); const k = r0.width / DISC;
-    const at = (ev) => ({ x: (ev.clientX - r0.left) / k, y: (ev.clientY - r0.top) / k });
-    const p = at(e); const d = Math.hypot(p.x - DISC / 2, p.y - DISC / 2);
-    const ring = d > DISC / 2 - RING - 4;
-    if (d > DISC / 2 + 4) return;
-    if (!ring && (p.x < SQ0 - 8 || p.y < SQ0 - 8 || p.x > SQ0 + SQ + 8 || p.y > SQ0 + SQ + 8)) return;
-    e.preventDefault();
-    try { disc.setPointerCapture(e.pointerId); } catch { /* ignore */ }
-    disc.classList.add('is-held');
-    const mv = (ev) => {
-      const q = at(ev);
-      if (ring) setHsv(Math.atan2(q.x - DISC / 2, -(q.y - DISC / 2)) * 180 / Math.PI, hsv[1], hsv[2]);
-      else setHsv(hsv[0], (q.x - SQ0) / SQ, 1 - (q.y - SQ0) / SQ);
-    };
-    const up = () => {
-      disc.removeEventListener('pointermove', mv); disc.removeEventListener('pointerup', up); disc.removeEventListener('pointercancel', up);
-      disc.classList.remove('is-held');
-      onCommit(hex());
-    };
-    mv(e);
-    disc.addEventListener('pointermove', mv); disc.addEventListener('pointerup', up); disc.addEventListener('pointercancel', up);
-  });
-  disc.addEventListener('keydown', (e) => {
-    const big = e.shiftKey ? 3 : 1;
-    const step = { ArrowLeft: [-5, 0], ArrowRight: [5, 0], ArrowUp: [0, 0.04], ArrowDown: [0, -0.04] }[e.key];
-    if (!step) return;
-    e.preventDefault();
-    setHsv(hsv[0] + step[0] * big, hsv[1], hsv[2] + step[1] * big, { commit: true });
-  });
-  hexIn.addEventListener('input', () => {
-    let m = hexIn.value.trim().replace(/^#?/, '#');
-    if (/^#[0-9a-f]{3}$/i.test(m)) m = `#${m[1]}${m[1]}${m[2]}${m[2]}${m[3]}${m[3]}`;
-    if (/^#[0-9a-f]{6}$/i.test(m)) fromHex(m.toLowerCase(), { commit: true, skipHex: true });
-    else hexIn.setAttribute('aria-invalid', 'true');
-  });
-  hexIn.addEventListener('change', () => show());
-  hexIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); show(); } });
-  was.addEventListener('click', () => fromHex(start, { commit: true }));
-  show();
-  return { el, set: (x) => { if (isHex(x)) { const n = hex2hsv(x.toLowerCase()); hsv = [n[1] && n[2] ? n[0] : hsv[0], n[1], n[2]]; show(); } }, value: hex };
-}
+  const lum = (x) => { const c = rgbOf(x).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const x = lum(a); const y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const history = () => Settings.get().colourHistory || [];
+  const saved = () => Settings.get().colourSaved || [];
+  const remember = (hex) => Settings.set({ colourHistory: [hex, ...history().filter((c) => c !== hex)].slice(0, HIST) });
 
-function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
-  // The custom swatch opens the colour wheel under the swatches (and closes it again).
-  const customWrap = h('button', { class: 'swatch swatch--custom', type: 'button', title: 'Custom colour', 'aria-label': 'Custom colour', 'aria-expanded': 'false' });
-  const wheelBox = h('div', { class: 'cpick__wheel', hidden: true });
-  let wheel = null;
+  function open({ anchor, value = null, label = 'Colour', onInput = () => {}, onDone = () => {} }) {
+    if (cur) cur.close('keep');
+    const orig = isHex(value) ? value.toLowerCase() : null;
+    let hsv = hex2hsv(orig || '#4d9078');
+    let fmt = 'hex'; let frame = 0; let pending = false; let touched = false;
+    const hex = () => hsv2hex(hsv[0], hsv[1], hsv[2]);
+    const r0 = anchor.getBoundingClientRect();
+    const host = anchor.closest('dialog[open]') || document.body;
+
+    // ---- the pieces
+    const origBtn = h('button', { class: 'cpk-orig', type: 'button', title: 'Back to the original colour' });
+    const nowBtn = h('button', { class: 'cpk-now', type: 'button', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-label': 'Presets' });
+    const chev = h('button', { class: 'cpk-chev', type: 'button', 'aria-label': 'Presets', 'aria-expanded': 'false' }, icon('down', 'icon--sm'));
+    const badge = h('span', { class: 'cpk-contrast', role: 'status' });
+    const eye = 'EyeDropper' in window ? h('button', { class: 'icon-btn icon-btn--sm cpk-eye', type: 'button', 'aria-label': 'Pick a colour from the screen', 'data-tip': 'Eyedropper' }, icon('eyedropper')) : null;
+    const copy = h('button', { class: 'icon-btn icon-btn--sm cpk-copy', type: 'button', 'aria-label': 'Copy the hex code', 'data-tip': 'Copy' }, icon('copy'));
+    const closeBtn = h('button', { class: 'icon-btn icon-btn--sm cpk-close', type: 'button', 'aria-label': 'Close (keeps the colour)', 'data-tip': 'Close', 'data-tip-align': 'end' }, icon('x'));
+    const svKnob = h('span', { class: 'cpk-knob', 'aria-hidden': 'true' });
+    const sv = h('div', { class: 'cpk-sv', tabindex: '0', role: 'slider', 'aria-label': 'Saturation and brightness: ← → saturation, ↑ ↓ brightness' }, svKnob);
+    const hueKnob = h('span', { class: 'cpk-knob', 'aria-hidden': 'true' });
+    const hue = h('div', { class: 'cpk-hue', tabindex: '0', role: 'slider', 'aria-label': 'Hue', 'aria-orientation': 'vertical', 'aria-valuemin': '0', 'aria-valuemax': '360' }, hueKnob);
+    const fmtBtn = h('button', { class: 'cpk-fmt', type: 'button' });
+    const inputs = h('div', { class: 'cpk-inputs' });
+    const field = h('div', { class: 'cpk-field' }, fmtBtn, inputs);
+    const hist = h('div', { class: 'cpk-history', role: 'group', 'aria-label': 'Recent colours' });
+    const add = h('button', { class: 'cpk-add', type: 'button', 'aria-label': 'Save this colour', 'data-tip': 'Save colour', 'data-tip-align': 'end' }, icon('plus', 'icon--xs'));
+    const presets = h('div', { class: 'cpk-presets', hidden: true });
+    const el = h('div', { class: 'cpk', role: 'dialog', 'aria-label': label },
+      h('div', { class: 'cpk-top' }, h('div', { class: 'cpk-swatch' }, origBtn, nowBtn), chev, badge, h('span', { class: 'cpk-spacer' }), eye, copy, closeBtn),
+      presets,
+      h('div', { class: 'cpk-main' }, sv, hue),
+      h('div', { class: 'cpk-bottom' }, field, hist, add));
+
+    // ---- showing the colour
+    function buildInputs() {
+      const f = (k, lbl, max) => h('input', { class: 'cpk-in', dataset: { k }, 'aria-label': lbl, autocomplete: 'off', spellcheck: 'false', autocapitalize: 'off',
+        ...(max ? { type: 'text', inputmode: 'numeric', maxlength: 3 } : { type: 'text', maxlength: 7 }) });
+      inputs.replaceChildren(...(fmt === 'hex' ? [f('hex', 'Hex code')] : fmt === 'rgb' ? [f('r', 'Red, 0 to 255', 255), f('g', 'Green, 0 to 255', 255), f('b', 'Blue, 0 to 255', 255)]
+        : [f('h', 'Hue, 0 to 360 degrees', 360), f('s', 'Saturation, 0 to 100 percent', 100), f('l', 'Lightness, 0 to 100 percent', 100)]));
+      fmtBtn.textContent = fmt.toUpperCase();
+      fmtBtn.setAttribute('aria-label', `Format: ${fmt.toUpperCase()}. Tap for ${{ hex: 'RGB', rgb: 'HSL', hsl: 'HEX' }[fmt]}`);
+      inputs.dataset.fmt = fmt;
+    }
+    function paint({ skipInputs = false } = {}) {
+      const c = hex();
+      el.style.setProperty('--now', c);
+      el.style.setProperty('--orig', orig || 'transparent');
+      el.classList.toggle('is-none', !orig);
+      sv.style.setProperty('--h', String(hsv[0]));
+      svKnob.style.left = `${hsv[1] * 100}%`; svKnob.style.top = `${(1 - hsv[2]) * 100}%`;
+      hueKnob.style.top = `${(1 - hsv[0] / 360) * 100}%`;
+      hueKnob.style.background = `hsl(${hsv[0]} 100% 50%)`;
+      sv.setAttribute('aria-valuetext', `Saturation ${Math.round(hsv[1] * 100)}%, brightness ${Math.round(hsv[2] * 100)}%`);
+      hue.setAttribute('aria-valuenow', String(Math.round(hsv[0])));
+      origBtn.setAttribute('aria-label', orig ? `Original colour ${orig.toUpperCase()}: tap to go back` : 'Original: no colour; tap to go back');
+      nowBtn.setAttribute('aria-label', `New colour ${c.toUpperCase()}: presets`);
+      const ink = readable(c); const rr = ratio(ink, c);
+      badge.textContent = rr >= 4.5 ? 'Aa ✓ AA' : 'Low contrast';
+      badge.style.setProperty('--ink', ink);
+      badge.classList.toggle('is-low', rr < 4.5);
+      badge.title = `Text on this colour: ${rr.toFixed(1)}:1`;
+      if (!skipInputs) {
+        const set = (k, v) => { const x = inputs.querySelector(`[data-k="${k}"]`); if (x) x.value = v; };
+        const [r, g, b] = rgbOf(c); const [hh, ss, ll] = rgb2hsl([r, g, b]);
+        set('hex', c.toUpperCase()); set('r', r); set('g', g); set('b', b); set('h', Math.round(hh)); set('s', Math.round(ss)); set('l', Math.round(ll));
+        field.classList.remove('is-invalid');
+      }
+      $$('[data-hex]', el).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.hex === c)));
+    }
+    function paintHistory() {
+      hist.replaceChildren(...history().map((c) => h('button', { class: 'cpk-dot', type: 'button', style: `--c:${c}`, dataset: { hex: c }, 'aria-label': `Recent colour ${c.toUpperCase()}`, 'aria-pressed': String(c === hex()) })));
+    }
+    /** The thing being coloured follows, once a frame. */
+    function send() {
+      touched = true;
+      if (pending) return;
+      pending = true;
+      frame = requestAnimationFrame(() => { pending = false; onInput(hex()); });
+    }
+    function setHex(c, opts) { const n = hex2hsv(c); hsv = [n[1] && n[2] ? n[0] : hsv[0], n[1], n[2]]; paint(opts); }   // a grey keeps its hue
+
+    // ---- dragging (the handles follow the pointer exactly; pointer capture keeps it past the edge)
+    function drag(area, apply) {
+      area.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault();
+        area.focus({ preventScroll: true });
+        try { area.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+        area.classList.add('is-held');
+        const at = (ev) => {
+          const r = area.getBoundingClientRect();
+          apply(Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height)));
+          paint(); send();
+        };
+        const up = () => {
+          area.classList.remove('is-held');
+          area.removeEventListener('pointermove', at); area.removeEventListener('pointerup', up); area.removeEventListener('pointercancel', up);
+        };
+        at(e);
+        area.addEventListener('pointermove', at); area.addEventListener('pointerup', up); area.addEventListener('pointercancel', up);
+      });
+    }
+    drag(sv, (x, y) => { hsv[1] = x; hsv[2] = 1 - y; });
+    drag(hue, (x, y) => { hsv[0] = (1 - y) * 360; });
+    // Keyboard: arrows move the handles (Shift: bigger steps).
+    sv.addEventListener('keydown', (e) => {
+      const d = e.shiftKey ? 0.1 : 0.01;
+      const step = { ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, d], ArrowDown: [0, -d] }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      hsv[1] = Math.min(1, Math.max(0, hsv[1] + step[0])); hsv[2] = Math.min(1, Math.max(0, hsv[2] + step[1]));
+      paint(); send();
+    });
+    hue.addEventListener('keydown', (e) => {
+      const d = e.shiftKey ? 10 : 1;
+      const step = { ArrowUp: d, ArrowRight: d, ArrowDown: -d, ArrowLeft: -d }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      hsv[0] = Math.min(360, Math.max(0, hsv[0] + step));
+      paint(); send();
+    });
+
+    // ---- typing a colour
+    inputs.addEventListener('input', (e) => {
+      const vals = Object.fromEntries($$('.cpk-in', inputs).map((x) => [x.dataset.k, x.value.trim()]));
+      let c = null;
+      if (fmt === 'hex') c = norm(vals.hex);
+      else {
+        const nums = Object.values(vals).map((v) => (/^\d{1,3}$/.test(v) ? Number(v) : NaN));
+        const max = fmt === 'rgb' ? [255, 255, 255] : [360, 100, 100];
+        if (nums.every((n, i) => n >= 0 && n <= max[i])) c = fmt === 'rgb' ? hexOf(...nums) : hexOf(...hsl2rgb(...nums));
+      }
+      field.classList.toggle('is-invalid', !c);
+      e.target.setAttribute('aria-invalid', String(!c));
+      if (c) { setHex(c, { skipInputs: true }); send(); }
+    });
+    inputs.addEventListener('change', () => paint());   // leaving a box tidies what was typed
+    fmtBtn.addEventListener('click', () => { fmt = { hex: 'rgb', rgb: 'hsl', hsl: 'hex' }[fmt]; buildInputs(); paint(); });
+
+    // ---- presets: the palette and your saved colours (long-press or right-click one to rename or delete it)
+    let editing = -1;
+    function paintPresets() {
+      const list = saved();
+      const big = (c, name, i = null) => h('button', { class: 'cpk-big', type: 'button', style: `--c:${c}`, dataset: { hex: c, ...(i != null ? { saved: String(i) } : {}) }, 'aria-label': name, title: name, 'aria-pressed': String(c === hex()) });
+      const kids = [h('div', { class: 'cpk-h', text: 'Palette' }), h('div', { class: 'cpk-grid' }, PALETTE.map((x) => big(x.hex, x.name))),
+        h('div', { class: 'cpk-h', text: 'Saved' }),
+        list.length ? h('div', { class: 'cpk-grid' }, list.map((x, i) => big(x.hex, x.name, i))) : h('p', { class: 'cpk-empty', text: 'Tap + to save the colour you’re on.' })];
+      if (editing >= 0 && list[editing]) {
+        const nameIn = h('input', { class: 'input input--inline cpk-name', type: 'text', value: list[editing].name, maxlength: 40, 'aria-label': 'Name of this saved colour' });
+        nameIn.addEventListener('input', () => { const l2 = saved().slice(); if (l2[editing]) { l2[editing] = { ...l2[editing], name: nameIn.value.slice(0, 40) }; Settings.set({ colourSaved: l2 }); } });
+        nameIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); editing = -1; paintPresets(); } });
+        kids.push(h('div', { class: 'cpk-edit' }, h('span', { class: 'cpk-edit__dot', style: `--c:${list[editing].hex}` }), nameIn,
+          h('button', { class: 'btn btn--danger btn--sm', type: 'button', text: 'Delete', onclick: () => { Settings.set({ colourSaved: saved().filter((_, k) => k !== editing) }); editing = -1; paintPresets(); } }),
+          h('button', { class: 'btn btn--sm', type: 'button', text: 'Done', onclick: () => { editing = -1; paintPresets(); } })));
+      }
+      presets.replaceChildren(...kids);
+      if (editing >= 0) { const n = $('.cpk-name', presets); if (n) n.focus(); }
+    }
+    function togglePresets(show = presets.hidden) {
+      presets.hidden = !show;
+      [nowBtn, chev].forEach((b) => b.setAttribute('aria-expanded', String(show)));
+      if (show) { editing = -1; paintPresets(); }
+      place();
+    }
+    nowBtn.addEventListener('click', () => togglePresets());
+    chev.addEventListener('click', () => togglePresets());
+    let pressT = 0; let pressed = false;
+    presets.addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('[data-saved]'); if (!b) return;
+      pressed = false; clearTimeout(pressT);
+      pressT = setTimeout(() => { pressed = true; editing = Number(b.dataset.saved); paintPresets(); }, 500);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => presets.addEventListener(t, () => clearTimeout(pressT)));
+    presets.addEventListener('contextmenu', (e) => {
+      const b = e.target.closest('[data-saved]'); if (!b) return;
+      e.preventDefault(); editing = Number(b.dataset.saved); paintPresets();
+    });
+    presets.addEventListener('click', (e) => {
+      const b = e.target.closest('.cpk-big'); if (!b) return;
+      if (pressed) { pressed = false; return; }   // that press was a long-press
+      setHex(b.dataset.hex); send(); togglePresets(false);
+    });
+
+    // ---- history, saving, copy, eyedropper, revert
+    hist.addEventListener('click', (e) => { const b = e.target.closest('.cpk-dot'); if (b) { setHex(b.dataset.hex); send(); } });
+    add.addEventListener('click', () => {
+      const c = hex();
+      if (!saved().some((x) => x.hex === c)) Settings.set({ colourSaved: [...saved(), { hex: c, name: c.toUpperCase() }].slice(-SAVED) });
+      add.classList.remove('is-pop'); void add.offsetWidth; add.classList.add('is-pop');
+      Toast.show(`Saved ${c.toUpperCase()}`);
+      if (!presets.hidden) paintPresets();
+    });
+    copy.addEventListener('click', () => {
+      const c = hex().toUpperCase();
+      const done = () => Toast.show(`Copied ${c}`);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(done, () => Toast.show('Couldn’t copy', { type: 'error' }));
+      else Toast.show('Couldn’t copy', { type: 'error' });
+    });
+    if (eye) eye.addEventListener('click', () => { new window.EyeDropper().open().then((r) => { const c = norm(r.sRGBHex); if (c) { setHex(c); send(); } }).catch(() => {}); });
+    origBtn.addEventListener('click', () => {
+      if (orig) setHex(orig); else paint();
+      cancelAnimationFrame(frame); pending = false; onInput(orig); touched = false;
+    });
+    closeBtn.addEventListener('click', () => close('keep'));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); close('keep'); }   // a button keeps its own Enter
+    });
+
+    // ---- placing it: by its button, kept on the screen; a sheet along the bottom on narrow screens
+    function place() {
+      const narrow = innerWidth <= 560;
+      el.classList.toggle('is-sheet', narrow);
+      if (narrow) { el.style.left = ''; el.style.top = ''; return; }
+      const w = el.offsetWidth; const hh = el.offsetHeight; const m = 8;
+      const left = Math.min(innerWidth - w - m, Math.max(m, r0.left));
+      let top = r0.bottom + m;
+      if (top + hh > innerHeight - m) top = r0.top - hh - m;
+      if (top < m) top = Math.max(m, innerHeight - hh - m);
+      el.style.left = `${Math.round(left)}px`; el.style.top = `${Math.round(top)}px`;
+    }
+    const onDown = (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) close('keep'); };
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault(); e.stopPropagation();
+      if (editing >= 0) { editing = -1; paintPresets(); return; }
+      if (!presets.hidden) { togglePresets(false); return; }
+      close('revert');
+    };
+    const onEsc = (e) => e.preventDefault();   // a dialog's Esc while the picker is open is the picker's
+    const onResize = () => place();
+
+    // ---- open
+    buildInputs(); paint(); paintHistory();
+    if (typeof el.showPopover === 'function') el.setAttribute('popover', 'manual');
+    host.append(el);
+    try { if (el.showPopover) el.showPopover(); } catch { /* not supported: it's fixed in the page */ }
+    place();
+    anchor.setAttribute('aria-expanded', 'true');
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    window.addEventListener('resize', onResize);
+    if (host !== document.body) host.addEventListener('dialog-escape', onEsc);
+    // Keyboard users land on the square (arrows move it); a tap leaves the focus on the panel itself.
+    el.tabIndex = -1;
+    requestAnimationFrame(() => (document.documentElement.dataset.input === 'key' ? sv : el).focus({ preventScroll: true }));
+
+    function close(mode = 'keep') {
+      if (!cur || cur.el !== el) return;
+      cur = null;
+      cancelAnimationFrame(frame); pending = false;
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('resize', onResize);
+      if (host !== document.body) host.removeEventListener('dialog-escape', onEsc);
+      const c = hex();
+      if (mode === 'revert') { if (touched) onInput(orig); }
+      else if (touched && c !== orig) { onDone(c); remember(c); }
+      anchor.setAttribute('aria-expanded', 'false');
+      const hadFocus = el.contains(document.activeElement);
+      el.classList.add('is-closing');
+      const finish = () => { try { if (el.hidePopover && el.matches(':popover-open')) el.hidePopover(); } catch { /* ignore */ } el.remove(); };
+      if (prefersReducedMotion()) finish(); else setTimeout(finish, 120);
+      if (hadFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
+    }
+    cur = { el, anchor, close };
+    return { close };
+  }
+  return {
+    open,
+    close: (mode) => { if (cur) cur.close(mode); },
+    isOpenFor: (a) => !!cur && cur.anchor === a,
+  };
+})();
+/** Colour swatches: the palette, optional "None", and the custom swatch, which opens the colour picker.
+    onPick(colour, final): `final` is false while the picker previews (only when `live`), true when kept. */
+function swatchPicker({ value, onPick, allowNone = false, label = 'Colour', live = true }) {
+  const customWrap = h('button', { class: 'swatch swatch--custom', type: 'button', title: 'Custom colour', 'aria-label': 'Custom colour', 'aria-haspopup': 'dialog', 'aria-expanded': 'false' });
   const wrap = h('div', { class: 'swatches', role: 'group', 'aria-label': label },
     allowNone ? h('button', { class: 'swatch swatch--none', type: 'button', title: 'None', 'aria-label': 'No colour', dataset: { color: '' } }, icon('ban')) : null,
     PALETTE.map((p) => h('button', {
@@ -3257,24 +3548,20 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour' }) {
     if (!s) return;
     const c = s.dataset.color || null;
     current = c; mark(c);
-    if (wheel && c) wheel.set(c);
-    onPick(c);
+    onPick(c, true);
   });
   customWrap.addEventListener('click', () => {
-    const open = wheelBox.hidden;
-    wheelBox.hidden = !open;
-    customWrap.setAttribute('aria-expanded', String(open));
-    if (open && !wheel) {
-      // While dragging only the wheel and the swatch change; the colour is kept when the drag ends.
-      wheel = colourWheel({ value: current || '#4d9078', onInput: (c) => mark(c), onCommit: (c) => { if (c !== current) { current = c; mark(c); onPick(c); } } });
-      wheelBox.append(wheel.el);
-    }
-    // In a menu: keep it on the screen now that it's taller.
-    const pop = wrap.closest('.popover');
-    if (pop) { const r = pop.getBoundingClientRect(); if (r.bottom > innerHeight - 8) pop.style.top = `${Math.max(8, Math.round(innerHeight - 8 - r.height))}px`; }
+    if (ColourPicker.isOpenFor(customWrap)) { ColourPicker.close('keep'); return; }
+    const inMenu = customWrap.closest('.popover');
+    ColourPicker.open({
+      anchor: customWrap, value: current, label,
+      onInput: (c) => { mark(c); if (live) onPick(c, false); },
+      onDone: (c) => { current = c; mark(c); onPick(c, true); },
+    });
+    if (inMenu) Popover.close(false);   // the picker takes the menu's place
   });
   mark(value);
-  return h('div', { class: 'cpick' }, wrap, wheelBox);
+  return wrap;
 }
 
 /* ---------- Theme ----------
@@ -4668,19 +4955,15 @@ const SettingsPanel = (() => {
   function colorField(value, label, key, onInput) {
     const dot = h('span', { class: 'color-field__dot', style: `--c:${value}` });
     const text = h('span', { text: value.toUpperCase() });
-    const btn = h('button', { class: 'color-field', type: 'button', 'aria-label': `${label}: ${value.toUpperCase()}`, 'aria-expanded': 'false', dataset: { key } }, dot, text);
-    const box = h('div', { class: 'cpick__wheel', hidden: true });
-    let wheel = null; let last = value; let frame = 0;
+    const btn = h('button', { class: 'color-field', type: 'button', 'aria-label': `${label}: ${value.toUpperCase()}`, 'aria-haspopup': 'dialog', 'aria-expanded': 'false', dataset: { key } }, dot, text);
+    let last = value;
     const show = (v) => { dot.style.setProperty('--c', v); text.textContent = v.toUpperCase(); btn.setAttribute('aria-label', `${label}: ${v.toUpperCase()}`); };
-    // Applied as it moves (once a frame), so the theme follows the finger.
-    const apply = (v) => { show(v); if (v === last) return; last = v; cancelAnimationFrame(frame); frame = requestAnimationFrame(() => onInput(v)); };
+    const apply = (v) => { if (!v) return; show(v); if (v !== last) { last = v; onInput(v); } };
     btn.addEventListener('click', () => {
-      const open = box.hidden;
-      box.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
-      if (open && !wheel) { wheel = colourWheel({ value: last, onInput: apply, onCommit: apply }); box.append(wheel.el); }
+      if (ColourPicker.isOpenFor(btn)) { ColourPicker.close('keep'); return; }
+      ColourPicker.open({ anchor: btn, value: last, label, onInput: apply, onDone: apply });   // the theme follows the picker live
     });
-    return h('div', { class: 'cpick cpick--field' }, btn, box);
+    return btn;
   }
   /** Nav icon chips: drag (mouse, pen or touch) or ←/→ to reorder; the top bar follows live. */
   const NAV_ICONS = { home: 'home', notes: 'notes', connections: 'connections', pins: 'pin' };
@@ -4812,7 +5095,7 @@ const SettingsPanel = (() => {
             { keywords: 'graphite midnight forest mocha light dark custom colours' }),
           s.theme === 'custom' ? CUSTOM_FIELDS.map(([k, label]) => row(label, colorField(s.customTheme[k], label, `custom:${k}`, (v) => set({ customTheme: { ...Settings.get().customTheme, [k]: v } })), { keywords: 'custom theme colour' })) : null,
           s.theme === 'custom' ? row('Accent', colorField(s.accent, 'Accent', 'custom:accent', (v) => set({ accent: v })), { keywords: 'custom theme colour' }) : null,
-          row('Accent colour', swatchPicker({ value: s.accent, label: 'Accent colour', onPick: (c) => { set({ accent: c }); if (s.theme === 'custom') refresh(); } }), { keywords: 'slate mist wine sage mustard clay highlight' }),
+          row('Accent colour', swatchPicker({ value: s.accent, label: 'Accent colour', onPick: (c, final) => { set({ accent: c }); if (final && s.theme === 'custom') refresh(); } }), { keywords: 'slate mist wine sage mustard clay highlight' }),
           stackRow('Font', tiles('font', Object.keys(FONTS).map((id) => ({
             id, label: id === 'system' ? 'SF Pro / System' : id === 'mono' ? 'JetBrains Mono' : id === 'serif' ? 'Playfair Display' : 'Inter',
             preview: h('span', { class: 'tile__font', style: `font-family:${FONTS[id].head || FONTS[id].body}`, text: 'Aa' }),
@@ -7574,7 +7857,7 @@ const NoteTools = (() => {
     Popover.open({
       anchor, key: 'tool:highlight', label: 'Highlight',
       content: h('div', { class: 'menu__group' }, h('div', { class: 'panel__title menu__label', text: 'Highlight' }),
-        swatchPicker({ value: null, allowNone: true, label: 'Highlight colour', onPick: (c) => { Popover.close(false); highlight(c); } })),
+        swatchPicker({ value: null, allowNone: true, label: 'Highlight colour', live: false, onPick: (c) => { Popover.close(false); highlight(c); } })),
     });
   }
   /** A small search popover: an input, a list of .menu__item rows and an optional row pinned below it. */

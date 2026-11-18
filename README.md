@@ -108,7 +108,8 @@ Application state is `{ items, settings, ui, timer }`:
     `mono` · `serif`), `transparency` (0–80 %), `blur` (0–40 px), `radius` (4–28 px),
     `density` (`comfortable` · `compact`), `performanceMode` (`true`: solid surfaces and
     lighter effects, for slower computers like a Raspberry Pi; older backups don't have it
-    and load with it off), `navOrder` (order of the top-bar section icons),
+    and load with it off), `colourHistory` (the colour picker's last six colours) and `colourSaved`
+    (`[{ hex, name }]`; older backups load with both empty), `navOrder` (order of the top-bar section icons),
     `notesSizes` (the Notes page's two columns, as fractions)
   - Windows: `homeLayout` (`null` for the default, or `{ cols: [{ cards, w, split }] }`: two or
     three columns of `time` · `conn` · `tasks` · `notes`, at most two to a column; `w` is a
@@ -138,11 +139,17 @@ same function whenever an appearance setting changes. Text on coloured elements
 (accent buttons, the selected day, swatches) picks dark or light ink automatically
 for contrast.
 
-Colours you pick (a task's, note's, folder's or tag's colour, highlights, the accent, a
-Custom theme's colours) come from the palette or from the app's own colour wheel, which the
-rainbow swatch (or a colour field) opens in place: a hue ring round a square for richness and
-brightness, a hex field, and the colour it started from to go back to. A drag previews and the
-colour is kept when it ends (a Custom theme's colours follow the drag live).
+Colours you pick (a task's, event's, note's, folder's or tag's colour, highlights, the accent, a
+Custom theme's colours) come from the palette or from the app's own colour picker, which the
+rainbow swatch (or a colour field) opens: a glass panel by its button (a sheet along the bottom
+on narrow screens) with the colour split into the original and the new one (tap the original to
+go back; tap the new one, or ⌄, for the palette and your saved colours: long-press or right-click
+one to rename or delete it), a readability badge, the eyedropper (where the browser has one),
+Copy and Close; a saturation/brightness square and a hue slider; a HEX / RGB / HSL field (tap
+its label to switch); the last six colours applied, and + to save the colour. What's being
+coloured follows live; ×, Enter or a tap outside keeps it, Esc puts the original back. Arrow
+keys move the handles (Shift for bigger steps). The history and saved colours are settings
+(`colourHistory`, `colourSaved`), so they're kept and go into backups.
 
 Default palette: Slate `#223843`, Mist `#EFF1F3`, Wine `#750D37`, Sage `#4D9078`,
 Mustard `#D7C62C`, Clay `#D77A61`.
