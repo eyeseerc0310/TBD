@@ -1575,6 +1575,13 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
 .theme-prev::after { content: ""; position: absolute; right: 6px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--pv-accent); }
 .theme-prev--custom { background: conic-gradient(from 200deg, #223843, #750d37, #d77a61, #d7c62c, #4d9078, #223843); }
 .theme-prev--custom::before, .theme-prev--custom::after { display: none; }
+/* Style tiles: a little card in each style, with the theme's colours. */
+.tiles--styles { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }   /* the same columns as the Theme tiles below */
+.style-prev { position: relative; display: block; width: 100%; height: 58px; overflow: hidden; border-radius: max(var(--r-xs), calc(var(--r-md) - 6px)); background: var(--pv-bg); box-shadow: inset 0 0 0 1px var(--border); }
+.style-prev__card { position: absolute; inset: 9px 10px -10px; display: flex; flex-direction: column; gap: 5px; padding: 7px 9px; border-radius: var(--pv-r); background: var(--pv-surface); box-shadow: var(--pv-shadow), inset 0 0 0 var(--pv-bw, 1px) var(--pv-border); }
+.style-prev__aa { font: 600 16px/1 var(--pv-font); color: var(--pv-text); text-align: left; }
+.style-prev__line { width: 70%; height: 3px; border-radius: 2px; background: var(--pv-text3); }
+.style-prev__dot { position: absolute; right: 8px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--pv-accent); }
 
 .range-wrap { display: flex; align-items: center; gap: var(--s3); flex: none; }
 .range { -webkit-appearance: none; appearance: none; width: 168px; height: 28px; margin: 0; background: transparent; cursor: pointer; }
@@ -1748,6 +1755,123 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   .nsearch__input:placeholder-shown { padding-right: 40px; }
 }
 
+/* ---------- Styles (Settings → Appearance → Style) ----------
+   Glass is everything above. The other styles change the app's material: the theme engine reshapes
+   their colours, surfaces, borders, shadows, corners and type (data-style on <html>); these are the
+   details only the stylesheet can do. Every feature works the same in each. */
+:root:not([data-style="glass"]) .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+
+/* Paper: a warm sheet. Cards are sections on it, rows are ruled lines, headings are set in a serif,
+   labels in small capitals, fields are underlines and a note is ruled paper. */
+:root[data-style="paper"] { --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.24 0 0 0 0 0.17 0 0 0 0 0.09 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+:root[data-style="paper"][data-scheme="dark"] { --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.88 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+:root[data-style="paper"] .ambient { background: var(--grain), linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+:root[data-style="paper"] .task, :root[data-style="paper"] .mini-row, :root[data-style="paper"] .nfold {
+  background: transparent; border: 0; border-bottom: 1px solid var(--border-strong); border-radius: 0; box-shadow: none;
+}
+:root[data-style="paper"] .task:hover, :root[data-style="paper"] .mini-row:hover, :root[data-style="paper"] .nfold:hover { background: var(--hover); }
+:root[data-style="paper"] .task.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--task-c); }
+:root[data-style="paper"] .nfold.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--task-c); }
+:root[data-style="paper"] .mini-row.has-color { background: transparent; box-shadow: inset 3px 0 0 var(--row-c); }
+:root[data-style="paper"] .task.is-done { background: transparent; border-color: var(--border); }
+:root[data-style="paper"] .panel__section { border-top: 3px double var(--border-strong); }
+:root[data-style="paper"] .subhead, :root[data-style="paper"] .acc__title, :root[data-style="paper"] .card__title,
+:root[data-style="paper"] .agenda__toggle, :root[data-style="paper"] .nfold__label { font-family: var(--font-head); letter-spacing: 0; }
+:root[data-style="paper"] .eyebrow, :root[data-style="paper"] .panel__title, :root[data-style="paper"] .agenda-group,
+:root[data-style="paper"] .nlist__title, :root[data-style="paper"] .cpk-h, :root[data-style="paper"] .clock__zone {
+  text-transform: lowercase; font-variant: small-caps; letter-spacing: 0.06em; font-size: var(--fs-footnote);
+}
+:root[data-style="paper"] .input, :root[data-style="paper"] .topsearch__field {
+  background: transparent; border: 0; border-bottom: 1px solid var(--line-ctl); border-radius: 0;
+}
+:root[data-style="paper"] .input:focus-visible { outline: none; border-bottom: 2px solid var(--focus); }
+:root[data-style="paper"] .topsearch__field:focus-within { outline: none; border-bottom: 2px solid var(--focus); }
+:root[data-style="paper"] .notes__area.notes__editor {
+  background: transparent repeating-linear-gradient(180deg, transparent 0 calc(1.6em - 1px), var(--border-strong) calc(1.6em - 1px) 1.6em);
+  background-attachment: local; background-origin: content-box; border: 0; border-radius: 0; box-shadow: inset 2px 0 0 color-mix(in srgb, var(--danger) 45%, transparent);
+}
+:root[data-style="paper"] .check { border-radius: var(--r-xs); }
+:root[data-style="paper"] .btn:not(.btn--primary):not(.btn--danger):not(.btn--ghost) { background: transparent; box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+/* Terminal: phosphor on black (or dark ink on a pale LCD in Light). Monospace, outlines instead of
+   shadows, dashed rows, square checkboxes, inverse video for what's chosen, a blinking cursor, and
+   faint scanlines. */
+:root[data-style="terminal"] .ambient { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.22) 2px 3px), radial-gradient(120% 90% at 50% 40%, var(--bg) 60%, var(--bg-deep)); }
+:root[data-style="terminal"][data-scheme="light"] .ambient { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.04) 2px 3px), var(--bg); }
+:root[data-style="terminal"] .glass, :root[data-style="terminal"] .topbar::before { border-color: var(--border-strong); }
+:root[data-style="terminal"] .task, :root[data-style="terminal"] .mini-row, :root[data-style="terminal"] .nfold { background: transparent; border: 1px dashed var(--border-strong); }
+:root[data-style="terminal"] .task:hover, :root[data-style="terminal"] .mini-row:hover, :root[data-style="terminal"] .nfold:hover { background: var(--hover); border-style: solid; }
+:root[data-style="terminal"] .task.has-color, :root[data-style="terminal"] .nfold.has-color { background: transparent; border-color: var(--task-c); }
+:root[data-style="terminal"] .mini-row.has-color { background: transparent; border-color: var(--row-c); }
+:root[data-style="terminal"] .subhead, :root[data-style="terminal"] .acc__title, :root[data-style="terminal"] .card__title,
+:root[data-style="terminal"] .page-head__title, :root[data-style="terminal"] .dialog__title, :root[data-style="terminal"] .cal__month { text-transform: uppercase; }
+:root[data-style="terminal"] .page-head__title::before { content: "> "; color: var(--accent-ink); }
+:root[data-style="terminal"] .check { border-radius: 0; border-color: var(--text-2); }
+:root[data-style="terminal"] .check:checked { background: transparent; border-color: var(--accent-ink); }
+:root[data-style="terminal"] .check::after { border-color: var(--accent-ink); }
+:root[data-style="terminal"] .btn--primary { background: transparent; color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent-ink); }
+:root[data-style="terminal"] .btn--primary:hover { background: var(--accent-soft); }
+:root[data-style="terminal"] .nav__btn[aria-current="page"], :root[data-style="terminal"] .seg button[aria-pressed="true"],
+:root[data-style="terminal"] .cal__day[aria-pressed="true"], :root[data-style="terminal"] .wday[aria-pressed="true"],
+:root[data-style="terminal"] .tile[aria-pressed="true"], :root[data-style="terminal"] .chip[aria-pressed="true"],
+:root[data-style="terminal"] .menu__item:hover, :root[data-style="terminal"] .menu__item:focus-visible, :root[data-style="terminal"] .nnote.is-selected {
+  background: var(--text); color: var(--bg); box-shadow: none;
+}
+:root[data-style="terminal"] .nav__btn[aria-current="page"] .icon, :root[data-style="terminal"] .nav__btn[aria-current="page"] .nav__label, :root[data-style="terminal"] .menu__item:hover .icon, :root[data-style="terminal"] .menu__item:focus-visible .icon,
+:root[data-style="terminal"] .nnote.is-selected .nnote__title, :root[data-style="terminal"] .nnote.is-selected .nnote__time, :root[data-style="terminal"] .tile[aria-pressed="true"] .tile__font,
+:root[data-style="terminal"] .wday[aria-pressed="true"] .ring__label, :root[data-style="terminal"] .wday[aria-pressed="true"] .wday__num { color: var(--bg); }
+:root[data-style="terminal"] .brand > span::after { content: "_"; animation: term-blink 1.1s steps(1) infinite; }
+@keyframes term-blink { 50% { opacity: 0; } }
+:root[data-style="terminal"] .clock__digital, :root[data-style="terminal"] .clock__auto-inner, :root[data-style="terminal"] .timer.is-running .timer__time {
+  text-shadow: 0 0 14px color-mix(in srgb, var(--text) 40%, transparent);
+}
+
+/* Soft: pastel and round. Cards and rows are raised out of the page, fields and finished tasks
+   pressed into it; presses sink in, and everything moves with a bouncier spring. */
+:root[data-style="soft"] { --press: 0.95; --press-sm: 0.88; }
+@supports (transition-timing-function: linear(0, 1)) {
+  :root[data-style="soft"] { --ease-spring: linear(0, 0.22 8%, 0.6 16%, 0.9 24%, 1.06 32%, 1.1 38%, 1.08 44%, 1.02 54%, 0.99 64%, 1 76%, 1); }
+}
+:root[data-style="soft"] .glass, :root[data-style="soft"] .topbar::before { border-color: transparent; }
+:root[data-style="soft"] .task, :root[data-style="soft"] .mini-row, :root[data-style="soft"] .nfold { background: var(--bg); border-color: transparent; box-shadow: var(--shadow-ctl); }
+:root[data-style="soft"] .task:hover, :root[data-style="soft"] .mini-row:hover, :root[data-style="soft"] .nfold:hover { background: var(--bg); }
+:root[data-style="soft"] .task.has-color { background: color-mix(in srgb, var(--task-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .nfold.has-color { background: color-mix(in srgb, var(--task-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .mini-row.has-color { background: color-mix(in srgb, var(--row-c) 14%, var(--bg)); border-color: transparent; }
+:root[data-style="soft"] .task.is-done { background: var(--bg); border-color: transparent; box-shadow: var(--soft-in); }
+:root[data-style="soft"] .input, :root[data-style="soft"] .topsearch__field, :root[data-style="soft"] .notes__area.notes__editor,
+:root[data-style="soft"] .cpk-field, :root[data-style="soft"] .seg {
+  background: var(--bg); border-color: transparent; box-shadow: var(--soft-in);
+}
+/* Checkboxes and switches are pressed in too, but keep their edge so they stay easy to see. */
+:root[data-style="soft"] .check:not(:checked), :root[data-style="soft"] .switch input:not(:checked) { background: var(--bg); box-shadow: var(--soft-in); }
+:root[data-style="soft"] .btn:not(.btn--ghost), :root[data-style="soft"] .tasks-empty__add, :root[data-style="soft"] .swatch,
+:root[data-style="soft"] .seg button[aria-pressed="true"], :root[data-style="soft"] .wday[aria-pressed="true"], :root[data-style="soft"] .tile { box-shadow: var(--shadow-ctl); border-color: transparent; }
+:root[data-style="soft"] .btn:not(.btn--primary):not(.btn--danger):not(.btn--ghost) { background: var(--bg); }
+:root[data-style="soft"] .btn:active, :root[data-style="soft"] .icon-btn:active, :root[data-style="soft"] .tool:active, :root[data-style="soft"] .tile:active { box-shadow: var(--soft-in); }
+:root[data-style="soft"] .tile[aria-pressed="true"] { box-shadow: var(--soft-in), inset 0 0 0 1px var(--accent-ink); }
+:root[data-style="soft"] .cal__day[aria-pressed="true"] { box-shadow: var(--shadow-ctl); }
+
+/* Ink: black and white, with only your accent for colour. Hard lines, bold type, no glass or
+   gradients; what's chosen is inverted, and things that float cast a hard shadow. */
+:root[data-style="ink"] { --fw-regular: 500; --fw-medium: 600; --fw-semibold: 700; }
+:root[data-style="ink"] .glass, :root[data-style="ink"] .topbar::before, :root[data-style="ink"] .popover, :root[data-style="ink"] .dialog,
+:root[data-style="ink"] .toast, :root[data-style="ink"] .cpk, :root[data-style="ink"] .topsearch__results { border: 1.5px solid var(--text); }
+:root[data-style="ink"] .task, :root[data-style="ink"] .mini-row, :root[data-style="ink"] .nfold { background: transparent; border-color: var(--border-strong); }
+:root[data-style="ink"] .task:hover, :root[data-style="ink"] .mini-row:hover, :root[data-style="ink"] .nfold:hover { border-color: var(--text); background: transparent; }
+:root[data-style="ink"] .task.has-color, :root[data-style="ink"] .nfold.has-color { background: transparent; border-color: var(--border-strong); box-shadow: inset 4px 0 0 var(--task-c); }
+:root[data-style="ink"] .mini-row.has-color { background: transparent; border-color: var(--border-strong); box-shadow: inset 4px 0 0 var(--row-c); }
+:root[data-style="ink"] .nav__btn[aria-current="page"], :root[data-style="ink"] .seg button[aria-pressed="true"],
+:root[data-style="ink"] .cal__day[aria-pressed="true"], :root[data-style="ink"] .wday[aria-pressed="true"],
+:root[data-style="ink"] .tile[aria-pressed="true"], :root[data-style="ink"] .chip[aria-pressed="true"],
+:root[data-style="ink"] .menu__item:hover, :root[data-style="ink"] .menu__item:focus-visible, :root[data-style="ink"] .nnote.is-selected {
+  background: var(--text); color: var(--bg); box-shadow: none;
+}
+:root[data-style="ink"] .nav__btn[aria-current="page"] .icon, :root[data-style="ink"] .nav__btn[aria-current="page"] .nav__label, :root[data-style="ink"] .menu__item:hover .icon, :root[data-style="ink"] .menu__item:focus-visible .icon,
+:root[data-style="ink"] .nnote.is-selected .nnote__title, :root[data-style="ink"] .nnote.is-selected .nnote__time, :root[data-style="ink"] .tile[aria-pressed="true"] .tile__font,
+:root[data-style="ink"] .wday[aria-pressed="true"] .ring__label, :root[data-style="ink"] .wday[aria-pressed="true"] .wday__num { color: var(--bg); }
+:root[data-style="ink"] .input, :root[data-style="ink"] .topsearch__field { border-width: 1.5px; border-color: var(--text); }
+
 /* ---------- Performance mode (Settings → Appearance) ----------
    For slower computers like a Raspberry Pi. The theme engine makes surfaces solid (the same colours they
    show over the background), turns blur off and uses small shadows; here nothing blurs at all (the
@@ -1755,7 +1879,10 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
    transitions are shorter with no spring. Every feature stays the same. */
 :root[data-perf="on"] { --blur-scrim: 0px; --dur-1: 80ms; --dur-2: 120ms; --dur-3: 180ms; --dur-4: 240ms; --ease-spring: var(--ease-out); }
 :root[data-perf="on"] *, :root[data-perf="on"] *::before, :root[data-perf="on"] *::after, :root[data-perf="on"] dialog::backdrop { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-:root[data-perf="on"] .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)); }
+/* The other styles are opaque: nothing to see through, so no backdrop filter to pay for (the dialog scrim keeps its blur). */
+:root:not([data-style="glass"]) *, :root:not([data-style="glass"]) *::before, :root:not([data-style="glass"]) *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-perf="on"] .ambient { background: linear-gradient(180deg, var(--bg), var(--bg-deep)) !important; }
+:root[data-perf="on"] .clock__digital, :root[data-perf="on"] .clock__auto-inner, :root[data-perf="on"] .timer__time { text-shadow: none !important; }
 :root[data-perf="on"] .list { -webkit-mask-image: none !important; mask-image: none !important; }
 
 /* ---------- 10. Motion ---------- */
@@ -1782,6 +1909,7 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   @keyframes toast-in { from { opacity: 0; } }
   @keyframes toast-out { to { opacity: 0; } }
   .skel { animation: none; }
+  .brand > span::after { animation: none !important; }
   .btn.is-loading::after { animation-duration: 1.6s; }
 }
 </style>
@@ -5000,9 +5128,9 @@ const SettingsPanel = (() => {
       h('div', { class: 'srow__label' }, h('span', { text: label }), hint ? h('span', { class: 'srow__hint', text: hint }) : null),
       control);
   }
-  function stackRow(label, control, { keywords = '' } = {}) {
+  function stackRow(label, control, { keywords = '', hint = '' } = {}) {
     return h('div', { class: 'srow srow--stack', dataset: { search: `${label} ${keywords}`.toLowerCase() } },
-      h('div', { class: 'srow__label' }, h('span', { text: label })), control);
+      h('div', { class: 'srow__label' }, h('span', { text: label }), hint ? h('span', { class: 'srow__hint', text: hint }) : null), control);
   }
   function seg(key, options, value, label) {
     const group = h('div', { class: 'seg', role: 'group', 'aria-label': label },
@@ -5128,8 +5256,16 @@ const SettingsPanel = (() => {
   }
   function themePreview(id, s) {
     if (id === 'custom') return h('span', { class: 'theme-prev theme-prev--custom', 'aria-hidden': 'true' });
-    const t = THEMES[id];
-    return h('span', { class: 'theme-prev', 'aria-hidden': 'true', style: `--pv-bg:${t.bg};--pv-panel:${t.panel};--pv-line:${t.line}33;--pv-accent:${id === s.theme ? s.accent : t.accent}` });
+    // The theme as the chosen style shows it.
+    const v = window.StillTheme.compute({ ...s, theme: id, accent: id === s.theme ? s.accent : THEMES[id].accent }).vars;
+    return h('span', { class: 'theme-prev', 'aria-hidden': 'true', style: `--pv-bg:${v['--bg']};--pv-panel:${v['--surface']};--pv-line:${v['--border-strong']};--pv-accent:${v['--accent']}` });
+  }
+  const STYLES = window.StillTheme.STYLES;
+  function stylePreview(id, s) {
+    const v = window.StillTheme.compute({ ...s, style: id }).vars;
+    const shadow = id === 'soft' ? v['--shadow-ctl'] : 'none';
+    return h('span', { class: 'style-prev', 'aria-hidden': 'true', style: `--pv-bg:${v['--bg']};--pv-surface:${v['--surface']};--pv-border:${id === 'ink' ? v['--text'] : v['--border-strong']};--pv-bw:${id === 'ink' ? '1.5px' : '1px'};--pv-text:${v['--text']};--pv-text3:${v['--text-3']};--pv-accent:${v['--accent']};--pv-r:${v['--r-md']};--pv-shadow:${shadow};--pv-font:${v['--font-head']}` },
+      h('span', { class: 'style-prev__card' }, h('span', { class: 'style-prev__aa', text: 'Aa' }), h('span', { class: 'style-prev__line' })), h('span', { class: 'style-prev__dot' }));
   }
 
   /* --- Categories --- */
@@ -5168,8 +5304,8 @@ const SettingsPanel = (() => {
       ],
     },
     {
-      id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Theme, accent, font, glass and density',
-      keys: ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes', 'notesSizes'],
+      id: 'appearance', icon: 'palette', title: 'Appearance', desc: 'Style, theme, accent, font, glass and density',
+      keys: ['style', 'theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'navOrder', 'cardSizes', 'notesSizes'],
       onReset: () => HomeLayout.reset(), // card sizes (the arrangement stays: that's Windows)
       rows(s, refresh) {
         Object.keys(FONTS).forEach((id) => window.StillTheme.loadFont(id)); // for the "Aa" previews
@@ -5179,6 +5315,8 @@ const SettingsPanel = (() => {
           refresh();
         };
         return [
+          stackRow('Style', tiles('style', Object.keys(STYLES).map((id) => ({ id, label: STYLES[id].label, preview: stylePreview(id, s) })), s.style, 'Style', (v) => { set({ style: v }); refresh(); }, 'tiles--styles'),
+            { keywords: 'style look material glass paper terminal soft ink retro mono pastel black white' }),
           stackRow('Theme', tiles('theme', [...Object.keys(THEMES), 'custom'].map((id) => ({ id, label: id === 'custom' ? 'Custom' : THEMES[id].label, preview: themePreview(id, s) })), s.theme, 'Theme', pickTheme, 'tiles--themes'),
             { keywords: 'graphite midnight forest mocha light dark custom colours' }),
           s.theme === 'custom' ? CUSTOM_FIELDS.map(([k, label]) => row(label, colorField(s.customTheme[k], label, `custom:${k}`, (v) => set({ customTheme: { ...Settings.get().customTheme, [k]: v } })), { keywords: 'custom theme colour' })) : null,
@@ -5187,12 +5325,16 @@ const SettingsPanel = (() => {
           stackRow('Font', tiles('font', Object.keys(FONTS).map((id) => ({
             id, label: id === 'system' ? 'SF Pro / System' : id === 'mono' ? 'JetBrains Mono' : id === 'serif' ? 'Playfair Display' : 'Inter',
             preview: h('span', { class: 'tile__font', style: `font-family:${FONTS[id].head || FONTS[id].body}`, text: 'Aa' }),
-          })), s.font, 'Font', (v) => set({ font: v })), { keywords: 'typeface inter system sf pro jetbrains mono playfair serif' }),
-          row('Glass transparency', range('transparency', s.transparency, 0, 80, 'Glass transparency', (v) => `${v}%`), { keywords: 'opacity glass' }),
+          })), s.font, 'Font', (v) => set({ font: v })), { keywords: 'typeface inter system sf pro jetbrains mono playfair serif', hint: s.style === 'terminal' ? 'Terminal style always uses monospace' : '' }),
+          (() => {
+            const ctl = range('transparency', s.transparency, 0, 80, 'Glass transparency', (v) => `${v}%`);
+            if (s.style !== 'glass') $('input', ctl).disabled = true;
+            return row('Glass transparency', ctl, { keywords: 'opacity glass', hint: s.style !== 'glass' ? 'Glass style only' : '' });
+          })(),
           (() => {
             const ctl = range('blur', s.blur, 0, 40, 'Blur strength', (v) => `${v}px`);
-            if (s.performanceMode) $('input', ctl).disabled = true;
-            return row('Blur strength', ctl, { keywords: 'frosted glass', hint: s.performanceMode ? 'Off in Performance mode' : '' });
+            if (s.performanceMode || s.style !== 'glass') $('input', ctl).disabled = true;
+            return row('Blur strength', ctl, { keywords: 'frosted glass', hint: s.style !== 'glass' ? 'Glass style only' : s.performanceMode ? 'Off in Performance mode' : '' });
           })(),
           (() => {
             const ctl = toggle('performanceMode', s.performanceMode, 'Performance mode');
