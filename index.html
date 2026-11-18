@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter" data-perf="off">
+<html lang="en" data-scheme="dark" data-density="comfortable" data-font="inter" data-perf="off" data-style="glass">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -1813,12 +1813,26 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
   var SANS = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
   var GF = 'https://fonts.googleapis.com/css2?display=swap&family=';
   var FONTS = {
-    inter: { label: 'Inter', body: SANS, href: GF + 'Inter:wght@300;400;500;600' },
+    inter: { label: 'Inter', body: SANS, href: GF + 'Inter:wght@300;400;500;600;700' },
     system: { label: 'System', body: 'system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif' },
     mono: { label: 'Mono', body: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace', href: GF + 'JetBrains+Mono:wght@300;400;500;600' },
     serif: { label: 'Playfair', body: SANS, head: '"Playfair Display", Georgia, "Times New Roman", serif', href: GF + 'Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600' },
   };
-  var DEFAULTS = { theme: 'graphite', font: 'inter', transparency: 42, blur: 22, radius: 16, density: 'comfortable' };
+  var DEFAULTS = { theme: 'graphite', font: 'inter', transparency: 42, blur: 22, radius: 16, density: 'comfortable', style: 'glass' };
+  /* Styles change the app's material; themes still choose the colours within one. Glass is the
+     default. Each other style reshapes the theme's colours its own way (a Custom theme keeps its
+     colours and takes only the material), scales the corners, and may set its own type. */
+  var STYLES = {
+    glass: { label: 'Glass', desc: 'Frosted glass, soft light', radius: 1 },
+    paper: { label: 'Paper', desc: 'A warm sheet, ruled lines, serif headings', radius: 0.3 },
+    terminal: { label: 'Terminal', desc: 'Phosphor on black, monospace, outlines', radius: 0.12 },
+    soft: { label: 'Soft', desc: 'Pastel and round, raised and pressed shapes', radius: 1.6 },
+    ink: { label: 'Ink', desc: 'Black and white, your accent, bold type', radius: 0.5 },
+  };
+  /* Terminal's phosphor for each theme (Light is an LCD: dark ink on pale green). */
+  var PHOSPHOR = { graphite: '#3dfc8a', midnight: '#7cd7ff', forest: '#55ff6e', mocha: '#ffb43a' };
+  var SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif';
+  var ROUNDED = 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", ';
 
   function isHex(v) { return typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v); }
   function rgb(hex) { return [1, 3, 5].map(function (i) { return parseInt(hex.slice(i, i + 2), 16); }); }
@@ -1852,11 +1866,19 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var card = mix(b.bg, b.panel, alpha);
     var raised = mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92));
     var sunken = light ? mix(card, b.line, 0.05) : mix(card, '#000000', 0.22);
-    return { text: [b.bg, card, raised, sunken], ctl: [card, raised, sunken] };
+    /* Rows (tasks, folders, recent notes) rest on a faint wash of the line colour (--hover): text must read there too. */
+    return { text: [b.bg, card, raised, sunken, mix(card, b.line, 0.05), mix(raised, b.line, 0.05)], ctl: [card, raised, sunken] };
   }
   /** The accent as text: itself when it reads (4.5:1 everywhere text sits), otherwise moved towards
       the text colour just until it does. */
-  function accentInk(accent, b, g) { return solve(accent, b.text, g.text, 4.5); }
+  function accentInk(accent, b, g) { return solve(accent, b.text, g.text, 4.55); }   // a hair over 4.5, for rounding
+  /** The red for destructive actions: 4.5:1 on every surface, and on its own tint too (a Delete or
+      Reset button is red text on a faint red fill, up to 22% on hover). */
+  function dangerInk(start, b, g) {
+    var d = solve(start, b.text, g.text, 4.6);
+    for (var i = 0; i < 3; i++) d = solve(d, b.text, g.text.concat(g.text.map(function (x) { return mix(x, d, 0.22); })), 4.6);
+    return d;
+  }
   function num(v, d, lo, hi) { v = typeof v === 'number' && isFinite(v) ? v : d; return Math.min(hi, Math.max(lo, v)); }
 
   function baseOf(s) {
@@ -1868,15 +1890,43 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     return THEMES[s.theme] || THEMES.graphite;
   }
 
+  /** The theme's colours as this style has them. */
+  function styleBase(b, style, s) {
+    if (style === 'glass' || s.theme === 'custom') return b;
+    var light = luminance(b.bg) > 0.35;
+    var o = Object.assign({}, b);
+    if (style === 'paper') {
+      if (light) { o.bg = '#ece5d8'; o.panel = '#f8f3ea'; o.line = '#3a2f24'; o.text = '#2a2119'; }
+      else { o.bg = mix(b.bg, '#1b1712', 0.7); o.panel = mix(b.panel, '#28221b', 0.7); o.line = '#f1e7d6'; o.text = mix(b.text, '#efe5d4', 0.7); }
+    } else if (style === 'terminal') {
+      if (light) { o.bg = '#d8e1cb'; o.panel = '#e2e9d7'; o.line = '#24321d'; o.text = '#1f2b19'; }
+      else { var ph = PHOSPHOR[s.theme] || PHOSPHOR.graphite; o.bg = mix('#030503', ph, 0.025); o.panel = mix('#030503', ph, 0.055); o.line = ph; o.text = ph; }
+    } else if (style === 'soft') {
+      if (light) { o.bg = '#e7e8ef'; o.panel = '#e7e8ef'; o.line = '#4a5063'; o.text = '#272c3a'; }
+      else { o.bg = mix(b.bg, '#272a33', 0.6); o.panel = o.bg; }
+    } else if (style === 'ink') {
+      if (light) { o.bg = '#ffffff'; o.panel = '#ffffff'; o.line = '#000000'; o.text = '#000000'; }
+      else { o.bg = '#000000'; o.panel = '#000000'; o.line = '#ffffff'; o.text = '#ffffff'; }
+    }
+    return o;
+  }
+
   function compute(settings) {
     var s = settings || {};
-    var b = baseOf(s);
+    var style = STYLES[s.style] ? s.style : 'glass';
+    var b = styleBase(baseOf(s), style, s);
+    var glass = style === 'glass';
     var accent = isHex(s.accent) ? s.accent : b.accent;
     var light = luminance(b.bg) > 0.35;
-    var alpha = 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100;
+    var alpha = glass ? 1 - num(s.transparency, DEFAULTS.transparency, 0, 80) / 100 : 1;
     var perf = s.performanceMode === true;
-    var radius = num(s.radius, DEFAULTS.radius, 4, 28);
-    var font = FONTS[s.font] || FONTS.inter;
+    var radius = num(s.radius, DEFAULTS.radius, 4, 28) * STYLES[style].radius;
+    var fontId = FONTS[s.font] ? s.font : 'inter';
+    var font = FONTS[fontId];
+    var body = font.body; var head = font.head || font.body;
+    if (style === 'terminal') { fontId = 'mono'; body = head = FONTS.mono.body; }
+    else if (style === 'paper' && fontId !== 'mono' && fontId !== 'serif') head = SERIF;
+    else if (style === 'soft' && fontId !== 'mono' && fontId !== 'serif') { body = ROUNDED + body; head = ROUNDED + head; }
     var g = groundsOf(b, alpha, light);
     /* Secondary and faint text keep their place between the text and the background, but never
        drop below 4.5:1 (WCAG AA) on anything they can sit on, in any theme, Custom included. */
@@ -1884,24 +1934,27 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     var low = Math.min.apply(null, g.text.map(function (x) { return contrast(text3, x); }));
     /* Secondary text stays a clear step above faint text: at least 6:1, and 1.2× faint's contrast. */
     var text2 = solve(mix(b.text, b.bg, 0.32), b.text, g.text, Math.max(6, low * 1.2));
+    if (style === 'ink') { text2 = b.text; text3 = solve(mix(b.text, b.bg, 0.3), b.text, g.text, 7); }   // Ink: no greys to speak of
+    var sv = styleVars(style, b, light, perf);
     return {
       scheme: light ? 'light' : 'dark',
       density: s.density === 'compact' ? 'compact' : 'comfortable',
-      font: FONTS[s.font] ? s.font : 'inter',
+      font: fontId,
+      style: style,
       perf: perf,
       bg: b.bg,
       vars: {
         '--bg': b.bg,
         '--bg-deep': mix(b.bg, light ? '#ffffff' : '#000000', light ? 0.35 : 0.3),
-        '--surface': perf ? mix(b.bg, b.panel, alpha) : rgba(b.panel, alpha.toFixed(2)),
-        '--surface-raised': perf ? mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92)) : rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
+        '--surface': !glass ? b.panel : perf ? mix(b.bg, b.panel, alpha) : rgba(b.panel, alpha.toFixed(2)),
+        '--surface-raised': !glass ? (style === 'paper' && light ? mix(b.panel, '#ffffff', 0.4) : b.panel) : perf ? mix(b.bg, b.panel, Math.max(alpha, light ? 0.94 : 0.92)) : rgba(b.panel, Math.max(alpha, light ? 0.94 : 0.92).toFixed(2)),
         '--surface-sunken': light ? rgba(b.line, 0.05) : 'rgba(0, 0, 0, 0.22)',
         '--hover': rgba(b.line, light ? 0.05 : 0.05),
         '--hover-strong': rgba(b.line, light ? 0.085 : 0.08),
         '--fill': rgba(b.line, light ? 0.07 : 0.09),
         '--fill-hover': rgba(b.line, light ? 0.11 : 0.14),
-        '--border': rgba(b.line, light ? 0.11 : 0.07),
-        '--border-strong': rgba(b.line, light ? 0.19 : 0.12),
+        '--border': sv.border || rgba(b.line, light ? 0.11 : 0.07),
+        '--border-strong': sv.borderStrong || rgba(b.line, light ? 0.19 : 0.12),
         '--text': b.text,
         '--text-2': text2,
         '--text-3': text3,
@@ -1909,35 +1962,66 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
         '--on-accent': readable(accent),
         '--accent-ink': accentInk(accent, b, g),
         /* Status colours: a red, green and amber that read (4.5:1) on this theme. */
-        '--danger': solve(light ? '#e5484d' : '#ef7a7a', b.text, g.text, 4.6),
+        '--danger': dangerInk(light ? '#e5484d' : '#ef7a7a', b, g),
         '--success': solve(light ? '#30a46c' : '#6fcf97', b.text, g.text, 4.6),
         '--warning': solve(light ? '#d39a1f' : '#e6c26b', b.text, g.text, 4.6),
         /* Edges that identify a control: 3:1 against the card, a raised surface and a field. */
         '--line-ctl': solve(mix(b.text, b.bg, 0.8), b.text, g.ctl, 3.1),
         '--backdrop': light ? 'rgba(40, 50, 60, 0.28)' : 'rgba(6, 7, 9, 0.55)',
-        '--shadow-1': perf ? (light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(25, 35, 50, 0.12)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3)')
+        '--shadow-1': sv.s1 ? sv.s1 : perf ? (light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(25, 35, 50, 0.12)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3)')
                     : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(25, 35, 50, 0.06), 0 16px 40px -22px rgba(25, 35, 50, 0.25)'
                     : 'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.25), 0 16px 40px -20px rgba(0, 0, 0, 0.6)',
-        '--shadow-2': perf ? (light ? '0 4px 14px rgba(25, 35, 50, 0.18)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45)')
+        '--shadow-2': sv.s2 ? sv.s2 : perf ? (light ? '0 4px 14px rgba(25, 35, 50, 0.18)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.45)')
                     : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(25, 35, 50, 0.08), 0 32px 72px -24px rgba(25, 35, 50, 0.35)'
                     : 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.25), 0 32px 80px -24px rgba(0, 0, 0, 0.75)',
-        '--shadow-ctl': light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
+        '--shadow-ctl': sv.ctl ? sv.ctl : light ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(25, 35, 50, 0.14)'
                               : 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3)',
-        '--sheen': perf ? 'none' : light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
+        '--soft-in': sv.inset || 'none',
+        '--sheen': perf || !glass ? 'none' : light ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 160px)'
                                          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 160px)',
-        '--glow': light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
-        '--blur': perf ? '0px' : num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
+        '--glow': !glass ? 'transparent' : light ? 'rgba(255, 255, 255, 0.55)' : rgba(b.line, 0.035),
+        '--blur': perf || !glass ? '0px' : num(s.blur, DEFAULTS.blur, 0, 40) + 'px',
         /* One dial: cards take it as set, everything else follows from it. */
         '--r-xs': Math.round(radius * 0.25) + 'px',
         '--r-sm': Math.round(radius * 0.38) + 'px',
         '--r-md': Math.round(radius * 0.625) + 'px',
-        '--r-lg': radius + 'px',
-        '--r-xl': Math.min(32, radius + 4) + 'px',
-        '--r-pop': (Math.round(radius * 0.625) + 4) + 'px',
-        '--font': font.body,
-        '--font-head': font.head || font.body,
+        '--r-lg': Math.round(radius) + 'px',
+        '--r-xl': Math.min(36, Math.round(radius) + 4) + 'px',
+        '--r-pop': (Math.round(radius * 0.625) + (style === 'terminal' ? 1 : 4)) + 'px',
+        '--font': body,
+        '--font-head': head,
       },
     };
+  }
+
+  /** Borders and shadows that make each style's material (null: Glass's own). */
+  function styleVars(style, b, light, perf) {
+    var o = {};
+    if (style === 'paper') {
+      o.border = rgba(b.line, light ? 0.14 : 0.13); o.borderStrong = rgba(b.line, light ? 0.3 : 0.26);
+      o.s1 = light ? '0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 3px rgba(60, 45, 30, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.45)';
+      o.s2 = light ? '0 2px 6px rgba(60, 45, 30, 0.1), 0 14px 34px -10px rgba(60, 45, 30, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.4), 0 14px 34px -10px rgba(0, 0, 0, 0.7)';
+      o.ctl = '0 1px 1px rgba(0, 0, 0, 0.12)';
+    } else if (style === 'terminal') {
+      o.border = rgba(b.line, 0.22); o.borderStrong = rgba(b.line, 0.5);
+      o.s1 = 'none';
+      o.s2 = perf ? 'none' : '0 0 0 1px ' + rgba(b.line, 0.25) + ', 0 0 28px ' + rgba(b.line, light ? 0.08 : 0.12);
+      o.ctl = 'none';
+    } else if (style === 'soft') {
+      var hi = light ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.05)';
+      var lo = light ? 'rgba(70, 80, 110, 0.24)' : 'rgba(0, 0, 0, 0.55)';
+      o.border = rgba(b.line, light ? 0.06 : 0.05); o.borderStrong = rgba(b.line, light ? 0.12 : 0.1);
+      o.s1 = perf ? '-3px -3px 6px ' + hi + ', 3px 3px 6px ' + lo : '-7px -7px 16px ' + hi + ', 7px 7px 16px ' + lo;
+      o.s2 = perf ? '0 6px 16px ' + lo : '-10px -10px 24px ' + hi + ', 12px 12px 28px ' + lo;
+      o.ctl = '-3px -3px 6px ' + hi + ', 3px 3px 7px ' + lo;
+      o.inset = 'inset 3px 3px 6px ' + lo + ', inset -3px -3px 6px ' + hi;
+    } else if (style === 'ink') {
+      o.border = rgba(b.line, 0.28); o.borderStrong = rgba(b.line, 0.7);
+      o.s1 = 'none';
+      o.s2 = '5px 5px 0 ' + b.text;
+      o.ctl = 'none';
+    }
+    return o;
   }
 
   /** Adds the web font for `id` once (falls back to local fonts offline). */
@@ -1959,13 +2043,14 @@ html.is-dragging, html.is-dragging * { user-select: none; -webkit-user-select: n
     root.setAttribute('data-density', t.density);
     root.setAttribute('data-font', t.font);
     root.setAttribute('data-perf', t.perf ? 'on' : 'off');
+    root.setAttribute('data-style', t.style);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t.bg);
     loadFont(t.font);
     return t;
   }
 
-  window.StillTheme = { PALETTE: PALETTE, THEMES: THEMES, FONTS: FONTS, DEFAULTS: DEFAULTS, compute: compute, apply: apply, readable: readable, loadFont: loadFont, isHex: isHex };
+  window.StillTheme = { PALETTE: PALETTE, THEMES: THEMES, FONTS: FONTS, STYLES: STYLES, DEFAULTS: DEFAULTS, compute: compute, apply: apply, readable: readable, loadFont: loadFont, isHex: isHex };
 
   // Apply saved settings now, before first paint.
   var saved = {};
@@ -2398,6 +2483,7 @@ const CLOCK_FACES = ['minimal', 'classic', 'modern', 'digital'];
 const CLOCK_SHAPES = ['circle', 'rounded', 'squircle', 'hexagon'];
 const THEME_IDS = [...Object.keys(THEMES), 'custom'];
 const FONT_IDS = Object.keys(FONTS);
+const STYLE_IDS = Object.keys(window.StillTheme.STYLES);
 const SETTINGS_SECTIONS = ['clock', 'calendar', 'appearance', 'windows', 'graph', 'shortcuts', 'data'];
 
 function detect24h() {
@@ -2414,6 +2500,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   theme: 'graphite', customTheme: DEFAULT_CUSTOM_THEME, accent: THEMES.graphite.accent, font: 'inter',
   transparency: 42, blur: 22, radius: 16, density: 'comfortable', navOrder: [...PAGE_IDS],
   performanceMode: false, // solid surfaces and lighter effects, for slower computers (Settings → Appearance)
+  style: 'glass', // the app's material: glass · paper · terminal · soft · ink (Settings → Appearance → Style)
   colourHistory: [], // the colour picker's last six colours applied, newest first (#rrggbb)
   colourSaved: [], // colours saved in the colour picker: [{ hex, name }]
   cardSizes: null, // older Home card sizes ({ cols: [a, b, c], split }); read into homeLayout when that's missing
@@ -2601,6 +2688,7 @@ function normaliseSettings(raw) {
     radius: clampNum(s.radius, 4, 28, d.radius),
     density: oneOf(s.density, ['comfortable', 'compact'], d.density),
     performanceMode: bool(s.performanceMode, d.performanceMode),
+    style: oneOf(s.style, STYLE_IDS, d.style),
     colourHistory: (Array.isArray(s.colourHistory) ? s.colourHistory : []).filter((c, i, a) => isHex(c) && a.findIndex((x) => isHex(x) && x.toLowerCase() === c.toLowerCase()) === i).map((c) => c.toLowerCase()).slice(0, 6),
     colourSaved: (Array.isArray(s.colourSaved) ? s.colourSaved : []).filter((c) => isObj(c) && isHex(c.hex))
       .map((c) => ({ hex: c.hex.toLowerCase(), name: typeof c.name === 'string' && c.name.trim() ? c.name.slice(0, 40) : c.hex.toUpperCase() }))
@@ -3569,7 +3657,7 @@ function swatchPicker({ value, onPick, allowNone = false, label = 'Colour', live
    the relevant settings change. */
 const Theme = (() => {
   let applied = '';
-  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'performanceMode'];
+  const KEYS = ['theme', 'customTheme', 'accent', 'font', 'transparency', 'blur', 'radius', 'density', 'performanceMode', 'style'];
   function apply() {
     const s = Settings.get();
     const key = JSON.stringify(KEYS.map((k) => s[k]));
